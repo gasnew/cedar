@@ -1,0 +1,72 @@
+{
+  "name": "cedar-api",
+  "description": "An HTTP/WebSocket REST API for rapidly sending and receiving Cedar audio data",
+  "version": "0.0.0",
+  "homepage": "",
+  "repository": "https://github.com/gasnew/cedar/blob/master/api",
+  "author": "Garrett Newman",
+  "license": "MIT",
+  "private": false,
+  "main": "src",
+  "author": {
+    "name": "Garrett Newman",
+    "email": "garrett.s.newman@gmail.com"
+  },
+  "contributors": [],
+  "bugs": {},
+  "directories": {
+    "lib": "src",
+    "test": "test/",
+    "config": "config/"
+  },
+  "engines": {
+    "node": "^11.0.0",
+    "yarn": ">= 0.18.0"
+  },
+  "scripts": {
+    "test": "yarn run compile && yarn run jest",
+    "dev": "ts-node-dev --no-notify src/",
+    "start": "yarn run compile && node lib/",
+    "jest": "jest  --forceExit",
+    "compile": "shx rm -rf lib/ && tsc"
+  },
+  "standard": {
+    "env": [
+      "jest"
+    ],
+    "ignore": []
+  },
+  "types": "lib/",
+  "dependencies": {
+    "@feathersjs/authentication": "^4.5.1",
+    "@feathersjs/authentication-local": "^4.5.1",
+    "@feathersjs/authentication-oauth": "^4.5.1",
+    "@feathersjs/configuration": "^4.5.1",
+    "@feathersjs/errors": "^4.5.1",
+    "@feathersjs/express": "^4.5.1",
+    "@feathersjs/feathers": "^4.5.1",
+    "@feathersjs/socketio": "^4.5.1",
+    "@feathersjs/transport-commons": "^4.5.3",
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "helmet": "^3.21.2",
+    "serve-favicon": "^2.5.0",
+    "winston": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/compression": "^1.7.0",
+    "@types/cors": "^2.8.6",
+    "@types/helmet": "^0.0.47",
+    "@types/jest": "^25.2.2",
+    "@types/jsonwebtoken": "^8.5.0",
+    "@types/serve-favicon": "^2.5.0",
+    "axios": "^0.19.2",
+    "jest": "^26.0.1",
+    "nodemon": "^2.0.2",
+    "shx": "^0.3.2",
+    "ts-jest": "^26.0.0",
+    "ts-node-dev": "^1.0.0-pre.44",
+    "tslint": "^6.0.0",
+    "typescript": "^3.7.5"
+  }
+}
