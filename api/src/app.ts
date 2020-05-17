@@ -9,15 +9,12 @@ import configuration from '@feathersjs/configuration';
 import express from '@feathersjs/express';
 import socketio from '@feathersjs/socketio';
 
-
 import { Application } from './declarations';
 import logger from './logger';
 import middleware from './middleware';
 import services from './services';
 import appHooks from './app.hooks';
-import channels from './channels';
-import authentication from './authentication';
-// Don't remove this comment. It's needed to format import lines nicely.
+//import channels from './channels';
 
 const app: Application = express(feathers());
 
@@ -39,11 +36,10 @@ app.configure(socketio());
 
 // Configure other middleware (see `middleware/index.js`)
 app.configure(middleware);
-app.configure(authentication);
 // Set up our services (see `services/index.js`)
 app.configure(services);
 // Set up event channels (see channels.js)
-app.configure(channels);
+//app.configure(channels);
 
 // Configure a middleware for 404s and the error handler
 app.use(express.notFound());
