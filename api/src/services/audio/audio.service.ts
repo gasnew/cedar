@@ -1,6 +1,9 @@
-// Initializes the `users` service on path `/users`
+import { ServiceMethods } from '@feathersjs/feathers';
+import { Unprocessable } from '@feathersjs/errors';
+import { Tedis } from 'tedis';
+
 import { Application } from '../../declarations';
-import { Id, Params, ServiceMethods } from '@feathersjs/feathers';
+import { withRedis } from '../../redis';
 
 interface Audio {
   musicianId: string;
@@ -20,26 +23,28 @@ interface QueryParams {
 // https://docs.feathersjs.com/api/services.html#service-methods
 type AudioService = Partial<ServiceMethods<Audio>>;
 
-const audio: AudioService = {
-  find: async (params: QueryParams) => {
-    const roomId = params.query;
-    console.log(roomId);
-    return [
-      {
-        musicianId: 'abcd',
-        data: ['a', 'b', 'c'],
-      },
-    ];
-  },
-  patch: async (roomId: string, audio: Audio) => {
-    return [
-      {
-        musicianId: 'abcd',
-        data: ['a', 'b', 'c', ...audio.data],
-      },
-    ];
-  },
-};
+function buildAudio(redisClient: Tedis): AudioService {
+  return {
+    find: async (params: QueryParams) => {
+      const roomId = params.query;
+      throw new Unprocessable('Room does not exist!');
+      return [
+        {
+          musicianId: 'abcd',
+          data: ['a', 'b', 'c'],
+        },
+      ];
+    },
+    patch: async (roomId: string, audio: Audio) => {
+      return [
+        {
+          musicianId: 'abcd',
+          data: ['a', 'b', 'c', ...audio.data],
+        },
+      ];
+    },
+  };
+}
 
 // Add this service to the service type index
 declare module '../../declarations' {
@@ -49,6 +54,5 @@ declare module '../../declarations' {
 }
 
 export default function(app: Application) {
-  // Initialize our service with any options it requires
-  app.use('/audio', audio);
+  app.use('/audio', withRedis(app, buildAudio));
 }

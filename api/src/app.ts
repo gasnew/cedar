@@ -14,9 +14,10 @@ import logger from './logger';
 import middleware from './middleware';
 import services from './services';
 import appHooks from './app.hooks';
+import { connectToRedis } from './redis';
 //import channels from './channels';
 
-const app: Application = express(feathers());
+const app: Application = connectToRedis(express(feathers()));
 
 // Load app configuration
 app.configure(configuration());
