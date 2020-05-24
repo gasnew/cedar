@@ -35,7 +35,6 @@ type ValueOf<T> = T[keyof T];
 function withHelpers(redisClient: Tedis): Redis {
   const parseOrThrow = <Model>(jsonString: any): Model => {
     if (typeof jsonString !== 'string') {
-      console.log(jsonString);
       throw new Error(
         `${jsonString} could not be parsed because it is not a string!`
       );
@@ -77,12 +76,10 @@ function withHelpers(redisClient: Tedis): Redis {
       );
     },
     createRoom: async (name: string) => {
-      console.log('name', name);
       const newRoom: RoomMeta = {
         id: uuidv4(),
         name,
       };
-      console.log(newRoom);
       await redisClient.hset(
         rKey({ roomId: newRoom.id }),
         'meta',

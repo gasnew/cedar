@@ -33,7 +33,6 @@ function buildMusicianService(redisClient: Redis): MusicianService {
       { name }: { name: string },
       { query: { roomId } }: QueryParams<{ roomId: string }>
     ) => {
-      console.log(roomId);
       if (!(await redisClient.exists(rKey({ roomId }))))
         throw new Unprocessable(`Room ${roomId} does not exist!`);
 
