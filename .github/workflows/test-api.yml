@@ -3,7 +3,7 @@
 # see:
 # https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
 
-name: Node.js CI
+name: Cedar API tests
 
 on: [push]
 
@@ -12,7 +12,7 @@ defaults:
     working-directory: ./api
 
 jobs:
-  build:
+  test-api:
 
     runs-on: ubuntu-latest
 
