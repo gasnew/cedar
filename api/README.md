@@ -4,17 +4,29 @@
 
 ## About
 
-This project uses [Feathers](http://feathersjs.com). An open source web
-framework for building modern real-time applications.
+This project uses [Feathers](http://feathersjs.com), an open source web
+framework for building modern real-time applications that is touted as
+transport-agnostic. This means we can define each REST endpoint once but get to
+call into it using both HTTP (via [express](https://expressjs.com/)) and
+WebSocket (via [Socket.io](https://socket.io/)). This repo was originally built
+with the [Feathers
+CLI](https://docs.feathersjs.com/guides/basics/generator.html), which can serve
+other useful functions such as generating service templates and setting up
+authentication.
+
+This directory contains the Cedar backend, an HTTP/WebSocket API for running
+CRUD operations on and hooking into events related to rooms, musicians, audio,
+etc. We use Redis as a database because it is very fast and scalable, at the
+expense of being extremely permissible DB-schema-wise. One goal of the layout
+of this repo (namely using TypeScript and defining our own Redis client
+interface) is to help us impose some structure on the data from the application
+level.
 
 ## Getting Started
-
-Getting up and running is as easy as 1, 2, 3.
 
 1. Make sure you have [NodeJS](https://nodejs.org/),
    [yarn](https://yarnpkg.com/getting-started/install), and
    [redis](https://redis.io/) installed.
-
 
 2. Install your dependencies
 
@@ -27,24 +39,24 @@ Getting up and running is as easy as 1, 2, 3.
    Make a single command that manages both the Redis and Node servers.
 
     ```
-    redis-server &
+    redis-server > /dev/null 2>&1 &
     ```
 
 4. Start your Feathers app in "dev mode." This will watch source files and
    recompile (TS -> JS) and restart the web server when any of them changes.
 
     ```
-    yarn start
+    yarn dev
     ```
 
-## Dev process
+## Development process
 
 I use [eslint](https://eslint.org/) in vim to catch TypeScript errors and
 things as I type. We don't have autoformatting setup yet for this repo, so I
 run [prettier](https://prettier.io/) from my editor to format as I go.
 
 If there are a bunch of TypeScript/compilation errors to look at, just run
-`yarn compile` to see them all printed nicely.
+`yarn compile` to see them all printed nicely in your terminal.
 
 ## Calling the API
 
@@ -67,9 +79,11 @@ http POST localhost:3030/musicians roomId==$roomId name="Bobby Tuba"
 http localhost:3030/musicians roomId==$roomId
 ```
 
-## Schema validation
+## API Schema validation
 
-TODO: Fill out this section.
+TODO: Fill out this section. We use JSON schema.
+
+## Redis key format
 
 ## Testing
 

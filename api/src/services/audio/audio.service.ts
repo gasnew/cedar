@@ -1,3 +1,5 @@
+// TODO(gnewman): This is a skeleton service--doesn't do anything right now...
+
 import { ServiceMethods } from '@feathersjs/feathers';
 import { Unprocessable } from '@feathersjs/errors';
 import { Tedis } from 'tedis';

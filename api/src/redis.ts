@@ -13,7 +13,14 @@ import { Tedis } from 'tedis';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Application } from './declarations';
-import { Collection, Collections, Musician, Musicians, Room, RoomMeta } from './room';
+import {
+  Collection,
+  Collections,
+  Musician,
+  Musicians,
+  Room,
+  RoomMeta,
+} from './room';
 
 // NOTE(gnewman): For more information on common redis commands, see this
 // cheatsheet:
@@ -32,7 +39,7 @@ export type Redis = Tedis & RedisHelpers;
 
 type ValueOf<T> = T[keyof T];
 
-function withHelpers(redisClient: Tedis): Redis {
+export function withHelpers(redisClient: Tedis): Redis {
   const parseOrThrow = <Model>(jsonString: any): Model => {
     if (typeof jsonString !== 'string') {
       throw new Error(
@@ -44,10 +51,10 @@ function withHelpers(redisClient: Tedis): Redis {
   const getCollection = <Model>(
     collectionName: keyof Collections
   ): ((roomId: string) => Promise<Collection<Model>>) => async roomId =>
-      _.mapValues(
-        await redisClient.hgetall(rKey({ roomId, collection: collectionName })),
-        jsonString => parseOrThrow<Model>(jsonString)
-      )
+    _.mapValues(
+      await redisClient.hgetall(rKey({ roomId, collection: collectionName })),
+      jsonString => parseOrThrow<Model>(jsonString)
+    );
 
   const helperMethods: RedisHelpers = {
     getMusicians: getCollection<Musician>('musicians'),
@@ -102,17 +109,21 @@ interface RedisKeyParameters {
   roomId: string;
   collection?: keyof Collections;
 }
-// Generate a key of the form "{roomId}" or "{roomId}-{modelName}" for various
-// Redis calls
+// Generate a key of the form "{roomId}" or "{roomId}:{collection}" for
+// various Redis calls
 export function rKey({ roomId, collection }: RedisKeyParameters): string {
-  return `${roomId}${collection && `-${collection}`}`;
+  return `${roomId}${collection ? `:${collection}` : ''}`;
 }
 
-export function connectToRedis(app: Application): Application {
-  const redis = new Tedis();
-  redis.on('error', error => console.error(`Redis error: ${error}`));
-  redis.on('connect', () => console.log('Connected to the Redis server!'));
-  app.set('redis', withHelpers(redis));
+export function connectToRedis(
+  app: Application,
+  redisClient: Tedis
+): Application {
+  redisClient.on('error', error => console.error(`Redis error: ${error}`));
+  redisClient.on('connect', () =>
+    console.log('Connected to the Redis server!')
+  );
+  app.set('redis', withHelpers(redisClient));
   return app;
 }
 

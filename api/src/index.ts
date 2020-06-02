@@ -1,6 +1,9 @@
-import logger from './logger';
-import app from './app';
+import { Tedis } from 'tedis';
 
+import logger from './logger';
+import createApp from './app';
+
+const app = createApp(new Tedis());
 const port = app.get('port');
 const server = app.listen(port);
 

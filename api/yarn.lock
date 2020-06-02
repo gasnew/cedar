@@ -356,6 +356,14 @@
     events "^3.1.0"
     uberproto "^2.0.6"
 
+"@feathersjs/socketio-client@^4.5.4":
+  version "4.5.4"
+  resolved "https://registry.yarnpkg.com/@feathersjs/socketio-client/-/socketio-client-4.5.4.tgz#9e280e3b3f3f110a4138f6cdf252d14fe0e49d3e"
+  integrity sha512-pyqy/AyCyLAyBcd2KpxIuiSnZ9piY98ESJIWOgzTQmTN9KvJ2XUhShJWRsOwRAIFlOPDXbg06nw6qvedtPPliw==
+  dependencies:
+    "@feathersjs/transport-commons" "^4.5.3"
+    "@types/socket.io-client" "^1.4.32"
+
 "@feathersjs/socketio@^4.5.1":
   version "4.5.4"
   resolved "https://registry.yarnpkg.com/@feathersjs/socketio/-/socketio-4.5.4.tgz#a2dbd05a645a9aff93d88bb50b10c250e022a3b9"
@@ -779,6 +787,11 @@
   dependencies:
     "@types/express-serve-static-core" "*"
     "@types/mime" "*"
+
+"@types/socket.io-client@^1.4.32":
+  version "1.4.33"
+  resolved "https://registry.yarnpkg.com/@types/socket.io-client/-/socket.io-client-1.4.33.tgz#8e705b9b3f7fba6cb329d27cd2eda222812adbf1"
+  integrity sha512-m4LnxkljsI9fMsjwpW5QhRpMixo2BeeLpFmg0AE+sS4H1pzAd/cs/ftTiL60FLZgfFa8PFRPx5KsHu8O0bADKQ==
 
 "@types/socket.io@^2.1.4":
   version "2.1.5"
