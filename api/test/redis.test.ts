@@ -51,7 +51,7 @@ describe('withHelpers', () => {
 
       const response = await client.getRoom('room-uuid');
 
-      expect(client.hget).toHaveBeenCalledWith('room-uuid', 'meta');
+      expect(client.hget).toHaveBeenCalledWith('oom-uuid', 'meta');
       expect(response).toEqual(roomMeta);
     });
 
