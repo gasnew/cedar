@@ -19,11 +19,6 @@ type MusicianService = Partial<ServiceMethods<Musician>>;
 function buildMusicianService(redisClient: Redis): MusicianService {
   return {
     find: async ({ query: { roomId } }: QueryParams<{ roomId: string }>) => {
-      // TODO(gnewman): Refactor this check into a before hook or into our
-      // custom Redis client
-      if (!(await redisClient.exists(rKey({ roomId }))))
-        throw new Unprocessable(`Room ${roomId} does not exist!`);
-
       // NOTE(gnewman): The returned order of musicians is not guaranteed. We
       // return them as a list here because that is how feathers expects the
       // return type of `find` to be formed.
@@ -32,12 +27,7 @@ function buildMusicianService(redisClient: Redis): MusicianService {
     create: async (
       { name }: { name: string },
       { query: { roomId } }: QueryParams<{ roomId: string }>
-    ) => {
-      if (!(await redisClient.exists(rKey({ roomId }))))
-        throw new Unprocessable(`Room ${roomId} does not exist!`);
-
-      return await redisClient.createMusician(roomId, name);
-    },
+    ) => redisClient.createMusician(roomId, name),
   };
 }
 
