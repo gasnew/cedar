@@ -2,8 +2,9 @@ import { Tedis } from 'tedis';
 
 import logger from './logger';
 import createApp from './app';
+import { withHelpers } from './redis';
 
-const app = createApp(new Tedis());
+const app = createApp(withHelpers(new Tedis()));
 const port = app.get('port');
 const server = app.listen(port);
 

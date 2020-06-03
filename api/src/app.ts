@@ -15,10 +15,10 @@ import logger from './logger';
 import middleware from './middleware';
 import services from './services';
 import appHooks from './app.hooks';
-import { connectToRedis } from './redis';
+import { Redis, connectToRedis } from './redis';
 //import channels from './channels';
 
-export default function(redisClient: Tedis) {
+export default function(redisClient: Redis) {
   const app: Application = connectToRedis(express(feathers()), redisClient);
 
   // Load app configuration

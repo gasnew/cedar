@@ -31,7 +31,7 @@ describe('withHelpers', () => {
 
       // getRoom is an async function, so we need to tell Jest to test on the
       // "rejects" case.
-      expect(() => client.getRoom('i-dont-exist')).rejects.toThrowError(
+      await expect(() => client.getRoom('i-dont-exist')).rejects.toThrowError(
         Unprocessable
       );
     });

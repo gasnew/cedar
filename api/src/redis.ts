@@ -117,13 +117,13 @@ export function rKey({ roomId, collection }: RedisKeyParameters): string {
 
 export function connectToRedis(
   app: Application,
-  redisClient: Tedis
+  redisClient: Redis
 ): Application {
   redisClient.on('error', error => console.error(`Redis error: ${error}`));
   redisClient.on('connect', () =>
     console.log('Connected to the Redis server!')
   );
-  app.set('redis', withHelpers(redisClient));
+  app.set('redis', redisClient);
   return app;
 }
 

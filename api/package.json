@@ -69,6 +69,7 @@
     "@types/serve-favicon": "^2.5.0",
     "axios": "^0.19.2",
     "jest": "^26.0.1",
+    "jest-mock-extended": "^1.0.8",
     "nodemon": "^2.0.2",
     "shx": "^0.3.2",
     "ts-jest": "^26.0.0",
