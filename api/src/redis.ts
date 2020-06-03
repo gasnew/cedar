@@ -37,8 +37,6 @@ interface RedisHelpers {
 
 export type Redis = Tedis & RedisHelpers;
 
-type ValueOf<T> = T[keyof T];
-
 export function withHelpers(redisClient: Tedis): Redis {
   const parseOrThrow = <Model>(jsonString: any): Model => {
     if (typeof jsonString !== 'string') {

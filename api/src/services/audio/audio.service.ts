@@ -1,4 +1,5 @@
 // TODO(gnewman): This is a skeleton service--doesn't do anything right now...
+// We probably want to rewrite this as a "tracks" service or something
 
 import { ServiceMethods } from '@feathersjs/feathers';
 import { Unprocessable } from '@feathersjs/errors';

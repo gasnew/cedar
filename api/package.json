@@ -38,9 +38,6 @@
   },
   "types": "lib/",
   "dependencies": {
-    "@feathersjs/authentication": "^4.5.1",
-    "@feathersjs/authentication-local": "^4.5.1",
-    "@feathersjs/authentication-oauth": "^4.5.1",
     "@feathersjs/configuration": "^4.5.1",
     "@feathersjs/errors": "^4.5.3",
     "@feathersjs/express": "^4.5.1",
@@ -48,8 +45,6 @@
     "@feathersjs/socketio": "^4.5.1",
     "@feathersjs/socketio-client": "^4.5.4",
     "@feathersjs/transport-commons": "^4.5.3",
-    "@types/lodash": "^4.14.151",
-    "@types/uuid": "^8.0.0",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
     "feathers-hooks-common": "^5.0.3",
@@ -66,15 +61,15 @@
     "@types/helmet": "^0.0.47",
     "@types/jest": "^25.2.2",
     "@types/jsonwebtoken": "^8.5.0",
+    "@types/lodash": "^4.14.155",
     "@types/serve-favicon": "^2.5.0",
-    "axios": "^0.19.2",
+    "@types/uuid": "^8.0.0",
     "jest": "^26.0.1",
     "jest-mock-extended": "^1.0.8",
     "nodemon": "^2.0.2",
     "shx": "^0.3.2",
     "ts-jest": "^26.0.0",
     "ts-node-dev": "^1.0.0-pre.44",
-    "tslint": "^6.0.0",
     "typescript": "^3.7.5"
   }
 }

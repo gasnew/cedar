@@ -38,7 +38,7 @@ export default {
   },
 
   after: {
-    all: [errorHandler],
+    all: [],
     find: [],
     get: [],
     create: [],

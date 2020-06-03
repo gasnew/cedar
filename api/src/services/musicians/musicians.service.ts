@@ -8,6 +8,11 @@ import { Musician } from '../../room';
 import { QueryParams } from '../index.d';
 import musicianHooks from './musicians.hooks';
 
+// NOTE(gnewman): If we fail to implement any of the basic service functions
+// (e.g., fetch, get, update, etc.), then Feathers will default it to emitting
+// a NotImplemented error. We use Partial here so that we don't have to bother
+// defining empty methods for the other endpoints.
+// https://docs.feathersjs.com/api/services.html#service-methods
 type MusicianService = Partial<ServiceMethods<Musician>>;
 
 // NOTE(gnewman): The most useful table in the Feathers docs (info about which
