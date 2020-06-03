@@ -1,0 +1,75 @@
+{
+  "name": "cedar-api",
+  "description": "An HTTP/WebSocket REST API for rapidly sending and receiving Cedar audio data",
+  "version": "0.0.0",
+  "homepage": "",
+  "repository": "https://github.com/gasnew/cedar/blob/master/api",
+  "author": {
+    "name": "Garrett Newman",
+    "email": "garrett.s.newman@gmail.com"
+  },
+  "license": "MIT",
+  "private": false,
+  "main": "src",
+  "contributors": [],
+  "bugs": {},
+  "directories": {
+    "lib": "src",
+    "test": "test/",
+    "config": "config/"
+  },
+  "engines": {
+    "node": "^14.0.0",
+    "yarn": ">= 0.18.0"
+  },
+  "scripts": {
+    "compile-and-test": "yarn run compile && yarn run jest",
+    "dev": "ts-node-dev --no-notify src/",
+    "start": "yarn run compile && node lib/",
+    "test": "jest  --forceExit",
+    "test:watch": "jest  --forceExit --watchAll",
+    "compile": "shx rm -rf lib/ && tsc -p tsconfig.build.json"
+  },
+  "standard": {
+    "env": [
+      "jest"
+    ],
+    "ignore": []
+  },
+  "types": "lib/",
+  "dependencies": {
+    "@feathersjs/configuration": "^4.5.1",
+    "@feathersjs/errors": "^4.5.3",
+    "@feathersjs/express": "^4.5.1",
+    "@feathersjs/feathers": "^4.5.1",
+    "@feathersjs/socketio": "^4.5.1",
+    "@feathersjs/socketio-client": "^4.5.4",
+    "@feathersjs/transport-commons": "^4.5.3",
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "feathers-hooks-common": "^5.0.3",
+    "helmet": "^3.21.2",
+    "lodash": "^4.17.15",
+    "serve-favicon": "^2.5.0",
+    "tedis": "^0.1.12",
+    "uuid": "^8.0.0",
+    "winston": "^3.0.0"
+  },
+  "devDependencies": {
+    "@types/compression": "^1.7.0",
+    "@types/cors": "^2.8.6",
+    "@types/helmet": "^0.0.47",
+    "@types/jest": "^25.2.2",
+    "@types/jsonwebtoken": "^8.5.0",
+    "@types/lodash": "^4.14.155",
+    "@types/serve-favicon": "^2.5.0",
+    "@types/uuid": "^8.0.0",
+    "jest": "^26.0.1",
+    "jest-mock-extended": "^1.0.8",
+    "nodemon": "^2.0.2",
+    "shx": "^0.3.2",
+    "ts-jest": "^26.0.0",
+    "ts-node-dev": "^1.0.0-pre.44",
+    "typescript": "^3.7.5"
+  }
+}
