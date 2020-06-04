@@ -1,9 +1,15 @@
 // NOTE(gnewman): This file is modified from the template here:
 // https://github.com/electron/electron-quick-start/blob/master/main.js
+//
+// NOTE(gnewman): I made some changes to this file and others following this
+// Medium article on how to integrate React with Electron:
+// https://www.freecodecamp.org/news/building-an-electron-application-with-create-react-app-97945861647c/
 
 // Modules to control application life and create native browser window
-import { app, BrowserWindow } from 'electron';
-import path from 'path';
+// @ts-ignore We need to do require-style imports for this file because
+//            ES6-style imports are not supported by electron.
+const { app, BrowserWindow } = require('electron');
+const path = require('path');
 
 function createWindow() {
   // Create the browser window.
@@ -16,10 +22,10 @@ function createWindow() {
   });
 
   // and load the index.html of the app.
-  mainWindow.loadFile('index.html');
+  mainWindow.loadURL('http://localhost:3000');
 
   // Open the DevTools.
-  // mainWindow.webContents.openDevTools()
+  mainWindow.webContents.openDevTools();
 }
 
 // This method will be called when Electron has finished
