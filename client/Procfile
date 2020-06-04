@@ -1,0 +1,2 @@
+react-app: yarn start-react
+electron: wait-on http://localhost:3000 && yarn start-electron
