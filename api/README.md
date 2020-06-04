@@ -22,7 +22,7 @@ of this repo (namely using TypeScript and defining our own Redis client
 interface) is to help us impose some structure on the data from the application
 level.
 
-## Getting Started
+## Getting started
 
 1. Make sure you have [NodeJS](https://nodejs.org/),
    [yarn](https://yarnpkg.com/getting-started/install), and
@@ -31,7 +31,7 @@ level.
 2. Install your dependencies
 
     ```
-    cd path/to/cedar-api
+    cd path/to/cedar/api
     yarn install
     ```
 

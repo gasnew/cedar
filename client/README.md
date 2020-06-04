@@ -9,6 +9,26 @@ App](https://github.com/facebook/create-react-app), using the
 [Redux](https://redux.js.org/) and [Redux
 Toolkit](https://redux-toolkit.js.org/) template.
 
+## Getting started
+
+1. Make sure you have [NodeJS](https://nodejs.org/) and
+   [yarn](https://yarnpkg.com/getting-started/install).
+
+2. Install your dependencies
+
+    ```
+    cd path/to/cedar/client
+    yarn install
+    ```
+
+3. Start your React dev server, and start the Electron app when the React
+   server is ready. The React server will watch source files and recompile (TS
+   -> JS) and restart itself when any of them changes.
+
+    ```
+    yarn start
+    ```
+
 ## Available Scripts
 
 In the project directory, you can run:
