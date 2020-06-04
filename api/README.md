@@ -46,7 +46,7 @@ level.
    recompile (TS -> JS) and restart the web server when any of them changes.
 
     ```
-    yarn dev
+    yarn start
     ```
 
 ## Development process
@@ -56,7 +56,7 @@ things as I type. We don't have autoformatting setup yet for this repo, so I
 run [prettier](https://prettier.io/) from my editor to format as I go.
 
 If there are a bunch of TypeScript/compilation errors to look at, just run
-`yarn compile` to see them all printed nicely in your terminal.
+`yarn build` to see them all printed nicely in your terminal.
 
 ## Calling the API
 
