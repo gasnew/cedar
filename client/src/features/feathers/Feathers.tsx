@@ -3,7 +3,7 @@ import feathers, {
   ServiceMethods,
   Service,
 } from '@feathersjs/feathers';
-import { FeathersError } from '@feathersjs/errors';
+import { FeathersError, GeneralError } from '@feathersjs/errors';
 import feathersSocketIO from '@feathersjs/socketio-client';
 import React, { createContext, useContext, useState } from 'react';
 import socketIO from 'socket.io-client';
@@ -33,38 +33,38 @@ type ExtractData<Service> = Service extends Partial<ServiceMethods<infer T>>
   ? T
   : never;
 //export function useService<T extends keyof ServiceTypes>(
-  //serviceName: T,
-  //method: keyof ServiceMethods<any>,
-  //requestData: Partial<ExtractData<ServiceTypes[T]>>
+//serviceName: T,
+//method: keyof ServiceMethods<any>,
+//requestData: Partial<ExtractData<ServiceTypes[T]>>
 //): Result<ExtractData<ServiceTypes[T]>> {
-  ////type Data = ExtractData<ServiceTypes[keyof ServiceTypes]>;
-  //const app = useContext(FeathersContext);
-  //const [loading, setLoading] = useState<boolean>(true);
-  //const [error, setError] = useState<FeathersError | null>(null);
-  ////const [data, setData] = useState<Data | Data[] | null>(null);
-  //const [data, setData] = useState<any>(null);
+////type Data = ExtractData<ServiceTypes[keyof ServiceTypes]>;
+//const app = useContext(FeathersContext);
+//const [loading, setLoading] = useState<boolean>(true);
+//const [error, setError] = useState<FeathersError | null>(null);
+////const [data, setData] = useState<Data | Data[] | null>(null);
+//const [data, setData] = useState<any>(null);
 
-  //useEffect(
-    //() => {
-      //const callService = async () => {
-        //console.log('huh');
-        //const service = app.service(serviceName);
-        //try {
-          //const data = await app.service(serviceName).create!(requestData);
-          //setLoading(false);
-          //setData(data);
-        //} catch (error) {
-          //setLoading(false);
-          //setError(error);
-        //}
-      //};
+//useEffect(
+//() => {
+//const callService = async () => {
+//console.log('huh');
+//const service = app.service(serviceName);
+//try {
+//const data = await app.service(serviceName).create!(requestData);
+//setLoading(false);
+//setData(data);
+//} catch (error) {
+//setLoading(false);
+//setError(error);
+//}
+//};
 
-      //callService();
-    //},
-    //[app]
-  //);
+//callService();
+//},
+//[app, roomId]
+//);
 
-  //return { loading, error, data };
+//return { loading, error, data };
 //}
 
 interface CreateResult<Data> {
@@ -73,7 +73,10 @@ interface CreateResult<Data> {
   error: FeathersError | null;
   data: Data | null;
 }
-type CreateResultTuple<Data> = [() => Promise<Data>, CreateResult<Data>];
+type CreateResultTuple<Data> = [
+  () => Promise<{ data: Data | null; error: FeathersError | null }>,
+  CreateResult<Data>
+];
 
 export function useCreate<T extends keyof ServiceTypes>(
   serviceName: T,
@@ -89,15 +92,18 @@ export function useCreate<T extends keyof ServiceTypes>(
     setCalled(true);
     setLoading(true);
     try {
-      const data = await app.service(serviceName).create!(requestData);
+      const data = (await app.service(serviceName).create!(
+        requestData
+      )) as ExtractData<ServiceTypes[T]>;
       setData(data);
       setError(null);
+      setLoading(false);
+      return { data, error: null };
     } catch (error) {
       setError(error);
+      setLoading(false);
+      return { data: null, error };
     }
-    setLoading(false);
-
-    return data;
   };
 
   return [callCreate, { called, loading, error, data }];
