@@ -1,0 +1,49 @@
+.room-overlay {
+  top: 0;
+  left: calc(50vw - 250px);
+  width: 500px;
+  margin: 10vh 0;
+}
+
+.room-overlay-enter {
+  transform: (translateY(-50vh) rotate(-10deg), translateY(0) rotate(0deg));
+}
+.room-overlay-exit: {
+  transform: (translateY(150vh) rotate(-20deg), translateY(0) rotate(0deg));
+}
+/*.room-overlay {*/
+/*$overlay-example-width: $pt-grid-size * 40;*/
+/*$enter: (*/
+/*transform: (*/
+/*translateY(-50vh) rotate(-10deg),*/
+/*translateY(0) rotate(0deg),*/
+/*),*/
+/*);*/
+/*$leave: (*/
+/*transform: (*/
+/*translateY(150vh) rotate(-20deg),*/
+/*translateY(0) rotate(0deg),*/
+/*),*/
+/*);*/
+
+/*@include react-transition-phase(*/
+/*'#{$ns}-overlay',*/
+/*'enter',*/
+/*$enter,*/
+/*$pt-transition-duration * 3,*/
+/*$pt-transition-ease-bounce,*/
+/*$before: '&'*/
+/*);*/
+/*@include react-transition-phase(*/
+/*'#{$ns}-overlay',*/
+/*'exit',*/
+/*$leave,*/
+/*$pt-transition-duration * 5,*/
+/*$before: '&'*/
+/*);*/
+/*left: 50vw;*/
+/*margin: 10vh 0;*/
+
+/*top: 0;*/
+/*width: $overlay-example-width;*/
+/*}*/

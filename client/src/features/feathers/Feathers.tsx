@@ -108,3 +108,45 @@ export function useCreate<T extends keyof ServiceTypes>(
 
   return [callCreate, { called, loading, error, data }];
 }
+
+interface GetResult<Data> {
+  called: boolean;
+  loading: boolean;
+  error: FeathersError | null;
+  data: Data | null;
+}
+type LazyGetResultTuple<Data> = [
+  () => Promise<{ data: Data | null; error: FeathersError | null }>,
+  CreateResult<Data>
+];
+
+export function useLazyGet<T extends keyof ServiceTypes>(
+  serviceName: T,
+  getData: number | string
+): CreateResultTuple<ExtractData<ServiceTypes[T]>> {
+  const app = useContext(FeathersContext);
+  const [called, setCalled] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<FeathersError | null>(null);
+  const [data, setData] = useState<any>(null);
+
+  const callGet = async () => {
+    setCalled(true);
+    setLoading(true);
+    try {
+      const data = (await app.service(serviceName).get!(
+        getData
+      )) as ExtractData<ServiceTypes[T]>;
+      setData(data);
+      setError(null);
+      setLoading(false);
+      return { data, error: null };
+    } catch (error) {
+      setError(error);
+      setLoading(false);
+      return { data: null, error };
+    }
+  };
+
+  return [callGet, { called, loading, error, data }];
+}
