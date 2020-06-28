@@ -2,33 +2,18 @@ import React, { useState } from 'react';
 
 import {
   Button,
-  Card,
   Classes,
-  Code,
   Dialog,
   Divider,
   FormGroup,
   InputGroup,
   ControlGroup,
-  H3,
-  H5,
-  Intent,
-  Overlay,
-  Switch,
 } from '@blueprintjs/core';
-import { CSSTransition } from 'react-transition-group';
-
-import './RoomOverlay.css';
 
 import { useDispatch, useSelector } from 'react-redux';
 
-import { useCreate, useLazyGet } from '../../features/feathers/Feathers';
+import { useCreate, useLazyGet } from '../../features/feathers/FeathersHooks';
 import { setRoom, selectRoom } from '../../features/room/roomSlice';
-import Navbar from '../../features/navbar/Navbar';
-import RoomOverlay from '../../features/roomOverlay/RoomOverlay';
-
-const OVERLAY_EXAMPLE_CLASS = 'docs-overlay-example-transition';
-const OVERLAY_TALL_CLASS = 'docs-overlay-example-tall';
 
 export default function() {
   // Redux state
@@ -36,7 +21,6 @@ export default function() {
   const room = useSelector(selectRoom);
 
   // Local state
-  const [isOpen, setIsOpen] = useState(!!!room.id);
   const [roomId, setRoomId] = useState('');
   const [joinFormError, setJoinFormError] = useState('');
   const [roomName, setRoomName] = useState('');
@@ -45,13 +29,14 @@ export default function() {
   // API state
   const [
     joinRoomBackend,
-    { data: getData, error: getApiError, loading: getLoading },
+    { error: getApiError, loading: getLoading },
   ] = useLazyGet('rooms', roomId);
   const [
     createRoomBackend,
-    { data: createData, error: createApiError, loading: createLoading },
+    { error: createApiError, loading: createLoading },
   ] = useCreate('rooms', { name: roomName });
 
+  // Button actions
   const joinRoom = async () => {
     if (!roomId) {
       setJoinFormError('Room ID must be filled!');
@@ -61,7 +46,6 @@ export default function() {
     const { data } = await joinRoomBackend();
     if (data) {
       dispatch(setRoom(data));
-      setIsOpen(false);
     }
   };
   const createRoom = async () => {
@@ -73,10 +57,10 @@ export default function() {
     const { data } = await createRoomBackend();
     if (data) {
       dispatch(setRoom(data));
-      setIsOpen(false);
     }
   };
 
+  // Helpful constants
   const createFieldHelperText = createFormError || createApiError?.message;
   const joinFieldHelperText = joinFormError || getApiError?.message;
   const intentForError = (errorMessage: any) =>
@@ -87,7 +71,7 @@ export default function() {
       className={Classes.DARK}
       icon="tree"
       title="Join or create a Cedar room!"
-      isOpen={isOpen}
+      isOpen={!!!room.id}
       isCloseButtonShown={false}
     >
       <div className={Classes.DIALOG_BODY}>
@@ -112,6 +96,7 @@ export default function() {
               disabled={createLoading}
               icon="arrow-right"
               onClick={joinRoom}
+              loading={getLoading}
               intent="primary"
             >
               Join
@@ -134,6 +119,7 @@ export default function() {
               placeholder="Brodyquest Fanclub"
             />
             <Button
+              disabled={getLoading}
               intent="primary"
               outlined
               icon="arrow-right"

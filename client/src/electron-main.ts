@@ -22,6 +22,7 @@ function createWindow() {
   });
 
   // and load the index.html of the app.
+  // TODO(gnewman): Put this URL into an env variable someday
   mainWindow.loadURL('http://localhost:3000');
 
   // Open the DevTools.
