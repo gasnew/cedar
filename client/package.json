@@ -22,7 +22,7 @@
     "react-redux": "^7.2.0",
     "react-scripts": "3.4.1",
     "socket.io-client": "^2.3.0",
-    "typescript": "~3.7.2"
+    "typescript": "~3.7.5"
   },
   "scripts": {
     "start": "nf start -p 3000",

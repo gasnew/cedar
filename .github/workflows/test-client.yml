@@ -17,6 +17,13 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: 14.x
+    # NOTE(gnewman): Puzzlingly, we need to install the api dependencies as
+    # well to get the build step to work. My suspicion is that there is some
+    # gap in the type system that causes TypeScript to treat a type as
+    # "unknown" that shouldn't be/isn't unknown, but I haven't nailed down the
+    # root cause. For now, this gets us by.
+    - run: cd ../api && yarn install
     - run: yarn install
     - run: yarn build
-    - run: yarn test
+    # TODO(gnewman): Remove --passWithNoTests flag when we add our first test
+    - run: yarn test --passWithNoTests
