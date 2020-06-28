@@ -16,16 +16,12 @@
     "@types/react": "^16.9.0",
     "@types/react-dom": "^16.9.0",
     "@types/react-redux": "^7.1.9",
-    "@types/react-transition-group": "^4.4.0",
     "electron": "^9.0.2",
-    "grommet": "^2.13.0",
-    "grommet-icons": "^4.4.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-redux": "^7.2.0",
     "react-scripts": "3.4.1",
     "socket.io-client": "^2.3.0",
-    "styled-components": "^5.1.1",
     "typescript": "~3.7.2"
   },
   "scripts": {
