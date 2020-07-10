@@ -63,7 +63,6 @@ function useInputDevices(): [() => void, InputDeviceData] {
   return [requestPermission, { hasPermission, inputDevices }];
 }
 
-// TODO(gnewman): Actually install lodash
 export default function() {
   const [
     requestPermission,
@@ -74,40 +73,45 @@ export default function() {
   );
 
   if (!hasPermission && selectedDevice) setSelectedDevice(null);
+  // testing only
+  if (hasPermission && !selectedDevice && inputDevices.length > 0)
+    setSelectedDevice(inputDevices[0]);
 
   return (
-    <Card>
+    <Card style={{ width: 400, maxHeight: 400 }}>
       <H4>Audio input</H4>
-      <InputDeviceSelect
-        filterable={false}
-        items={inputDevices}
-        itemRenderer={inputDeviceRenderer}
-        noResults={
-          <MenuItem
-            disabled={true}
-            text={
-              hasPermission
-                ? 'Searching for input devices...'
-                : `Microphone access has been denied. Please allow access to
+      <div style={{ marginBottom: 10 }}>
+        <InputDeviceSelect
+          filterable={false}
+          items={inputDevices}
+          itemRenderer={inputDeviceRenderer}
+          noResults={
+            <MenuItem
+              disabled={true}
+              text={
+                hasPermission
+                  ? 'Searching for input devices...'
+                  : `Microphone access has been denied. Please allow access to
                    use this feature.`
-            }
-          />
-        }
-        onItemSelect={setSelectedDevice}
-        popoverProps={{ minimal: true }}
-      >
-        <Button
-          icon="headset"
-          rightIcon="caret-down"
-          onClick={requestPermission}
+              }
+            />
+          }
+          onItemSelect={setSelectedDevice}
+          popoverProps={{ minimal: true }}
         >
-          {selectedDevice ? (
-            selectedDevice.label
-          ) : (
-            <i>please select an input device</i>
-          )}
-        </Button>
-      </InputDeviceSelect>
+          <Button
+            icon="headset"
+            rightIcon="caret-down"
+            onClick={requestPermission}
+          >
+            {selectedDevice ? (
+              selectedDevice.label
+            ) : (
+              <i>please select an input device</i>
+            )}
+          </Button>
+        </InputDeviceSelect>
+      </div>
       <DeviceVolume deviceId={selectedDevice?.deviceId || null} />
     </Card>
   );

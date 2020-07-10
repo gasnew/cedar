@@ -6902,6 +6902,11 @@ kleur@^3.0.3:
   resolved "https://registry.yarnpkg.com/kleur/-/kleur-3.0.3.tgz#a79c9ecc86ee1ce3fa6206d1216c501f147fc07e"
   integrity sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==
 
+konva@^7.0.2:
+  version "7.0.2"
+  resolved "https://registry.yarnpkg.com/konva/-/konva-7.0.2.tgz#bcff105177bad3e1f287fef1625128f73e910dbf"
+  integrity sha512-e3l5bLJh/+zIDWdBjxdZfZ0Gyn6ebvI0bx2gI4MHp6U3/p2CoM1/PHK7aPmdAaaSgqQxFe4CIZwZval6B51REw==
+
 last-call-webpack-plugin@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/last-call-webpack-plugin/-/last-call-webpack-plugin-3.0.0.tgz#9742df0e10e3cf46e5c0381c2de90d3a7a2d7555"
@@ -9265,6 +9270,14 @@ react-is@^16.12.0, react-is@^16.7.0, react-is@^16.8.1, react-is@^16.8.4, react-i
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.13.1.tgz#789729a4dc36de2999dc156dd6c1d9c18cea56a4"
   integrity sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==
 
+react-konva@^16.13.0-3:
+  version "16.13.0-3"
+  resolved "https://registry.yarnpkg.com/react-konva/-/react-konva-16.13.0-3.tgz#9ef1e813c8b2dd61b54b26151ccbdeed52b89a80"
+  integrity sha512-U9az1RidQD4c64oZoHiiv6GU6h2ggHO30nZDqfQWuBTH+Bl2wij6Z0NgbUyVyN1IpKIgXRiEKMS9idlxhAzTXQ==
+  dependencies:
+    react-reconciler "^0.25.1"
+    scheduler "^0.19.1"
+
 react-lifecycles-compat@^3.0.4:
   version "3.0.4"
   resolved "https://registry.yarnpkg.com/react-lifecycles-compat/-/react-lifecycles-compat-3.0.4.tgz#4f1a273afdfc8f3488a8c516bfda78f872352362"
@@ -9282,6 +9295,16 @@ react-popper@^1.3.7:
     prop-types "^15.6.1"
     typed-styles "^0.0.7"
     warning "^4.0.2"
+
+react-reconciler@^0.25.1:
+  version "0.25.1"
+  resolved "https://registry.yarnpkg.com/react-reconciler/-/react-reconciler-0.25.1.tgz#f9814d59d115e1210762287ce987801529363aaa"
+  integrity sha512-R5UwsIvRcSs3w8n9k3tBoTtUHdVhu9u84EG7E5M0Jk9F5i6DA1pQzPfUZd6opYWGy56MJOtV3VADzy6DRwYDjw==
+  dependencies:
+    loose-envify "^1.1.0"
+    object-assign "^4.1.1"
+    prop-types "^15.6.2"
+    scheduler "^0.19.1"
 
 react-redux@^7.2.0:
   version "7.2.0"
