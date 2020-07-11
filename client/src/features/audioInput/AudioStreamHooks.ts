@@ -1,11 +1,16 @@
+
 import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
 import { Slider, Card, H4, Button, H5, MenuItem } from '@blueprintjs/core';
 
 import VolumeBar from './VolumeBar';
 
+interface Props {
+  deviceId: string | null;
+  gainDB: number;
+}
 
-function useStream(deviceId: string | null) {
+export function useStream(deviceId: string | null) {
   const [stream, setStream] = useState<MediaStream | null>(null);
 
   useEffect(() => {
@@ -32,7 +37,7 @@ interface DataResponse {
   setGainDB: (number) => void;
 }
 
-function useStreamData(stream: MediaStream | null): DataResponse {
+export function useStreamData(stream: MediaStream | null): DataResponse {
   const [analyzer, setAnalyzer] = useState<AnalyserNode | null>(null);
   const [gainNode, setGainNode] = useState<GainNode | null>(null);
   const [dataArray, setDataArray] = useState<Uint8Array>(new Uint8Array());
@@ -65,19 +70,4 @@ function useStreamData(stream: MediaStream | null): DataResponse {
   };
 
   return { someData: !!analyzer, fetchData, setGainDB };
-}
-
-interface Props {
-  deviceId: string | null;
-  gainDB: number;
-}
-export default function DeviceVolume({ deviceId, gainDB }: Props) {
-  const { someData, fetchData, setGainDB } = useStreamData(useStream(deviceId));
-
-  return (
-    <VolumeBar
-      fetchData={fetchData}
-      disabled={!someData}
-    />
-  );
 }

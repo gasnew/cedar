@@ -1,9 +1,11 @@
 import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
-import { Card, H4, Button, H5, MenuItem } from '@blueprintjs/core';
+import { Card, H4, Button, H5, MenuItem, Slider } from '@blueprintjs/core';
 import { ItemRenderer, Select } from '@blueprintjs/select';
 
 import DeviceVolume from './DeviceVolume';
+import { useStream, useStreamData } from './AudioStreamHooks';
+import VolumeBar from './VolumeBar';
 
 interface IInputDevice {
   deviceId: string;
@@ -64,6 +66,7 @@ function useInputDevices(): [() => void, InputDeviceData] {
 }
 
 export default function() {
+  // Device selection
   const [
     requestPermission,
     { hasPermission, inputDevices },
@@ -72,15 +75,24 @@ export default function() {
     null
   );
 
+  // Audio data
+  const { someData, fetchData, setGainDB } = useStreamData(
+    useStream(selectedDevice?.deviceId || null)
+  );
+  const [sliderGainDB, setSliderGainDB] = useState(0);
+
   if (!hasPermission && selectedDevice) setSelectedDevice(null);
   // testing only
   if (hasPermission && !selectedDevice && inputDevices.length > 0)
     setSelectedDevice(inputDevices[0]);
 
   return (
-    <Card style={{ width: 400, maxHeight: 400 }}>
+    <Card style={{ maxHeight: 400 }}>
       <H4>Audio input</H4>
       <div style={{ marginBottom: 10 }}>
+      <div style={{ position: 'absolute', height: 20, marginBottom: 10 }}>
+        <VolumeBar fetchData={fetchData} disabled={!someData} />
+      </div>
         <InputDeviceSelect
           filterable={false}
           items={inputDevices}
@@ -112,7 +124,20 @@ export default function() {
           </Button>
         </InputDeviceSelect>
       </div>
-      <DeviceVolume deviceId={selectedDevice?.deviceId || null} />
+      <div style={{ marginRight: 20 }}>
+        <Slider
+          min={-60}
+          max={6}
+          stepSize={0.1}
+          labelStepSize={66}
+          onChange={value => {
+            setSliderGainDB(value);
+            setGainDB(value);
+          }}
+          value={sliderGainDB}
+          labelRenderer={value => `${value > 0 ? '+' : ''}${_.round(value, 1)} dB`}
+        />
+      </div>
     </Card>
   );
 }
