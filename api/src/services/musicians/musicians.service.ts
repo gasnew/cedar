@@ -29,7 +29,7 @@ function buildMusicianService(redisClient: Redis): MusicianService {
       // return type of `find` to be formed.
       return _.values(await redisClient.getMusicians(roomId));
     },
-    create: async (
+    create: (
       { name }: { name: string },
       { query: { roomId } }: QueryParams<{ roomId: string }>
     ) => redisClient.createMusician(roomId, name),

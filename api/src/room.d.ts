@@ -23,8 +23,32 @@ export interface Musician {
 }
 export type Musicians = Collection<Musician>
 
+export interface Track {
+  id: string;
+  musicianId: string;
+  // data is stored in a separate Redis stream named `track-{track.id}`. We
+  // expect to only send small chunks of the track over the network in any
+  // given request.
+  data: string | null;
+  // NOTE(gnewman): Since we are storing track data in a Redis stream, we need
+  // to keep track of the position of the last chunk of data we read--this is
+  // the purpose of the cursor. A client will say something like, "Give me the
+  // track data *after* cursor `1234-0`," then the server will query the Redis
+  // stream: `XRANGE track-abc123 1234-1 +` and return that data along with
+  // whatever the new cursor is we get from Redis. Additionally, requiring the
+  // cursor in PATCH calls allows us to make that endpoint idempotent because
+  // the server will be able to compare the provided cursor with the
+  // monotonically-increasing Redis-provided cursor.
+  //
+  // Read more about Redis streams and entry IDs here:
+  // https://redis.io/topics/streams-intro#entry-ids
+  cursor: string | null;
+}
+export type Tracks = Collection<Track>
+
 export interface Collections {
   musicians: Musicians;
+  tracks: Tracks;
 }
 
 // Room

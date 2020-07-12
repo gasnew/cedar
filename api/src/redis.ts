@@ -20,6 +20,7 @@ import {
   Musicians,
   Room,
   RoomMeta,
+  Track,
 } from './room';
 
 // NOTE(gnewman): For more information on common redis commands, see this
@@ -28,11 +29,18 @@ import {
 // I think we're going to use redis hashes to store our records and a redis
 // stream for audio data.
 
+// TODO: Refactor this file into a few files
 interface RedisHelpers {
   getMusicians: (roomId: string) => Promise<Musicians>;
   createMusician: (roomId: string, name: string) => Promise<Musician>;
   getRoom: (roomId: string) => Promise<RoomMeta>;
   createRoom: (name: string) => Promise<RoomMeta>;
+  getTrack: (roomId: string, trackId: string, cursor: string) => Promise<Track>;
+  createTrack: (roomId: string, musicianId: string) => Promise<Track>;
+  appendTrackData: (
+    roomId: string,
+    { id, data, cursor }: { id: string; data: string; cursor: string }
+  ) => Promise<Track>;
 }
 
 export type Redis = Tedis & RedisHelpers;
@@ -53,6 +61,23 @@ export function withHelpers(redisClient: Tedis): Redis {
       await redisClient.hgetall(rKey({ roomId, collection: collectionName })),
       jsonString => parseOrThrow<Model>(jsonString)
     );
+  const readFromStream = async (
+    streamKey: string,
+    trackId: string
+  ): Promise<{
+    data: string;
+    newCursor: string;
+  }> => {
+    // NOTE(gnewman): We use `command` here because XRANGE doesn't seem to be
+    // implemented in Tedis.
+    const redisData = await redisClient.command('XRANGE', streamKey, '-', '+');
+    console.log(redisData);
+    // TODO: Actually return stream data
+    return {
+      data: 'abc123',
+      newCursor: '123-0',
+    };
+  };
 
   const helperMethods: RedisHelpers = {
     getMusicians: getCollection<Musician>('musicians'),
@@ -92,6 +117,52 @@ export function withHelpers(redisClient: Tedis): Redis {
       );
       return newRoom;
     },
+    getTrack: async (roomId, trackId, cursor) => {
+      if (!(await redisClient.exists(rKey({ roomId }))))
+        throw new Unprocessable(`Room ${roomId} does not exist!`);
+
+      const track = parseOrThrow<Track>(
+        await redisClient.hget(rKey({ roomId, collection: 'tracks' }), trackId)
+      );
+      const { data, newCursor } = await readFromStream(
+        rStreamKey({ roomId, trackId }),
+        cursor
+      );
+      return {
+        ...track,
+        data,
+        cursor: newCursor,
+      };
+    },
+    createTrack: async (roomId: string, musicianId: string) => {
+      if (!(await redisClient.exists(rKey({ roomId }))))
+        throw new Unprocessable(`Room ${roomId} does not exist!`);
+
+      const newTrack: Track = {
+        id: uuidv4(),
+        musicianId,
+        data: null,
+        cursor: null,
+      };
+      // TODO verify musician exists
+      await redisClient.hset(
+        rKey({ roomId, collection: 'tracks' }),
+        newTrack.id,
+        JSON.stringify(newTrack)
+      );
+      return newTrack;
+    },
+    appendTrackData: async (roomId, { id, data, cursor }) => {
+      if (!(await redisClient.exists(rKey({ roomId }))))
+        throw new Unprocessable(`Room ${roomId} does not exist!`);
+      // TODO verify cursor is equivalent to what's currently found in Redis
+
+      // TODO actually append data
+      const track = parseOrThrow<Track>(
+        await redisClient.hget(rKey({ roomId, collection: 'tracks' }), id)
+      );
+      return track;
+    },
   };
   // NOTE(gnewman): Normally, I'd want to use the spread syntax to merge
   // objects like this, but according to the MDN web docs, this uses
@@ -111,6 +182,18 @@ interface RedisKeyParameters {
 // various Redis calls
 export function rKey({ roomId, collection }: RedisKeyParameters): string {
   return `${roomId}${collection ? `:${collection}` : ''}`;
+}
+
+interface RedisStreamKeyParameters {
+  roomId: string;
+  trackId: string;
+}
+// Generate a key of the form "{roomId}:{trackId}" for accessing track streams
+export function rStreamKey({
+  roomId,
+  trackId,
+}: RedisStreamKeyParameters): string {
+  return `${roomId}${trackId}`;
 }
 
 export function connectToRedis(
