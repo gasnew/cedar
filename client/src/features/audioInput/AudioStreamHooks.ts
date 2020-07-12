@@ -1,4 +1,3 @@
-
 import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
 import { Slider, Card, H4, Button, H5, MenuItem } from '@blueprintjs/core';
@@ -52,7 +51,10 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
 
       mediaSource.connect(gainNode);
       gainNode.connect(analyzer);
-      analyzer.fftSize = 2048;
+      // Has to be a power of 2. At the default sample rate of 44100, this size
+      // should be enough to let us fetch all samples assuming we are fetching
+      // every 1/60th of a second (44100 / 60 = 735 samples).
+      analyzer.fftSize = 1024;
       gainNode.gain.value = 1;
 
       setAnalyzer(analyzer);
@@ -66,7 +68,7 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
     return dataArray;
   };
   const setGainDB = gainDB => {
-    if (!!gainNode) gainNode.gain.value = 1;
+    if (!!gainNode) gainNode.gain.value = Math.pow(10, gainDB / 20);
   };
 
   return { someData: !!analyzer, fetchData, setGainDB };

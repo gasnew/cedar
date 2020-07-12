@@ -25,27 +25,23 @@ export function useInterval(callback: () => void, delay: number) {
   }, [delay]);
 }
 
-// NOTE(gnewman):
-interface MyStage extends Stage {
-  content: HTMLDivElement;
-}
 interface Props {
   fetchData: () => Uint8Array;
   disabled: boolean;
+  height: number;
+  width: number;
 }
 
-export default function({ fetchData, disabled }: Props) {
+export default function({ height, width, fetchData, disabled }: Props) {
   const [barWidth, setBarWidth] = useState(0);
   const [dampedBarWidth, setDampedBarWidth] = useState(0);
   const [clipOpacity, setClipOpacity] = useState(0);
-  const [stageDiv, setStageDiv] = useState<HTMLDivElement | null>(null);
-  const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
 
   useInterval(() => {
     const offset = 128.0; // The offset of the signal from 0 amplitude
     const amplitudeNormalized =
       ((_.max(fetchData()) || offset) - offset) / 127.0;
-    const newBarWidth = amplitudeNormalized * (canvas?.width || 0);
+    const newBarWidth = disabled ? 0 : amplitudeNormalized * (width || 0);
 
     setBarWidth(newBarWidth);
     setDampedBarWidth(
@@ -56,64 +52,45 @@ export default function({ fetchData, disabled }: Props) {
     );
   }, 1000 / 60);
 
-  if (canvas && stageDiv) {
-    stageDiv.style.width = '100px';
-    stageDiv.style.height = '100px';
-    canvas.style.width = '100px';
-    canvas.style.height = '100px';
-    // ...then set the internal size to match
-    canvas.width = canvas.offsetWidth;
-    canvas.height = canvas.offsetHeight;
-  }
-
   return (
-    <Stage
-      style={{ height: '100%', width: '100%' }}
-      ref={node =>
-        node && setStageDiv((node as MyStage | null)?.content || null)
-      }
-    >
-      <Layer ref={node => node && setCanvas(node.canvas._canvas)}>
-        {canvas && (
-          <>
-            <Rect
-              x={0}
-              y={0}
-              width={canvas.width}
-              height={canvas.height}
-              fill={Colors.DARK_GRAY3}
-            />
-            <Rect
-              x={0}
-              y={0}
-              width={barWidth}
-              height={canvas.height}
-              fill={Colors.GREEN3}
-            />
-            <Rect
-              x={barWidth - 10}
-              y={0}
-              width={10}
-              height={canvas.height}
-              fill={Colors.GREEN5}
-            />
-            <Rect
-              x={dampedBarWidth - 2}
-              y={0}
-              width={2}
-              height={canvas.height}
-              fill={Colors.GRAY4}
-            />
-            <Rect
-              x={canvas.width - 5}
-              y={0}
-              width={5}
-              height={canvas.height}
-              fill={Colors.RED3}
-              opacity={clipOpacity}
-            />
-          </>
-        )}
+    <Stage height={height} width={width}>
+      <Layer>
+        <Rect
+          x={0}
+          y={0}
+          width={width}
+          height={height}
+          fill={Colors.DARK_GRAY3}
+        />
+        <Rect
+          x={0}
+          y={0}
+          width={barWidth}
+          height={height}
+          fill={Colors.GREEN3}
+        />
+        <Rect
+          x={barWidth - 10}
+          y={0}
+          width={10}
+          height={height}
+          fill={Colors.GREEN5}
+        />
+        <Rect
+          x={dampedBarWidth - 2}
+          y={0}
+          width={2}
+          height={height}
+          fill={Colors.GRAY4}
+        />
+        <Rect
+          x={width - 5}
+          y={0}
+          width={5}
+          height={height}
+          fill={Colors.RED3}
+          opacity={clipOpacity}
+        />
       </Layer>
     </Stage>
   );

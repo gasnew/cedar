@@ -18,9 +18,7 @@ function App() {
       className={Classes.DARK}
     >
       <Navbar />
-      <div style={{ display: 'flex' }}>
-        <AudioInput />
-      </div>
+      <AudioInput />
       <RoomOverlay />
     </div>
   );

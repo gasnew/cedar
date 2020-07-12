@@ -3,7 +3,6 @@ import React, { useEffect, useState } from 'react';
 import { Card, H4, Button, H5, MenuItem, Slider } from '@blueprintjs/core';
 import { ItemRenderer, Select } from '@blueprintjs/select';
 
-import DeviceVolume from './DeviceVolume';
 import { useStream, useStreamData } from './AudioStreamHooks';
 import VolumeBar from './VolumeBar';
 
@@ -49,10 +48,10 @@ function useInputDevices(): [() => void, InputDeviceData] {
     requestPermission();
   }, []);
   useEffect(() => {
-    navigator.mediaDevices.enumerateDevices().then(maybeDevices => {
+    navigator.mediaDevices.enumerateDevices().then(devices => {
       setInputDevices(
         _.filter(
-          maybeDevices,
+          devices,
           device =>
             device.kind === 'audioinput' &&
             !!device.deviceId &&
@@ -79,6 +78,8 @@ export default function() {
   const { someData, fetchData, setGainDB } = useStreamData(
     useStream(selectedDevice?.deviceId || null)
   );
+
+  // Slider state
   const [sliderGainDB, setSliderGainDB] = useState(0);
 
   if (!hasPermission && selectedDevice) setSelectedDevice(null);
@@ -87,12 +88,9 @@ export default function() {
     setSelectedDevice(inputDevices[0]);
 
   return (
-    <Card style={{ maxHeight: 400 }}>
+    <Card style={{ width: 300 }}>
       <H4>Audio input</H4>
       <div style={{ marginBottom: 10 }}>
-      <div style={{ position: 'absolute', height: 20, marginBottom: 10 }}>
-        <VolumeBar fetchData={fetchData} disabled={!someData} />
-      </div>
         <InputDeviceSelect
           filterable={false}
           items={inputDevices}
@@ -124,20 +122,28 @@ export default function() {
           </Button>
         </InputDeviceSelect>
       </div>
-      <div style={{ marginRight: 20 }}>
-        <Slider
-          min={-60}
-          max={6}
-          stepSize={0.1}
-          labelStepSize={66}
-          onChange={value => {
-            setSliderGainDB(value);
-            setGainDB(value);
-          }}
-          value={sliderGainDB}
-          labelRenderer={value => `${value > 0 ? '+' : ''}${_.round(value, 1)} dB`}
+      <div style={{ marginBottom: 10 }}>
+        <VolumeBar
+          height={20}
+          width={250}
+          fetchData={fetchData}
+          disabled={!someData}
         />
       </div>
+      <Slider
+        min={-60}
+        max={6}
+        stepSize={0.2}
+        labelStepSize={66}
+        onChange={value => {
+          setSliderGainDB(value);
+          setGainDB(value);
+        }}
+        value={sliderGainDB}
+        labelRenderer={value =>
+          `${_.round(value, 1) >= 0 ? '+' : ''}${_.round(value, 1)} dB`
+        }
+      />
     </Card>
   );
 }
