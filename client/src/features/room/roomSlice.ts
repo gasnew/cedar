@@ -7,8 +7,8 @@ interface RoomState {
 }
 
 const initialState: RoomState = {
-  id: '7944ed50-1e7a-4297-955e-635d281829c4',
-  name: 'My Test Room',
+  id: null,
+  name: null,
 };
 
 export const roomSlice = createSlice({

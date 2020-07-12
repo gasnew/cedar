@@ -1,8 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
 import _ from 'lodash';
-import { Stage, Layer, Rect, Text } from 'react-konva';
-import { render } from 'react-dom';
-import Konva from 'konva';
+import React, { useEffect, useRef, useState } from 'react';
+import { Stage, Layer, Rect } from 'react-konva';
 import { Colors } from '@blueprintjs/core';
 
 export function useInterval(callback: () => void, delay: number) {
@@ -48,7 +46,7 @@ export default function({ height, width, fetchData, disabled }: Props) {
       _.max([newBarWidth, dampedBarWidth - 0.6]) || newBarWidth
     );
     setClipOpacity(
-      amplitudeNormalized == 1.0 ? 1 : _.max([clipOpacity - 0.02, 0]) || 0
+      amplitudeNormalized === 1.0 ? 1 : _.max([clipOpacity - 0.02, 0]) || 0
     );
   }, 1000 / 60);
 

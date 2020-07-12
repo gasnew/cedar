@@ -1,8 +1,4 @@
-import _ from 'lodash';
-import React, { useEffect, useState } from 'react';
-import { Slider, Card, H4, Button, H5, MenuItem } from '@blueprintjs/core';
-
-import VolumeBar from './VolumeBar';
+import { useEffect, useState } from 'react';
 
 interface Props {
   deviceId: string | null;

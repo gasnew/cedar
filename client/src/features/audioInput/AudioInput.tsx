@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
-import { Card, H4, Button, H5, MenuItem, Slider } from '@blueprintjs/core';
+import { Card, H4, Button, MenuItem, Slider } from '@blueprintjs/core';
 import { ItemRenderer, Select } from '@blueprintjs/select';
 
 import { useStream, useStreamData } from './AudioStreamHooks';
@@ -83,9 +83,6 @@ export default function() {
   const [sliderGainDB, setSliderGainDB] = useState(0);
 
   if (!hasPermission && selectedDevice) setSelectedDevice(null);
-  // testing only
-  if (hasPermission && !selectedDevice && inputDevices.length > 0)
-    setSelectedDevice(inputDevices[0]);
 
   return (
     <Card style={{ width: 300 }}>
