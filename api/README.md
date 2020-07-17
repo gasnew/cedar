@@ -77,6 +77,17 @@ http POST localhost:3030/musicians roomId==$roomId name="Bobby Tuba"
 
 # Check out the musicians you just made!
 http localhost:3030/musicians roomId==$roomId
+
+# Create a new recording
+recordingId=$(http POST localhost:3030/recordings roomId==$roomId | jq -r .id)
+track1Id=$(http POST localhost:3030/tracks roomId==$roomId musicianId=abc | jq -r .id)
+track2Id=$(http POST localhost:3030/tracks roomId==$roomId musicianId=abc | jq -r .id)
+
+# Send some audio data to the track
+http PATCH localhost:3030/tracks/$trackId roomId==$roomId cursor= data:='["abc", "def"]'
+
+# Fetch the track
+http "localhost:3030/tracks?cursorsByTrack[$trackId]=" roomId==$roomId
 ```
 
 ## API Schema validation
@@ -96,7 +107,7 @@ For more information on all the things you can do with Feathers visit
 
 ## Known bugs
 
-* Tedis does not reconnect to the Redis server when the Redis server dies :(
-  (this is fine for dev work but is a deal-breaker for real prod stuff--should
-  figure this out eventually). We may want to switch to something like
-  [async-redis](https://www.npmjs.com/package/async-redis)
+* **[FIXED]** Tedis does not reconnect to the Redis server when the Redis
+  server dies :( (this is fine for dev work but is a deal-breaker for real prod
+  stuff--should figure this out eventually). We may want to switch to something
+  like [async-redis](https://www.npmjs.com/package/async-redis)

@@ -3,6 +3,9 @@
 TODO: Think about whether to use [opus](https://opus-codec.org/) and, if so,
 whether to use [this npm package](https://www.npmjs.com/package/opusscript)
 )
+https://stackoverflow.com/questions/41346699/how-to-stream-audio-chunks-using-web-audio-api-coming-from-web-socket
+https://developer.mozilla.org/en-US/docs/Web/API/AudioBufferSourceNode
+https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletNode
 
 This project was bootstrapped with [Create React
 App](https://github.com/facebook/create-react-app), using the

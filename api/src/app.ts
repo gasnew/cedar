@@ -3,7 +3,6 @@ import favicon from 'serve-favicon';
 import compress from 'compression';
 import helmet from 'helmet';
 import cors from 'cors';
-import { Tedis } from 'tedis';
 
 import feathers from '@feathersjs/feathers';
 import configuration from '@feathersjs/configuration';
@@ -15,7 +14,7 @@ import logger from './logger';
 import middleware from './middleware';
 import services from './services';
 import appHooks from './app.hooks';
-import { Redis, connectToRedis } from './redis';
+import { Redis, connectToRedis } from './models';
 //import channels from './channels';
 
 export default function(redisClient: Redis) {

@@ -23,13 +23,20 @@ export interface Musician {
 }
 export type Musicians = Collection<Musician>
 
+export interface Recording {
+  id: string;
+  state: 'running';
+  trackIds: string[];
+}
+export type Recordings = Collection<Recording>;
+
 export interface Track {
   id: string;
   musicianId: string;
   // data is stored in a separate Redis stream named `track-{track.id}`. We
   // expect to only send small chunks of the track over the network in any
   // given request.
-  data: string | null;
+  data: string[];
   // NOTE(gnewman): Since we are storing track data in a Redis stream, we need
   // to keep track of the position of the last chunk of data we read--this is
   // the purpose of the cursor. A client will say something like, "Give me the
@@ -48,6 +55,7 @@ export type Tracks = Collection<Track>
 
 export interface Collections {
   musicians: Musicians;
+  recordings: Recordings;
   tracks: Tracks;
 }
 

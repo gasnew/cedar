@@ -6,7 +6,6 @@ import _ from 'lodash';
 import { HookContext } from '@feathersjs/feathers';
 import { GeneralError } from '@feathersjs/errors';
 
-// TODO(gnewman): Fix these--I don't think they're working right now.
 function errorHandler(context: HookContext) {
   if (context.error) {
     const { error } = context;

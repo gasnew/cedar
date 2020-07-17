@@ -2,7 +2,7 @@ import { Unprocessable } from '@feathersjs/errors';
 import _ from 'lodash';
 
 import { Application } from '../../declarations';
-import { Redis, rKey, withRedis } from '../../redis';
+import { Redis, withRedis } from '../../models';
 import { ServiceMethods } from '@feathersjs/feathers';
 import { Musician } from '../../room';
 import { QueryParams } from '../index.d';

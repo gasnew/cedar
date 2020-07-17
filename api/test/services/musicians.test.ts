@@ -3,7 +3,7 @@ import { mock, mockClear } from 'jest-mock-extended';
 import { BadRequest } from '@feathersjs/errors';
 
 import createApp from '../../src/app';
-import { Redis } from '../../src/redis';
+import { Redis } from '../../src/models';
 
 describe("'musicians' service", () => {
   const mockRedis = mock<Redis>();

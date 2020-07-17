@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { mocked } from 'ts-jest/utils';
 import { Unprocessable } from '@feathersjs/errors';
 
-import { withHelpers } from '../src/redis';
+import { withHelpers } from '../src/models';
 
 jest.mock('uuid');
 const { Tedis } = jest.genMockFromModule('tedis');
