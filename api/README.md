@@ -64,7 +64,7 @@ I've been using [httpie](https://httpie.org/) for sending requests to the API
 to see how things are working. For example, this is how you would set up a room
 and add a couple of musicians to it:
 
-```
+```bash
 # Create the room, using jq to get the room ID
 roomId=$(http POST localhost:3030/rooms name=test-room | jq -r .id)
 
@@ -79,15 +79,19 @@ http POST localhost:3030/musicians roomId==$roomId name="Bobby Tuba"
 http localhost:3030/musicians roomId==$roomId
 
 # Create a new recording
-recordingId=$(http POST localhost:3030/recordings roomId==$roomId | jq -r .id)
-track1Id=$(http POST localhost:3030/tracks roomId==$roomId musicianId=abc | jq -r .id)
-track2Id=$(http POST localhost:3030/tracks roomId==$roomId musicianId=abc | jq -r .id)
+trackIds=($(http POST localhost:3030/recordings roomId==$roomId | jq -r ".trackIds[]"))
 
-# Send some audio data to the track
-http PATCH localhost:3030/tracks/$trackId roomId==$roomId cursor= data:='["abc", "def"]'
+# Send some audio data to the tracks
+cursor=$(http PATCH localhost:3030/tracks/${trackIds[1]} roomId==$roomId cursor= data:='["abc", "def"]' | jq -r .cursor)
+cursor=$(http PATCH localhost:3030/tracks/${trackIds[1]} roomId==$roomId cursor=$cursor data:='["ghi"]' | jq -r .cursor)
+http PATCH localhost:3030/tracks/${trackIds[2]} roomId==$roomId cursor= data:='["hello world"]'
 
-# Fetch the track
-http "localhost:3030/tracks?cursorsByTrack[$trackId]=" roomId==$roomId
+# Fetch all audio from the tracks
+http "localhost:3030/tracks?cursorsByTrack[${trackIds[1]}]=&cursorsByTrack[${trackIds[2]}]=" roomId==$roomId
+
+# Send a little more data, and just fetch the new data
+http PATCH localhost:3030/tracks/${trackIds[1]} roomId==$roomId cursor=$cursor data:='["some", "new", "data"]'
+http "localhost:3030/tracks?cursorsByTrack[${trackIds[1]}]=$cursor" roomId==$roomId
 ```
 
 ## API Schema validation

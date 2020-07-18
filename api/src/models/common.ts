@@ -39,7 +39,7 @@ export function rStreamKey({
   roomId,
   trackId,
 }: RedisStreamKeyParameters): string {
-  return `${roomId}-${trackId}`;
+  return `${roomId}:${trackId}`;
 }
 
 export default function(redisClient: IORedisClient): CommonInterface {

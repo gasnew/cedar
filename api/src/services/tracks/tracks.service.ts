@@ -17,7 +17,6 @@ function buildTracks(redisClient: Redis): TracksService {
   return {
     find: async (params: FindQueryParams) => {
       const { roomId, cursorsByTrack } = params.query;
-      console.log(cursorsByTrack);
       return Promise.all(
         _.map(cursorsByTrack, (cursor, trackId) =>
           redisClient.getTrack(roomId, trackId, cursor)
@@ -33,7 +32,6 @@ function buildTracks(redisClient: Redis): TracksService {
       { data, cursor }: { data: string[]; cursor: string },
       { query: { roomId } }: QueryParams<{ roomId: string }>
     ) => {
-      console.log('DATA', data);
       return redisClient.appendTrackData(roomId, { id, data, cursor });
     },
   };

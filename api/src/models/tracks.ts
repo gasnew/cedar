@@ -18,7 +18,7 @@ export interface TrackInterface {
   createTrack: (roomId: string, musicianId: string) => Promise<Track>;
   appendTrackData: (
     roomId: string,
-    { id, data, cursor }: { id: string; data: string[]; cursor: string }
+    { id, data, cursor }: { id: string; data: string[]; cursor: string | null }
   ) => Promise<Track>;
 }
 
@@ -36,30 +36,30 @@ export default function(redisClient: IORedisClient): TrackInterface {
   }> => {
     const cursorPlusOne = _.flow(
       cursor => cursor.split('-'),
-      ([serverMs, sequenceNum]) =>
-        _.join(serverMs, _.toString(_.toInteger(sequenceNum) + 1))
+      ([serverMs, sequenceNum]) => `${serverMs}-${_.toInteger(sequenceNum) + 1}`
     );
     const streamData = await redisClient.xrange(
       streamKey,
       cursor ? cursorPlusOne(cursor) : '-',
       '+'
     );
-    console.log(streamData);
 
+    const getValues = (set: string[]) =>
+      _.map(_.range(set.length / 2), index => set[index * 2 + 1]);
     return {
-      data: _.flatMap(streamData, timePoint => timePoint[1]),
+      data: _.flatMap(streamData, timePoint => getValues(timePoint[1])),
       newCursor:
         streamData.length > 0 ? streamData[streamData.length - 1][0] : cursor,
     };
   };
   const writeToStream = async (
     streamKey: string,
-    cursor: string,
     data: string[]
   ): Promise<{
     newCursor: string;
   }> => {
-    const newCursor = await redisClient.xadd(streamKey, '*', ...data);
+    const dataArray = _.flatMap(data, value => ['data', value]);
+    const newCursor = await redisClient.xadd(streamKey, '*', ...dataArray);
     return { newCursor };
   };
 
@@ -67,7 +67,7 @@ export default function(redisClient: IORedisClient): TrackInterface {
     getTrack: async (roomId, trackId, cursor) => {
       // We're opting to only accept cursors like 1234-1 (anything else is
       // probably an error in Cedar)
-      if (!/^(\d+)-(\d+)$/.test(cursor))
+      if (cursor && !/^(\d+)-(\d+)$/.test(cursor))
         throw new Unprocessable(`${cursor} is not a valid cursor!`);
       if (!(await redisClient.exists(rKey({ roomId }))))
         throw new Unprocessable(`Room ${roomId} does not exist!`);
@@ -111,18 +111,31 @@ export default function(redisClient: IORedisClient): TrackInterface {
     appendTrackData: async (roomId, { id, data, cursor }) => {
       if (!(await redisClient.exists(rKey({ roomId }))))
         throw new Unprocessable(`Room ${roomId} does not exist!`);
-      // TODO verify cursor is equivalent to what's currently found in Redis
-
-      // TODO actually append data
       const track = parseOrThrow<Track>(
         await redisClient.hget(rKey({ roomId, collection: 'tracks' }), id)
       );
+      if (track.cursor && cursor !== track.cursor)
+        throw new Unprocessable(
+          `Provided cursor ${cursor} does not match the current cursor ${track.cursor}`
+        );
+
       const { newCursor } = await writeToStream(
         rStreamKey({ roomId, trackId: id }),
-        cursor,
         data
       );
-      return track;
+      await redisClient.hset(
+        rKey({ roomId, collection: 'tracks' }),
+        track.id,
+        JSON.stringify({
+          ...track,
+          cursor: newCursor,
+        })
+      );
+      return {
+        ...track,
+        data,
+        cursor: newCursor,
+      };
     },
   };
 }
