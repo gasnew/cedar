@@ -61,8 +61,8 @@ If there are a bunch of TypeScript/compilation errors to look at, just run
 ## Calling the API
 
 I've been using [httpie](https://httpie.org/) for sending requests to the API
-to see how things are working. For example, this is how you would set up a room
-and add a couple of musicians to it:
+to see how things are working. For example, this is how you would set up a room,
+add a couple of musicians to it, and start a recording:
 
 ```bash
 # Create the room, using jq to get the room ID

@@ -25,7 +25,7 @@ export type Musicians = Collection<Musician>
 
 export interface Recording {
   id: string;
-  state: 'running';
+  state: 'running' | 'complete';
   trackIds: string[];
 }
 export type Recordings = Collection<Recording>;
@@ -33,7 +33,7 @@ export type Recordings = Collection<Recording>;
 export interface Track {
   id: string;
   musicianId: string;
-  // data is stored in a separate Redis stream named `track-{track.id}`. We
+  // data is stored in a separate Redis stream named `${roomId}:${trackId}. We
   // expect to only send small chunks of the track over the network in any
   // given request.
   data: string[];
@@ -41,7 +41,7 @@ export interface Track {
   // to keep track of the position of the last chunk of data we read--this is
   // the purpose of the cursor. A client will say something like, "Give me the
   // track data *after* cursor `1234-0`," then the server will query the Redis
-  // stream: `XRANGE track-abc123 1234-1 +` and return that data along with
+  // stream: `XRANGE def456:abc123 1234-1 +` and return that data along with
   // whatever the new cursor is we get from Redis. Additionally, requiring the
   // cursor in PATCH calls allows us to make that endpoint idempotent because
   // the server will be able to compare the provided cursor with the

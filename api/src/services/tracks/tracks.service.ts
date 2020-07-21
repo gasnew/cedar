@@ -10,7 +10,7 @@ import { Track } from '../../room';
 type TracksService = Partial<ServiceMethods<Track>>;
 type FindQueryParams = QueryParams<{
   roomId: string;
-  cursorsByTrack: { [trackId: string]: string };
+  cursorsByTrack: { [trackId: string]: string | null };
 }>;
 
 function buildTracks(redisClient: Redis): TracksService {
@@ -23,10 +23,6 @@ function buildTracks(redisClient: Redis): TracksService {
         )
       );
     },
-    create: (
-      { musicianId }: { musicianId: string },
-      { query: { roomId } }: QueryParams<{ roomId: string }>
-    ) => redisClient.createTrack(roomId, musicianId),
     patch: async (
       id: string,
       { data, cursor }: { data: string[]; cursor: string },

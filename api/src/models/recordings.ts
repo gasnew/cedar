@@ -20,7 +20,14 @@ export default function(redisClient: IORedisClient): RecordingInterface {
     createRecording: async (roomId: string) => {
       if (!(await redisClient.exists(rKey({ roomId }))))
         throw new Unprocessable(`Room ${roomId} does not exist!`);
-      // TODO Don't allow creating a recording if one is already 'playing'
+      const thing = _.values(
+        await getCollection<Recording>('recordings')(roomId)
+      );
+      if (_.some(thing, ['state', 'running'])) {
+        throw new Unprocessable(
+          'A new recording cannot begin while another is running!'
+        );
+      }
 
       const musicians = await getMusicians(roomId);
       const tracks = await Promise.all(

@@ -11,7 +11,6 @@ import { ServiceMethods } from '@feathersjs/feathers';
 import { Unprocessable } from '@feathersjs/errors';
 import _ from 'lodash';
 import IORedis from 'ioredis';
-import { RedisError } from 'redis';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Application } from '../declarations';
@@ -41,7 +40,7 @@ export function withHelpers(redisClient: IORedisClient): Redis {
   // Object.assign to a blank object under the hood, which does not copy over
   // properties from a prototype. So using spread syntax here won't get us
   // the actual object we want. Instead, then, we create a new instance of
-  // the Tedis client with Object.create (so this can remain a pure function)
+  // the IORedis client with Object.create (so this can remain a pure function)
   // and assign our RedisHelpers methods to that.
   return Object.assign(Object.create(redisClient), helperMethods);
 }
@@ -50,7 +49,7 @@ export function connectToRedis(
   app: Application,
   redisClient: Redis
 ): Application {
-  redisClient.on('error', (error: RedisError) =>
+  redisClient.on('error', (error: Error) =>
     console.error(`Redis error: ${error}`)
   );
   redisClient.on('connect', () =>
