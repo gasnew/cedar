@@ -275,11 +275,6 @@
   resolved "https://registry.yarnpkg.com/@feathersjs/commons/-/commons-4.5.3.tgz#72ea846c80b74e3251448486b7800e7550cb0fa1"
   integrity sha512-LsiZ0jxh13TT6SOrDq5VYtdBCv0Vdvu4a5Wei/Dvd/daZHX6ERuH6iQtfh2f5hFwuydtd+Ch/2GlYld8XziwhA==
 
-"@feathersjs/commons@^4.5.5":
-  version "4.5.5"
-  resolved "https://registry.yarnpkg.com/@feathersjs/commons/-/commons-4.5.5.tgz#bef2abdfaeeb7860b4681f0f0ca1c1613d3f9847"
-  integrity sha512-pY1yyrK6kMcdq5cdLkTtGQlsFoT3kexiSXwPc7weXPTRhpqWyZ49c5iy+6JxwyQKaMQUZCfK0KQ3CxlVdTMCQQ==
-
 "@feathersjs/configuration@^4.5.1":
   version "4.5.3"
   resolved "https://registry.yarnpkg.com/@feathersjs/configuration/-/configuration-4.5.3.tgz#e65bbaf23202fe87c637dc427778b35a5aa58f90"
@@ -293,13 +288,6 @@
   version "4.5.3"
   resolved "https://registry.yarnpkg.com/@feathersjs/errors/-/errors-4.5.3.tgz#7476de0a9586f7290b1cbe5ff481ef293660a25b"
   integrity sha512-yvy5k0X79yQBxNSmjxU8rxRrKD/YnMjqAWzT/LbJ41UIOsvRzo88pqFuNXTX8qbB90IPjtxgbSjuaxoiQZ7nmg==
-  dependencies:
-    debug "^4.1.1"
-
-"@feathersjs/errors@^4.5.5":
-  version "4.5.5"
-  resolved "https://registry.yarnpkg.com/@feathersjs/errors/-/errors-4.5.5.tgz#04a520926db6e1b42d0fa6723708fde567af017d"
-  integrity sha512-VY4OgdazSmWtmTLbr+/G/NDVKiN/3zmEVR1ngw3lgn4BGSoiohbm3m2TQ6ySROzBTpvUjQEhAQzlhlt6+1268w==
   dependencies:
     debug "^4.1.1"
 
@@ -325,15 +313,6 @@
     debug "^4.1.1"
     events "^3.1.0"
     uberproto "^2.0.6"
-
-"@feathersjs/rest-client@^4.5.6":
-  version "4.5.6"
-  resolved "https://registry.yarnpkg.com/@feathersjs/rest-client/-/rest-client-4.5.6.tgz#37ba699a9ab4e1d2902bc1379c7495e4d6421881"
-  integrity sha512-oXwMbL+vkOzErYtgGSFm7m2kcewfhZsam6sYjNBkLvNgNA8eSuP8Tvh7MJBS7Q+1MI9FRGc0M+O4c5VBb6fE2Q==
-  dependencies:
-    "@feathersjs/commons" "^4.5.5"
-    "@feathersjs/errors" "^4.5.5"
-    qs "^6.9.4"
 
 "@feathersjs/socketio-client@^4.5.4":
   version "4.5.4"
@@ -3949,11 +3928,6 @@ nocache@2.1.0:
   resolved "https://registry.yarnpkg.com/nocache/-/nocache-2.1.0.tgz#120c9ffec43b5729b1d5de88cd71aa75a0ba491f"
   integrity sha512-0L9FvHG3nfnnmaEQPjT9xhfN4ISk0A8/2j4M37Np4mcDesJjHgEUfgPhdCyZuFI954tjokaIj/A3NdpFNdEh4Q==
 
-node-fetch@^2.6.0:
-  version "2.6.0"
-  resolved "https://registry.yarnpkg.com/node-fetch/-/node-fetch-2.6.0.tgz#e633456386d4aa55863f676a7ab0daa8fdecb0fd"
-  integrity sha512-8dG4H5ujfvFiqDmVu9fQ5bOHUC15JMjMY/Zumv26oOvvVJjM67KF8koCWIabKQ1GJIa9r2mMZscBq/TbdOcmNA==
-
 node-int64@^0.4.0:
   version "0.4.0"
   resolved "https://registry.yarnpkg.com/node-int64/-/node-int64-0.4.0.tgz#87a9065cdb355d3182d8f94ce11188b825c68a3b"
@@ -4414,11 +4388,6 @@ qs@6.7.0:
   version "6.7.0"
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.7.0.tgz#41dc1a015e3d581f1621776be31afb2876a9b1bc"
   integrity sha512-VCdBRNFTX1fyE7Nb6FYoURo/SPe62QCaAyzJvUjwRaIsc+NePBEniHlvxFmmX56+HZphIGtV0XeCirBtpDrTyQ==
-
-qs@^6.9.4:
-  version "6.9.4"
-  resolved "https://registry.yarnpkg.com/qs/-/qs-6.9.4.tgz#9090b290d1f91728d3c22e54843ca44aea5ab687"
-  integrity sha512-A1kFqHekCTM7cz0udomYUoYNWjBebHm/5wzU/XqrBRBNWectVH0QIiN+NEcZ0Dte5hvzHwbr8+XQmguPhJ6WdQ==
 
 qs@~6.5.2:
   version "6.5.2"

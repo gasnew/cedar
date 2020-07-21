@@ -15,8 +15,8 @@ describe('room methods', () => {
     // tests only. This lets the engine know whether we've completed the test
     // or not, so it doesn't run forever.
     expect.assertions(1);
-    // This actually returns a mocked-out instance of Tedis because of our
-    // jest.genMockFromModule('tedis') call above.
+    // This actually returns a mocked-out instance of MockIORedis because of
+    // our jest.genMockFromModule('ioredis') call above.
     const mockRedis = new MockIORedis();
     const client = withHelpers(mockRedis);
 

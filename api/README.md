@@ -94,6 +94,45 @@ http PATCH localhost:3030/tracks/${trackIds[1]} roomId==$roomId cursor=$cursor d
 http "localhost:3030/tracks?cursorsByTrack[${trackIds[1]}]=$cursor" roomId==$roomId
 ```
 
+## Audio streaming approach
+
+In the above example, we created a new recording, which generates a track for
+each musician in the room. Each track, then, corresponds one-to-one with what
+is called a [Redis stream](https://redis.io/topics/streams-intro). Redis
+streams are a streaming technology originally inspired by Kafka that lets us do
+many amazing things with data, but for our purposes, we use it to append audio
+data to a stream and read audio data from certain time points along the stream.
+The main benefits this affords us is that Redis streams are optimized for
+querying a range of data with `XRANGE`, and Redis can automatically free up
+memory used by old data, so we can have streams with arbitrary duration. In
+Cedar land, this means we can have recordings that can run arbitrarily long,
+and we can minimize the amount of audio data being passed across the network. A
+basic sequence of Redis commands in a Cedar room may look like this:
+
+```bash
+# Client 1 adds audio data
+XADD room-1:track-1 * data-chunk-1
+# -> 123-0
+
+# Client 2 reads ALL client 1 audio data
+XRANGE room-1:track-1 - +
+# -> 123-0, data-chunk-1
+
+# Client 1 adds some more audio data
+XADD room-1:track-1 * data-chunk-2, data-chunk-3
+# -> 201-0
+XADD room-1:track-1 * data-chunk-4
+# -> 202-0
+
+# Client 2 reads client 1 audio data from the last time point (cursor)
+XRANGE room-1:track-1 123-1 +
+# -> 202-0, data-chunk-2, data-chunk-3, data-chunk-4
+```
+
+For more information about how we use Redis streams, see their documentation on
+[entry IDs](https://redis.io/topics/streams-intro#entry-ids) and [querying by
+range](https://redis.io/topics/streams-intro#querying-by-range-xrange-and-xrevrange).
+
 ## API Schema validation
 
 TODO: Fill out this section. We use JSON schema.
