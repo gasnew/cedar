@@ -1,0 +1,51 @@
+A simple text file outlining future features and how to get there
+-----------------------------------------------------------------
+
+TODO: Put this data into actual issue tracking software
+
+Audio streaming
+- Start/Stop recording
+- Musicians placed in chain automatically
+- Only root musician can start recording (eventually host maybe?)
+- Audio recording delayed by 1 second per musician
+
+Put it on DigitalOcean
+- Put it on a droplet
+- See if it works with friends!
+
+Modifying the chain
+- Two lists: audience and musicians; can move participants between lists
+- Musicians are not added to the chain automatically
+- Need to be able to set musician names
+  - Simple: shows name in top-right corner--can edit the field to update name
+  - Defaults to a bird or type of tree (probably a bird)
+  - Name saved somehow?
+  - In the future, we'll let people have profiles with names, and people can
+    change their name for the room like in Zoom
+- Cannot update chain during recording
+- Last musician in chain is considered the mixer
+
+Client-side mixing
+- Can only see musicians behind you
+- Tooltip about the fact that this only mixes for you (maybe just call it
+  "Personal Mixer"?)
+- Master output and slider
+
+Allow rejoining stream mid-stream (if you lose your place entirely)
+- Need to save metadata in stream chunks--i.e., chunk index
+
+Cedar audience
+- Can join in whenever and hear the audio of the room (definitely need
+  rejoining mid-stream to be a thing for this)
+
+Future features
+- Support multiple channels (stereo+)
+- Visualize and allow playback of recordings
+- Download recordings
+- Lossless audio
+- Musician layers/lanes for grouping musicians together
+  - Includes server-side mixing of each layer to minimize network data flux
+- Possibly put non-audio-streaming data into an RDBMS instead of Redis
+- Intercom feature? I really, really hope we don't need this (managing multiple
+  input devices sounds like UX hell). But it may be better than using two
+  applications for some people
