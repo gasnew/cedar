@@ -1,14 +1,6 @@
 import _ from 'lodash';
 
-import {
-  Collection,
-  Collections,
-  Musician,
-  Musicians,
-  Room,
-  RoomMeta,
-  Track,
-} from '../room';
+import { Collection, Collections } from '../room';
 import { IORedisClient } from './index';
 
 interface RedisKeyParameters {

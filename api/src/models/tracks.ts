@@ -1,15 +1,7 @@
 import _ from 'lodash';
 import { v4 as uuidv4 } from 'uuid';
 import { Unprocessable } from '@feathersjs/errors';
-import {
-  Collection,
-  Collections,
-  Musician,
-  Musicians,
-  Room,
-  RoomMeta,
-  Track,
-} from '../room';
+import { Track } from '../room';
 import commonInterface from './common';
 import { IORedisClient } from './index';
 
