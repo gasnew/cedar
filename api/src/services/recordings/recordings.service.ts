@@ -1,6 +1,4 @@
-import _ from 'lodash';
 import { ServiceMethods } from '@feathersjs/feathers';
-import { Unprocessable } from '@feathersjs/errors';
 
 import { Application } from '../../declarations';
 import { Redis, withRedis } from '../../models';
