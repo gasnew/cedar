@@ -79,10 +79,12 @@ export default function() {
     useStream(selectedDevice?.deviceId || null)
   );
 
-  // Slider state
-  const [sliderGainDB, setSliderGainDB] = useState(0);
+  // Slider state (default to 0.01 to get around UI bug)
+  const [sliderGainDB, setSliderGainDB] = useState(0.01);
 
   if (!hasPermission && selectedDevice) setSelectedDevice(null);
+  if (hasPermission && !selectedDevice && inputDevices.length > 0)
+    setSelectedDevice(inputDevices[0]);
 
   return (
     <Card style={{ width: 300 }}>
@@ -133,8 +135,9 @@ export default function() {
         stepSize={0.2}
         labelStepSize={66}
         onChange={value => {
-          setSliderGainDB(value);
-          setGainDB(value);
+          const newValue = Math.abs(value) < 0.5 ? 0.01 : value;
+          setSliderGainDB(newValue);
+          setGainDB(newValue);
         }}
         value={sliderGainDB}
         labelRenderer={value =>

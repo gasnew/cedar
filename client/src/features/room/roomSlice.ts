@@ -7,8 +7,8 @@ interface RoomState {
 }
 
 const initialState: RoomState = {
-  id: null,
-  name: null,
+  id: '64141f42-45a1-48f8-a394-fca808eebe63',
+  name: 'Brodyquest Fanclub',
 };
 
 export const roomSlice = createSlice({

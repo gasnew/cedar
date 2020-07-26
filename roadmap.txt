@@ -31,7 +31,33 @@ Client-side mixing
   "Personal Mixer"?)
 - Master output and slider
 
-Allow rejoining stream mid-stream (if you lose your place entirely)
+Allow rejoining stream mid-stream (if you lose your place entirely). This can
+be for audience members first, though we should be able to do it for musicians
+as well, in theory.
+Currently, when a recording starts, we assume:
+1. that all clients will start recording at approximately the correct time
+2. that all clients receive perfect data from the server (no gaps)
+3. that all clients perfectly send *all* input device data to the server (no
+   gaps)
+I am reasonably confident that we can rely on assumptions (1) and (2) holding
+true until we see evidence otherwise. Though I am not as confident about (3)
+because I don't know whether the Web Audio API guarantees all audio data passes
+through the audio graph lossless (though I would be surprised if that weren't
+the case), and the bigger factor: computers freeze and lose connection. In
+these cases, we will want a way for clients to jump back into the action, even
+without knowing the exact time recording began. To achieve this, I believe we
+need these things:
+* You can fetch the last x seconds (probably however long the chain is) of
+  audio data from the server
+* Each chunk of audio data includes an index that corresponds to that index of
+  the root audio track
+* Each client attaches that index to each chunk they send out
+* Clients only buffer audio for playing that matches the position relative to
+  the root audio (e.g., there can be gaps in data, but we should be able to
+  identify them)
+Then and only then can a client hypothetically join an existing stream,
+starting wherever they need to relative to root audio (given their position in
+the chain).
 - Need to save metadata in stream chunks--i.e., chunk index
 
 Cedar audience
