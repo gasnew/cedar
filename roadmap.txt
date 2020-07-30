@@ -4,6 +4,50 @@ A simple text file outlining future features and how to get there
 TODO: Put this data into actual issue tracking software
 
 Audio streaming
+I'm hoping to use Web Assembly for encoding/decoding because it's like 10x
+faster than plan JS. But for this, we need to load/compile a .wasm module in an
+audio worklet or web worker, which can be a sync or async operation. We *may*
+need, then, to post a message from the worklet when this is complete, but I'm
+not 100% sure we need to since we should be instantiating the worklet as soon
+as an input audio device is selected (should be sufficiently long before
+initiating recording).
+
+Then, to start recording, the main thread will post a message to the audio
+worklet for outgoing audio and to the audio worklet for incoming audio to say
+"start"
+
+Outgoing worklet:
+- audio input piped into this
+- load wasm script on instantiation
+- once started, buffer raw PCM data from input, then encode a frame (0.2
+  seconds?) and post the message to the main thread
+- main thread sends this out to Cedar server
+- should update the patch endpoint to, if it receives data with the wrong
+  cursor,
+  * if the incoming data matches the data from that cursor onward, return the
+    saved cursor with a 200 (truly idempotent, which is handy for when a server
+    dies before responding)
+  * if the incoming data does not match the data from that cursor onward, fail
+    the request by saying something like, "The provided data is not contiguous
+    with/adjacent to previous data"
+
+Incoming worklet:
+- piped into the audio context destination
+- load wasm script on instantiation
+- main thread fetches audio data and sends opus-encoded sets of frames from all
+  incoming streaams to the worklet.
+- After {musicianIndex * chainDelay} time, "start" will be sent to this worklet
+  and to "Outgoing worklet" at the same time to sync our musician's data with
+  the root musician's data.
+- received data sets will be decoded and added to a buffer (decoded in this
+  async callback to keep the main process() loop fast)
+- when started, the data from the buffer will be progressively loaded into the
+  worklet's output
+- make sure to free up the buffer periodically so we don't keep raw PCM data
+  sitting in memory forever
+- NOTE: When we allow client-side gain alteration, this should be handled as a
+  worklet param so we can update gain dynamically in real time during playback.
+
 - Start/Stop recording
 - Musicians placed in chain automatically
 - Only root musician can start recording (eventually host maybe?)
