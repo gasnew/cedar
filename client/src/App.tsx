@@ -2,6 +2,7 @@ import React from 'react';
 import { Classes, Colors } from '@blueprintjs/core';
 
 import AudioInput from './features/audioInput/AudioInput';
+import MasterOutput from './features/masterOutput/MasterOutput';
 import Navbar from './features/navbar/Navbar';
 import RoomDialog from './features/roomDialog/RoomDialog';
 
@@ -19,6 +20,7 @@ function App() {
     >
       <Navbar />
       <AudioInput />
+      <MasterOutput />
       <RoomDialog />
     </div>
   );

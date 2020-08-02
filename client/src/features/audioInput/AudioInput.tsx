@@ -130,7 +130,7 @@ export default function() {
         />
       </div>
       <Slider
-        min={-60}
+        min={-40}
         max={6}
         stepSize={0.2}
         labelStepSize={66}

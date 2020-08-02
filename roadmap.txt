@@ -5,12 +5,12 @@ TODO: Put this data into actual issue tracking software
 
 Audio streaming
 I'm hoping to use Web Assembly for encoding/decoding because it's like 10x
-faster than plan JS. But for this, we need to load/compile a .wasm module in an
-audio worklet or web worker, which can be a sync or async operation. We *may*
-need, then, to post a message from the worklet when this is complete, but I'm
-not 100% sure we need to since we should be instantiating the worklet as soon
-as an input audio device is selected (should be sufficiently long before
-initiating recording).
+faster than plain JS. But for this, we need to load/compile a .wasm module in
+an audio worklet or web worker (EDIT: probably a web worker; will look into
+this), which can be a sync or async operation. We *may* need, then, to post a
+message from the worklet when this is complete, but I'm not 100% sure we need
+to since we should be instantiating the worklet as soon as an input audio
+device is selected (should be sufficiently long before initiating recording).
 
 Then, to start recording, the main thread will post a message to the audio
 worklet for outgoing audio and to the audio worklet for incoming audio to say
@@ -35,7 +35,7 @@ Incoming worklet:
 - piped into the audio context destination
 - load wasm script on instantiation
 - main thread fetches audio data and sends opus-encoded sets of frames from all
-  incoming streaams to the worklet.
+  incoming streams to the worklet.
 - After {musicianIndex * chainDelay} time, "start" will be sent to this worklet
   and to "Outgoing worklet" at the same time to sync our musician's data with
   the root musician's data.
@@ -70,6 +70,7 @@ Modifying the chain
 - Last musician in chain is considered the mixer
 
 Client-side mixing
+- Optimize volume bar. Is rendering slow? Is getting data slow?
 - Can only see musicians behind you
 - Tooltip about the fact that this only mixes for you (maybe just call it
   "Personal Mixer"?)

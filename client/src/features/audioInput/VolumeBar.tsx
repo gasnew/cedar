@@ -39,14 +39,16 @@ export default function({ height, width, fetchData, disabled }: Props) {
     const offset = 128.0; // The offset of the signal from 0 amplitude
     const amplitudeNormalized =
       ((_.max(fetchData()) || offset) - offset) / 127.0;
-    const newBarWidth = disabled ? 0 : amplitudeNormalized * (width || 0);
+    const amplitudeDB = 20 * Math.log10(amplitudeNormalized);
+    const normalizedDB = (40 + (_.max([amplitudeDB, -40]) ?? -40)) / 40;
+    const newBarWidth = disabled ? 0 : normalizedDB * (width || 0);
 
     setBarWidth(newBarWidth);
     setDampedBarWidth(
       _.max([newBarWidth, dampedBarWidth - 0.6]) || newBarWidth
     );
     setClipOpacity(
-      amplitudeNormalized === 1.0 ? 1 : _.max([clipOpacity - 0.02, 0]) || 0
+      normalizedDB === 1.0 ? 1 : _.max([clipOpacity - 0.02, 0]) || 0
     );
   }, 1000 / 60);
 
