@@ -49,9 +49,20 @@ Incoming worklet:
   worklet param so we can update gain dynamically in real time during playback.
 
 - Start/Stop recording
+- Probably use webopus to encode/decode in separate threads
+- Disable input selection while recording
 - Musicians placed in chain automatically
 - Only root musician can start recording (eventually host maybe?)
 - Audio recording delayed by 1 second per musician
+- Server track PATCH endpoint is truly idempotent (returns the same response if
+  the same input is received)
++ Make sure we don't needlessly create audio nodes when switching audio inputs
+/ Features
+  / New MasterOutput component that launches the RoomAudioPlayer node and
+    includes a gain control and volume bar
+  / AudioInputBufferer, which takes raw audio input PCM data, buffers it for a
+    bit, then sends it back out to the main thread
+  + VolumeBar now displays audio decibel-scaled from 0 to -40 dB
 
 Put it on DigitalOcean
 - Put it on a droplet

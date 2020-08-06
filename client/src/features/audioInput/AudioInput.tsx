@@ -75,7 +75,7 @@ export default function() {
   );
 
   // Audio data
-  const { someData, fetchData, setGainDB } = useStreamData(
+  const { canChangeStream, someData, fetchData, setGainDB } = useStreamData(
     useStream(selectedDevice?.deviceId || null)
   );
 
@@ -91,6 +91,7 @@ export default function() {
       <H4>Audio input</H4>
       <div style={{ marginBottom: 10 }}>
         <InputDeviceSelect
+          disabled={!canChangeStream}
           filterable={false}
           items={inputDevices}
           itemRenderer={inputDeviceRenderer}
@@ -111,6 +112,7 @@ export default function() {
           <Button
             icon="headset"
             rightIcon="caret-down"
+            disabled={!canChangeStream}
             onClick={requestPermission}
           >
             {selectedDevice ? (

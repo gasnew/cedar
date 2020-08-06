@@ -13,7 +13,6 @@ export function useRoomAudio(): DataResponse {
   const [dataArray, setDataArray] = useState<Uint8Array>(new Uint8Array());
 
   useEffect(() => {
-    console.log('yoyoyo');
     const launchAudioNodes = async () => {
       const audioContext = new window.AudioContext();
       await audioContext.audioWorklet.addModule('RoomAudioPlayer.js');
