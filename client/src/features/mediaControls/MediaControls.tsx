@@ -15,30 +15,44 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 
 import { FeathersContext } from '../feathers/FeathersProvider';
-import { useCreate } from '../feathers/FeathersHooks';
+import { useCreate, usePatch } from '../feathers/FeathersHooks';
 import { selectRoom } from '../room/roomSlice';
 import {
-  startRecording,
+  selectRecordingId,
   selectRecordingState,
+  startRecording,
+  stopRecording,
 } from '../recording/recordingSlice';
 
 export default function() {
   const app = useContext(FeathersContext);
   const room = useSelector(selectRoom);
   const recordingState = useSelector(selectRecordingState);
+  const recordingId = useSelector(selectRecordingId);
   const dispatch = useDispatch();
 
-  const [createRecording, { error, loading }] = useCreate('recordings', {});
+  const [createRecording, { loading: createLoading }] = useCreate(
+    'recordings',
+    {}
+  );
+  const [patchRecording, { loading: patchLoading }] = usePatch('recordings');
 
   const networkedStartRecording = async () => {
     const { error, data } = await createRecording();
-    console.log(error);
     // NOTE(gnewman): Just return for now. Use a toast in the future?
     if (error || !data || !room.id) return;
     dispatch(startRecording(app, room.id, data.id));
   };
+  const networkedStopRecording = async () => {
+    const { error } = await patchRecording(recordingId, {
+      state: 'stopped',
+    });
+    // NOTE(gnewman): Just return for now. Use a toast in the future?
+    if (error) return;
+    dispatch(stopRecording());
+  };
 
-  const waitingToStart = loading || recordingState === 'initializing';
+  const waitingToStart = createLoading || recordingState === 'initializing';
 
   return (
     <Card style={{ padding: 5, borderRadius: 0 }} elevation={2}>
@@ -56,7 +70,7 @@ export default function() {
           intent={recordingState === 'stopped' ? 'none' : 'danger'}
           icon="stop"
           disabled={recordingState !== 'recording'}
-          onClick={() => console.log('starp')}
+          onClick={networkedStopRecording}
         >
           Stop
         </Button>

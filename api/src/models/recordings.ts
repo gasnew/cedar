@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { v4 as uuidv4 } from 'uuid';
 import { Unprocessable } from '@feathersjs/errors';
-import { Recording } from '../room';
+import { Recording, RecordingState } from '../room';
 import commonInterface from './common';
 import { IORedisClient } from './index';
 import musicianInterface from './musicians';
@@ -11,6 +11,11 @@ import trackInterface from './tracks';
 export interface RecordingInterface {
   getRecording: (roomId: string, recordingId: string) => Promise<Recording>;
   createRecording: (roomId: string) => Promise<Recording>;
+  patchRecording: (
+    roomId: string,
+    recordingId: string,
+    state: RecordingState
+  ) => Promise<Recording>;
 }
 
 export default function(redisClient: IORedisClient): RecordingInterface {
@@ -60,6 +65,37 @@ export default function(redisClient: IORedisClient): RecordingInterface {
         JSON.stringify(newRecording)
       );
       return newRecording;
+    },
+    patchRecording: async (
+      roomId: string,
+      recordingId: string,
+      state: RecordingState
+    ) => {
+      const room = await getRoom(roomId);
+      const recording = parseOrThrow<Recording>(
+        await redisClient.hget(
+          rKey({ roomId, collection: 'recordings' }),
+          recordingId
+        )
+      );
+      const updatedRecording = {
+        ...recording,
+        state: state,
+      };
+
+      if (state === 'stopped')
+        await redisClient.hset(
+          rKey({ roomId }),
+          'meta',
+          JSON.stringify({ ...room, recordingId: null })
+        );
+      await redisClient.hset(
+        rKey({ roomId: roomId, collection: 'recordings' }),
+        recordingId,
+        JSON.stringify(updatedRecording)
+      );
+
+      return updatedRecording;
     },
   };
 }

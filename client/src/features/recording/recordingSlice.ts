@@ -36,10 +36,18 @@ export const roomSlice = createSlice({
       state.currentRecordingId = action.payload.id;
       state.recordings[action.payload.id] = action.payload;
     },
+    stopRecording: (state, action: PayloadAction<void>) => {
+      state.currentRecordingId = null;
+      state.state = 'stopped';
+    },
   },
 });
 
-export const { setRecordingState, addRecording } = roomSlice.actions;
+export const {
+  setRecordingState,
+  addRecording,
+  stopRecording,
+} = roomSlice.actions;
 
 // The function below is called a thunk and allows us to perform async logic. It
 // can be dispatched like a regular action: `dispatch(incrementAsync(10))`. This
@@ -76,5 +84,7 @@ export const startRecording = (
 };
 
 export const selectRecordingState = (state: RootState) => state.recording.state;
+export const selectRecordingId = (state: RootState) =>
+  state.recording.currentRecordingId;
 
 export default roomSlice.reducer;

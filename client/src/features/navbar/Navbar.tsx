@@ -19,8 +19,9 @@ import { useGet } from '../feathers/FeathersHooks';
 import { FeathersContext } from '../feathers/FeathersProvider';
 import { selectRoom } from '../room/roomSlice';
 import {
-  startRecording,
   selectRecordingState,
+  startRecording,
+  stopRecording,
 } from '../recording/recordingSlice';
 
 function RecordingIcon() {
@@ -39,10 +40,13 @@ function RoomNameplate({ id, name }: { id: string; name: string }) {
     pollingInterval: 1000,
     // Keep recordingId up-to-date (indicates whether the server expects us to
     // be recording)
-    onUpdate: ({ recordingId }) =>
-      recordingId && recordingState === 'stopped'
-        ? dispatch(startRecording(app, id, recordingId))
-        : console.log('stahp'),
+    // TODO: Add a check that I am not the host
+    onUpdate: ({ recordingId }) => {
+      if (recordingId && recordingState === 'stopped')
+        dispatch(startRecording(app, id, recordingId));
+      if (!recordingId && recordingState === 'recording')
+        dispatch(stopRecording());
+    },
   });
 
   return (

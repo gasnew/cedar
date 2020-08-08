@@ -20,13 +20,14 @@ export interface RoomMeta {
 export interface Musician {
   id: string;
   name: string;
-  previousMusicianId: string | null,
+  previousMusicianId: string | null;
 }
-export type Musicians = Collection<Musician>
+export type Musicians = Collection<Musician>;
 
+export type RecordingState = 'running' | 'stopped';
 export interface Recording {
   id: string;
-  state: 'running' | 'complete';
+  state: RecordingState;
   trackIds: string[];
 }
 export type Recordings = Collection<Recording>;
@@ -52,7 +53,7 @@ export interface Track {
   // https://redis.io/topics/streams-intro#entry-ids
   cursor: string | null;
 }
-export type Tracks = Collection<Track>
+export type Tracks = Collection<Track>;
 
 export interface Collections {
   musicians: Musicians;
