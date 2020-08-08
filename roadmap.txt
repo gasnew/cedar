@@ -63,6 +63,8 @@ Incoming worklet:
   / AudioInputBufferer, which takes raw audio input PCM data, buffers it for a
     bit, then sends it back out to the main thread
   + VolumeBar now displays audio decibel-scaled from 0 to -40 dB
+- Documentation on how the frontend sends and receives audio data (include how
+  we compiled webopus)
 
 Put it on DigitalOcean
 - Put it on a droplet

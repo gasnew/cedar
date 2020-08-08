@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import React, { useState } from 'react';
 
 import {
@@ -12,6 +13,7 @@ import {
 
 import { useDispatch, useSelector } from 'react-redux';
 
+import { randomBirdName } from '../../app/util';
 import { useCreate, useLazyGet } from '../../features/feathers/FeathersHooks';
 import { setRoom, selectRoom } from '../../features/room/roomSlice';
 
@@ -35,6 +37,10 @@ export default function() {
     createRoomBackend,
     { error: createApiError, loading: createLoading },
   ] = useCreate('rooms', { name: roomName });
+  const [
+    createMusicianBackend,
+    { error: musicianApiError, loading: musicianLoading },
+  ] = useCreate('musicians', { name: randomBirdName() });
 
   // Button actions
   const joinRoom = async () => {
@@ -43,9 +49,19 @@ export default function() {
       return;
     }
     setJoinFormError('');
-    const { data } = await joinRoomBackend();
-    if (data) {
-      dispatch(setRoom(data));
+    const { data: roomData } = await joinRoomBackend();
+    if (!roomData) return;
+    const { data: musicianData } = await createMusicianBackend(
+      { name: randomBirdName() },
+      { roomId: roomData.id }
+    );
+    if (musicianData) {
+      dispatch(
+        setRoom({
+          ...roomData,
+          musicianId: musicianData.id,
+        })
+      );
     }
   };
   const createRoom = async () => {
@@ -54,15 +70,31 @@ export default function() {
       return;
     }
     setCreateFormError('');
-    const { data } = await createRoomBackend();
-    if (data) {
-      dispatch(setRoom(data));
+    const { data: roomData } = await createRoomBackend();
+    if (!roomData) return;
+    const { data: musicianData } = await createMusicianBackend(
+      { name: randomBirdName() },
+      { roomId: roomData.id }
+    );
+    if (musicianData) {
+      dispatch(
+        setRoom({
+          ...roomData,
+          musicianId: musicianData.id,
+        })
+      );
     }
   };
 
   // Helpful constants
-  const createFieldHelperText = createFormError || createApiError?.message;
-  const joinFieldHelperText = joinFormError || getApiError?.message;
+  const createFieldHelperText =
+    createFormError ||
+    (createApiError && createApiError.message) ||
+    (musicianApiError && musicianApiError.message);
+  const joinFieldHelperText =
+    joinFormError ||
+    (getApiError && getApiError.message) ||
+    (musicianApiError && musicianApiError.message);
   const intentForError = (errorMessage: any) =>
     errorMessage ? 'danger' : 'none';
 

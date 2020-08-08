@@ -26,7 +26,10 @@ interface CreateResult<Data> {
   data: Data | null;
 }
 type CreateResultTuple<Data> = [
-  () => Promise<{ data: Data | null; error: FeathersError | null }>,
+  (
+    Data?,
+    object?
+  ) => Promise<{ data: Data | null; error: FeathersError | null }>,
   CreateResult<Data>
 ];
 
@@ -48,13 +51,22 @@ export function useCreate<T extends keyof ServiceTypes>(
   const [error, setError] = useState<FeathersError | null>(null);
   const [data, setData] = useState<any>(null);
 
-  const callCreate = async () => {
+  const callCreate = async (
+    trueRequestData: Partial<ExtractData<ServiceTypes[T]>> = {},
+    queryData: object = {}
+  ) => {
     setCalled(true);
     setLoading(true);
     try {
-      const data = (await app.service(serviceName).create!(requestData, {
-        query: { roomId: room.id },
-      })) as ExtractData<ServiceTypes[T]>;
+      const data = (await app.service(serviceName).create!(
+        _.isEmpty(trueRequestData) ? requestData : trueRequestData,
+        {
+          query: {
+            roomId: room.id,
+            ...queryData,
+          },
+        }
+      )) as ExtractData<ServiceTypes[T]>;
       setData(data);
       setError(null);
       setLoading(false);
@@ -110,7 +122,7 @@ export function usePatch<T extends keyof ServiceTypes>(
     try {
       const data = (await app.service(serviceName).patch!(
         trueId || id,
-        trueRequestData || requestData,
+        _.isEmpty(trueRequestData) ? requestData : trueRequestData,
         { query: { roomId: room.id } }
       )) as ExtractData<ServiceTypes[T]>;
       setData(data);
