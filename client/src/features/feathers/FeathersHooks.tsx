@@ -1,11 +1,13 @@
 import { Params, ServiceMethods } from '@feathersjs/feathers';
 import { FeathersError } from '@feathersjs/errors';
+import _ from 'lodash';
 import { useContext, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { FeathersContext } from './FeathersProvider';
 import { ServiceTypes } from '../../../../api/src/declarations';
 import { selectRoom } from '../../features/room/roomSlice';
+import { useInterval } from '../../app/util';
 
 // TODO: Reduce code duplication in this file
 
@@ -40,6 +42,7 @@ export function useCreate<T extends keyof ServiceTypes>(
   requestData: Partial<ExtractData<ServiceTypes[T]>>
 ): CreateResultTuple<ExtractData<ServiceTypes[T]>> {
   const app = useContext(FeathersContext);
+  const room = useSelector(selectRoom);
   const [called, setCalled] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<FeathersError | null>(null);
@@ -49,9 +52,9 @@ export function useCreate<T extends keyof ServiceTypes>(
     setCalled(true);
     setLoading(true);
     try {
-      const data = (await app.service(serviceName).create!(
-        requestData
-      )) as ExtractData<ServiceTypes[T]>;
+      const data = (await app.service(serviceName).create!(requestData, {
+        query: { roomId: room.id },
+      })) as ExtractData<ServiceTypes[T]>;
       setData(data);
       setError(null);
       setLoading(false);
@@ -125,8 +128,8 @@ export function usePatch<T extends keyof ServiceTypes>(
 }
 /* ---- END PATCH HOOK ---- */
 
-/* ---- BEGIN GET HOOK ---- */
-interface GetResult<Data> {
+/* ---- BEGIN LAZY GET HOOK ---- */
+interface LazyGetResult<Data> {
   called: boolean;
   loading: boolean;
   error: FeathersError | null;
@@ -134,7 +137,7 @@ interface GetResult<Data> {
 }
 type LazyGetResultTuple<Data> = [
   () => Promise<{ data: Data | null; error: FeathersError | null }>,
-  GetResult<Data>
+  LazyGetResult<Data>
 ];
 
 /**
@@ -173,5 +176,63 @@ export function useLazyGet<T extends keyof ServiceTypes>(
   };
 
   return [callGet, { called, loading, error, data }];
+}
+/* ---- END LAZY GET HOOK ---- */
+
+/* ---- BEGIN GET HOOK ---- */
+interface GetResult<Data> {
+  loading: boolean;
+  error: FeathersError | null;
+  data: Data | null;
+}
+interface GetOptions<Data> {
+  pollingInterval: number;
+  onUpdate: (Data) => any;
+}
+
+/**
+ * A hook for Cedar GET (GET) endpoints.
+ *
+ * @param serviceName  The service name in lowercase (usually corresponds to
+ * API URI path), e.g., 'room'
+ * @param id  The id for the objedt to get, e.g., 'abc-123'
+ */
+export function useGet<T extends keyof ServiceTypes>(
+  serviceName: T,
+  id: number | string,
+  options: GetOptions<ExtractData<ServiceTypes[T]>> = {
+    pollingInterval: 1000,
+    onUpdate: _ => null,
+  }
+): GetResult<ExtractData<ServiceTypes[T]>> {
+  const app = useContext(FeathersContext);
+  const room = useSelector(selectRoom);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<FeathersError | null>(null);
+  const [data, setData] = useState<any>(null);
+
+  useInterval(async () => {
+    // Skip if we already have a request out
+    if (loading) return;
+
+    setLoading(true);
+    try {
+      const newData = (await app.service(serviceName).get!(id, {
+        query: { roomId: room.id },
+      })) as ExtractData<ServiceTypes[T]>;
+      if (options.onUpdate && !_.isEqual(newData, data))
+        options.onUpdate(newData);
+      setData(newData);
+      setError(null);
+      setLoading(false);
+      return { data, error: null };
+    } catch (error) {
+      setError(error);
+      setLoading(false);
+      return { data: null, error };
+    }
+  }, options.pollingInterval);
+
+  return { loading, error, data };
 }
 /* ---- END GET HOOK ---- */

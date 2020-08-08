@@ -25,6 +25,7 @@ export default function(redisClient: IORedisClient): RoomInterface {
       const newRoom: RoomMeta = {
         id: uuidv4(),
         name,
+        recordingId: null,
       };
       await redisClient.hset(
         rKey({ roomId: newRoom.id }),

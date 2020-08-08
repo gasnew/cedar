@@ -9,6 +9,7 @@ export interface Collection<Model> {
 export interface RoomMeta {
   id: string;
   name: string;
+  recordingId: string | null;
 }
 
 // Model and Collection definitions

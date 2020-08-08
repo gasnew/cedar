@@ -141,7 +141,11 @@ function useChunkPoster(trackId: string): (event: MessageEvent) => void {
         instantiatedStream = false;
       };
     },
-    [trackId]
+    // We can ignore the patchTrack dependency because that one isn't dependent
+    // on anything but roomId. This is a bit of a hack to get around using the
+    // feathers client directly (which we could do instead).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [trackId, opusWorker]
   );
 
   return postChunk;
@@ -175,7 +179,6 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
             audioContext,
             'AudioInputBufferer'
           );
-          console.log('hey');
           audioInputBufferNode.port.onmessage = postChunk;
 
           mediaSource.connect(gainNode);

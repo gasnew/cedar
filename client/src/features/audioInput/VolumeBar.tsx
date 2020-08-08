@@ -3,25 +3,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Stage, Layer, Rect } from 'react-konva';
 import { Colors } from '@blueprintjs/core';
 
-export function useInterval(callback: () => void, delay: number) {
-  const savedCallback = useRef<() => void>();
+import { useInterval } from '../../app/util';
 
-  // Remember the latest callback.
-  useEffect(() => {
-    savedCallback.current = callback;
-  }, [callback]);
-
-  // Set up the interval.
-  useEffect(() => {
-    function tick() {
-      if (savedCallback.current) savedCallback.current();
-    }
-    if (delay !== null) {
-      let id = setInterval(tick, delay);
-      return () => clearInterval(id);
-    }
-  }, [delay]);
-}
 
 interface Props {
   fetchData: () => Uint8Array;

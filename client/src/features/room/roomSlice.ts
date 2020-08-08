@@ -1,14 +1,15 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../../app/store';
+import { setRecordingState, addRecording } from '../recording/recordingSlice';
 
-interface RoomState {
+export interface RoomState {
   id: string | null;
   name: string | null;
 }
 
 const initialState: RoomState = {
-  id: '64141f42-45a1-48f8-a394-fca808eebe63',
-  name: 'Brodyquest Fanclub',
+  id: '843da19a-a8b6-4be6-9136-e160ebbb2065',
+  name: 'Leerooooyyyyy Jenkinnnnns!',
 };
 
 export const roomSlice = createSlice({
@@ -16,7 +17,7 @@ export const roomSlice = createSlice({
   initialState,
   reducers: {
     // Use the PayloadAction type to declare the contents of `action.payload`
-    setRoom: (state, action: PayloadAction<{id: string, name: string}>) => {
+    setRoom: (state, action: PayloadAction<{ id: string; name: string }>) => {
       // Redux Toolkit allows us to write "mutating" logic in reducers. It
       // doesn't actually mutate the state because it uses the Immer library,
       // which detects changes to a "draft state" and produces a brand new

@@ -4,8 +4,9 @@ import React, { createContext } from 'react';
 import socketIO from 'socket.io-client';
 import { ServiceTypes } from '../../../../api/src/declarations';
 
+export type CedarApp = FeathersApp<ServiceTypes>;
 // NOTE(gnewman): The `feathers()` default here is required but is never used.
-export const FeathersContext = createContext<FeathersApp<ServiceTypes>>(
+export const FeathersContext = createContext<CedarApp>(
   feathers()
 );
 

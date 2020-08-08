@@ -14,9 +14,13 @@ type FindQueryParams = QueryParams<{
 function buildRecordings(redisClient: Redis): RecordingsService {
   return {
     create: (
-      {}: {},
+      {  }: {},
       { query: { roomId } }: QueryParams<{ roomId: string }>
     ) => redisClient.createRecording(roomId),
+    get: (
+      recordingId: string,
+      { query: { roomId } }: QueryParams<{ roomId: string }>
+    ) => redisClient.getRecording(roomId, recordingId),
   };
 }
 

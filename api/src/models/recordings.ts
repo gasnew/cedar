@@ -5,9 +5,11 @@ import { Recording } from '../room';
 import commonInterface from './common';
 import { IORedisClient } from './index';
 import musicianInterface from './musicians';
+import roomInterface from './rooms';
 import trackInterface from './tracks';
 
 export interface RecordingInterface {
+  getRecording: (roomId: string, recordingId: string) => Promise<Recording>;
   createRecording: (roomId: string) => Promise<Recording>;
 }
 
@@ -15,26 +17,40 @@ export default function(redisClient: IORedisClient): RecordingInterface {
   const { getCollection, parseOrThrow, rKey } = commonInterface(redisClient);
   const { getMusicians } = musicianInterface(redisClient);
   const { createTrack } = trackInterface(redisClient);
+  const { getRoom } = roomInterface(redisClient);
 
   return {
-    createRecording: async (roomId: string) => {
+    getRecording: async (roomId: string, recordingId: string) => {
       if (!(await redisClient.exists(rKey({ roomId }))))
         throw new Unprocessable(`Room ${roomId} does not exist!`);
-      const thing = _.values(
-        await getCollection<Recording>('recordings')(roomId)
+
+      return parseOrThrow<Recording>(
+        await redisClient.hget(
+          rKey({ roomId, collection: 'recordings' }),
+          recordingId
+        )
       );
-      if (_.some(thing, ['state', 'running'])) {
+    },
+    createRecording: async (roomId: string) => {
+      const room = await getRoom(roomId);
+      if (room.recordingId) {
         throw new Unprocessable(
           'A new recording cannot begin while another is running!'
         );
       }
 
+      const recordingId = uuidv4();
+      await redisClient.hset(
+        rKey({ roomId }),
+        'meta',
+        JSON.stringify({ ...room, recordingId })
+      );
       const musicians = await getMusicians(roomId);
       const tracks = await Promise.all(
         _.map(musicians, musician => createTrack(roomId, musician.id))
       );
       const newRecording: Recording = {
-        id: uuidv4(),
+        id: recordingId,
         state: 'running',
         trackIds: _.map(tracks, 'id'),
       };
