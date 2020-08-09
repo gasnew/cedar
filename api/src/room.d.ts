@@ -10,6 +10,7 @@ export interface RoomMeta {
   id: string;
   name: string;
   recordingId: string | null;
+  musicianIdsChain: string[];
 }
 
 // Model and Collection definitions
@@ -20,7 +21,6 @@ export interface RoomMeta {
 export interface Musician {
   id: string;
   name: string;
-  previousMusicianId: string | null;
 }
 export type Musicians = Collection<Musician>;
 

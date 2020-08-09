@@ -1,6 +1,7 @@
 import _ from 'lodash';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { CedarApp } from '../feathers/FeathersProvider';
+import { updateChain } from '../room/roomSlice';
 import { AppThunk, RootState } from '../../app/store';
 import { Track as ServerTrack } from '../../../../api/src/room';
 
@@ -58,8 +59,13 @@ export const startRecording = (
   roomId: string,
   recordingId: string
 ): AppThunk => async dispatch => {
+  // This state is for UI elements to indicate something exciting is happening
   dispatch(setRecordingState('initializing'));
 
+  // Update our redux state so every component subscribing to recording-related
+  // data gets correct, up-to-date data, even if we're polling/subscribing to
+  // this data elsewhere
+  const room = await app.service('rooms').get!(roomId);
   const recording = await app.service('recordings').get!(recordingId, {
     query: { roomId },
   });
@@ -74,12 +80,15 @@ export const startRecording = (
     },
   })) as ServerTrack[];
 
+  dispatch(updateChain(room));
   dispatch(
     addRecording({
       id: recording.id,
       tracks,
     })
   );
+
+  // Indicate that the data is all set, and we're ready to record
   dispatch(setRecordingState('recording'));
 };
 
@@ -93,6 +102,14 @@ export const selectMyTrackId = (state: RootState) => {
   if (!recording) return null;
   const track = _.find(recording.tracks, ['musicianId', state.room.musicianId]);
   return track ? track.id : null;
+};
+export const selectRecordingDelaySeconds = (state: RootState) => {
+  // Delay each musician by 1 second
+  console.log(state.room);
+  const index = state.room.musicianIdsChain.indexOf(
+    state.room.musicianId || ''
+  );
+  return index === -1 ? 0 : index;
 };
 
 export default roomSlice.reducer;

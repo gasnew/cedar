@@ -2,6 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { Unprocessable } from '@feathersjs/errors';
 import { Musician, Musicians } from '../room';
 import commonInterface from './common';
+import roomInterface from './rooms';
 import { IORedisClient } from './index';
 
 export interface MusicianInterface {
@@ -11,23 +12,31 @@ export interface MusicianInterface {
 
 export default function(redisClient: IORedisClient): MusicianInterface {
   const { getCollection, rKey } = commonInterface(redisClient);
+  const { getRoom } = roomInterface(redisClient);
 
   return {
     getMusicians: getCollection<Musician>('musicians'),
     createMusician: async (roomId: string, name: string) => {
-      if (!(await redisClient.exists(rKey({ roomId }))))
-        throw new Unprocessable(`Room ${roomId} does not exist!`);
+      const room = await getRoom(roomId);
 
       const newMusician: Musician = {
         id: uuidv4(),
         name,
-        previousMusicianId: null,
       };
       await redisClient.hset(
         rKey({ roomId, collection: 'musicians' }),
         newMusician.id,
         JSON.stringify(newMusician)
       );
+      await redisClient.hset(
+        rKey({ roomId }),
+        'meta',
+        JSON.stringify({
+          ...room,
+          musicianIdsChain: [...room.musicianIdsChain, newMusician.id],
+        })
+      );
+
       return newMusician;
     },
   };

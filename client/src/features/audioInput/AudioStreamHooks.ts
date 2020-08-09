@@ -7,6 +7,7 @@ import { usePatch } from '../feathers/FeathersHooks';
 import {
   selectMyTrackId,
   selectRecordingState,
+  selectRecordingDelaySeconds,
 } from '../recording/recordingSlice';
 
 interface Props {
@@ -177,18 +178,20 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
   const [canChangeStream, setCanChangeStream] = useState<boolean>(true);
   const postChunk = useChunkPoster(useSelector(selectMyTrackId));
   const recordingState = useSelector(selectRecordingState);
+  const delaySeconds = useSelector(selectRecordingDelaySeconds);
 
   // Hook to start the worklet when recordingState says so. Starting the audio
   // worklet is idempotent, so it's OK if send the message multiple times
   useEffect(
     () => {
+      console.log(delaySeconds);
       if (recordingState === 'recording')
         postWorkletMessage({
           action: 'start',
-          delaySeconds: 1,
+          delaySeconds,
         });
     },
-    [recordingState, postWorkletMessage]
+    [recordingState, postWorkletMessage, delaySeconds]
   );
 
   useEffect(
