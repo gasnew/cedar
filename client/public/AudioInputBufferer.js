@@ -3,39 +3,6 @@
 // these types someday:
 // https://github.com/microsoft/TypeScript/issues/28308#issuecomment-650802278
 
-//function readBinary(url) {
-  //var xhr = new XMLHttpRequest();
-  //xhr.open('GET', url, false);
-  //xhr.responseType = 'arraybuffer';
-  //xhr.send(null);
-  //return new Uint8Array(xhr.response);
-//}
-//readBinary('opusscript_native_wasm.wasm');
-//var asm2wasmImports = {
-  //'f64-rem': function(x, y) {
-    //return x % y;
-  //},
-  //debugger: function() {
-    //debugger;
-  //},
-//};
-
-//var info = {
-  //env: env,
-  //global: { NaN: NaN, Infinity: Infinity },
-  //'global.Math': Math,
-  //asm2wasm: asm2wasmImports,
-//};
-
-//module = new WebAssembly.Module(binary);
-//instance = new WebAssembly.Instance(module, info);
-//console.log(instance);
-
-//const thing = WebAssembly.instantiateStreaming(fetch('opusscript_native_wasm.wasm'))
-//console.log(thing);
-//https://github.com/srikumarks/webopus
-//https://blog.scottlogic.com/2019/06/14/add-webassembly-to-react-app.html
-//import thing from './opusscript_native_nasm';
 class AudioInputBufferer extends AudioWorkletProcessor {
   constructor() {
     super();
@@ -56,24 +23,50 @@ class AudioInputBufferer extends AudioWorkletProcessor {
     );
     this.chunkBuffer = new Float32Array(this.framesPerChunk * this.frameSize);
     this.framesInBuffer = 0;
+
+    // State management
+    this.playing = false;
+    this.delayFrames = 0;
+    this.framesDelayed = 0;
+    this.port.onmessage = event => {
+      if (event.data && event.data.action && event.data.delaySeconds) {
+        const { action } = event.data;
+
+        if (action === 'start') {
+          if (this.playing) return;
+          this.playing = true;
+          // Assume we don't need to delay by less than 128-sample granularity
+          this.delayFrames = Math.floor(
+            (sampleRate * event.data.delaySeconds) / this.frameSize
+          );
+          this.framesDelayed = 0;
+        }
+      }
+    };
   }
 
   process(inputs, outputs, parameters) {
+    if (!this.playing) return true;
+
     // We assume we only have one input connection
     const input = inputs[0];
     const output = outputs[0];
 
-    // We only support one channel right now
-    const channel = input[0];
-    for (let i = 0; i < this.frameSize; i++) {
-      this.chunkBuffer[this.framesInBuffer * this.frameSize + i] = channel[i];
-    }
-    this.framesInBuffer += 1;
+    // Delay this frame, or buffer input
+    if (this.framesDelayed < this.delayFrames) this.framesDelayed += 1;
+    else {
+      // We only support one channel right now
+      const channel = input[0];
+      for (let i = 0; i < this.frameSize; i++) {
+        this.chunkBuffer[this.framesInBuffer * this.frameSize + i] = channel[i];
+      }
+      this.framesInBuffer += 1;
 
-    // Post chunk if the buffer is full
-    if (this.framesInBuffer === this.framesPerChunk) {
-      this.port.postMessage(this.chunkBuffer);
-      this.framesInBuffer = 0;
+      // Post chunk if the buffer is full
+      if (this.framesInBuffer === this.framesPerChunk) {
+        this.port.postMessage(this.chunkBuffer);
+        this.framesInBuffer = 0;
+      }
     }
 
     return true;

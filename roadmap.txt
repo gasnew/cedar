@@ -123,6 +123,7 @@ Cedar audience
   rejoining mid-stream to be a thing for this)
 
 Future features
+- Display errors (esp. for streaming failures)
 - Support multiple channels (stereo+)
 - Visualize and allow playback of recordings
 - Download recordings

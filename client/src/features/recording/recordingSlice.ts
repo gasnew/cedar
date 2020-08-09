@@ -86,5 +86,13 @@ export const startRecording = (
 export const selectRecordingState = (state: RootState) => state.recording.state;
 export const selectRecordingId = (state: RootState) =>
   state.recording.currentRecordingId;
+export const selectMyTrackId = (state: RootState) => {
+  const recordingId = state.recording.currentRecordingId;
+  if (!recordingId) return null;
+  const recording = state.recording.recordings[recordingId];
+  if (!recording) return null;
+  const track = _.find(recording.tracks, ['musicianId', state.room.musicianId]);
+  return track ? track.id : null;
+};
 
 export default roomSlice.reducer;

@@ -1,9 +1,13 @@
 import _ from 'lodash';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { encode } from 'js-base64';
 
 import { usePatch } from '../feathers/FeathersHooks';
-const opusscript = require('opusscript');
+import {
+  selectMyTrackId,
+  selectRecordingState,
+} from '../recording/recordingSlice';
 
 interface Props {
   deviceId: string | null;
@@ -35,11 +39,9 @@ export function useStream(deviceId: string | null) {
   return stream;
 }
 
-//const thing = WebAssembly.instantiateStreaming(fetch('opusscript_native_wasm.wasm'))
-//console.log(thing);
-function useChunkPoster(trackId: string): (event: MessageEvent) => void {
+function useChunkPoster(trackId: string | null): (event: MessageEvent) => void {
   // TODO: Make robust to network failures
-  const cursor = useRef<string | null>('1596386497825-0');
+  const cursor = useRef<string | null>(null);
   const dataBuffer = useRef<string[]>([]);
   const requestOut = useRef<boolean>(false);
   const [patchTrack] = usePatch('tracks');
@@ -57,8 +59,13 @@ function useChunkPoster(trackId: string): (event: MessageEvent) => void {
       // This onmessage function receives opus-encoded packets or opus/webopus
       // errors
       opusWorker.onmessage = async ({ data: { error, packet } }) => {
+        // Sometimes we receive undefined packets at the end of a stream
+        if (!packet) return;
+        // Sometimes the worklet takes a moment to stop, even after we've
+        // stopped recording
+        if (!trackId) return;
         if (error) {
-          console.error('webopus worker error:', error);
+          console.error('webopus worker error: ', error);
           return;
         }
 
@@ -73,7 +80,6 @@ function useChunkPoster(trackId: string): (event: MessageEvent) => void {
           // This needs to be set to true before anything else
           requestOut.current = true;
 
-          //console.log('cursor', cursor.current, 'data', dataBuffer.current);
           const response = await patchTrack(trackId, {
             cursor: cursor.current,
             data: dataBuffer.current,
@@ -134,11 +140,14 @@ function useChunkPoster(trackId: string): (event: MessageEvent) => void {
       });
 
       return () => {
-        opusWorker.postMessage({
-          op: 'end',
-          stream,
-        });
-        instantiatedStream = false;
+        if (instantiatedStream) {
+          opusWorker.postMessage({
+            op: 'end',
+            stream,
+          });
+          instantiatedStream = false;
+          cursor.current = null;
+        }
       };
     },
     // We can ignore the patchTrack dependency because that one isn't dependent
@@ -162,8 +171,25 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
   const [analyzer, setAnalyzer] = useState<AnalyserNode | null>(null);
   const [gainNode, setGainNode] = useState<GainNode | null>(null);
   const [dataArray, setDataArray] = useState<Uint8Array>(new Uint8Array());
+  const [postWorkletMessage, setPostWorkletMessage] = useState<(any) => void>(
+    _ => null
+  );
   const [canChangeStream, setCanChangeStream] = useState<boolean>(true);
-  const postChunk = useChunkPoster('08fe2ee7-dce7-42d8-8ee9-c75a1e11929f');
+  const postChunk = useChunkPoster(useSelector(selectMyTrackId));
+  const recordingState = useSelector(selectRecordingState);
+
+  // Hook to start the worklet when recordingState says so. Starting the audio
+  // worklet is idempotent, so it's OK if send the message multiple times
+  useEffect(
+    () => {
+      if (recordingState === 'recording')
+        postWorkletMessage({
+          action: 'start',
+          delaySeconds: 1,
+        });
+    },
+    [recordingState, postWorkletMessage]
+  );
 
   useEffect(
     () => {
@@ -195,6 +221,9 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
           setAnalyzer(analyzer);
           setGainNode(gainNode);
           setDataArray(new Uint8Array(analyzer.fftSize));
+          setPostWorkletMessage(() => message =>
+            audioInputBufferNode.port.postMessage(message)
+          );
         };
 
         updateStream();
