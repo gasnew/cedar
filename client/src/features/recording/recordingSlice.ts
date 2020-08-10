@@ -95,21 +95,43 @@ export const startRecording = (
 export const selectRecordingState = (state: RootState) => state.recording.state;
 export const selectRecordingId = (state: RootState) =>
   state.recording.currentRecordingId;
-export const selectMyTrackId = (state: RootState) => {
+const selectCurrentRecording = (state: RootState) => {
   const recordingId = state.recording.currentRecordingId;
   if (!recordingId) return null;
-  const recording = state.recording.recordings[recordingId];
+  return state.recording.recordings[recordingId] || null;
+};
+export const selectMyTrackId = (state: RootState) => {
+  const recording = selectCurrentRecording(state);
   if (!recording) return null;
   const track = _.find(recording.tracks, ['musicianId', state.room.musicianId]);
   return track ? track.id : null;
 };
 export const selectRecordingDelaySeconds = (state: RootState) => {
   // Delay each musician by 1 second
-  console.log(state.room);
   const index = state.room.musicianIdsChain.indexOf(
     state.room.musicianId || ''
   );
   return index === -1 ? 0 : index;
+};
+export const selectCurrentTracks = (state: RootState) => {
+  const recording = selectCurrentRecording(state);
+  if (!recording) return [];
+  return recording.tracks;
+};
+export const selectPrecedingTracks = (state: RootState): Track[] => {
+  const musicianId = state.room.musicianId;
+  if (!musicianId) return [];
+  const precedingMusicians = _.takeWhile(
+    state.room.musicianIdsChain,
+    id => id !== musicianId
+  );
+  const currentTracks = selectCurrentTracks(state);
+  const precedingTracks = _.map(precedingMusicians, id =>
+    _.find(currentTracks, ['musicianId', id])
+  );
+  if (_.some(precedingTracks, undefined)) return [];
+  return currentTracks;
+  return precedingTracks as Track[];
 };
 
 export default roomSlice.reducer;

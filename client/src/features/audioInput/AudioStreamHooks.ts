@@ -124,6 +124,7 @@ function useChunkPoster(trackId: string | null): (event: MessageEvent) => void {
 
       setPostChunk(() => event => {
         if (!instantiatedStream) {
+          console.log('encode!');
           opusWorker.postMessage({
             op: 'begin',
             stream,
@@ -184,12 +185,13 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
   // worklet is idempotent, so it's OK if send the message multiple times
   useEffect(
     () => {
-      console.log(delaySeconds);
-      if (recordingState === 'recording')
+      if (recordingState === 'recording') {
+        console.log('staht!');
         postWorkletMessage({
           action: 'start',
           delaySeconds,
         });
+      }
     },
     [recordingState, postWorkletMessage, delaySeconds]
   );

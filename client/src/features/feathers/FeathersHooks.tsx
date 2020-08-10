@@ -232,8 +232,8 @@ export function useGet<T extends keyof ServiceTypes>(
       const newData = (await app.service(serviceName).get!(id, {
         query: { roomId: room.id },
       })) as ExtractData<ServiceTypes[T]>;
-      if (options.onUpdate && !_.isEqual(newData, data))
-        options.onUpdate(newData);
+      // TODO: Call onUpdate all the time!...?
+      if (options.onUpdate) options.onUpdate(newData);
       setData(newData);
       setError(null);
       setLoading(false);
@@ -248,3 +248,59 @@ export function useGet<T extends keyof ServiceTypes>(
   return { loading, error, data };
 }
 /* ---- END GET HOOK ---- */
+
+/* ---- BEGIN LAZY FIND HOOK ---- */
+interface LazyFindResult<Data> {
+  called: boolean;
+  loading: boolean;
+  error: FeathersError | null;
+  data: Data | null;
+}
+type LazyFindResultTuple<Data> = [
+  (
+    queryData: object
+  ) => Promise<{ data: Data | null; error: FeathersError | null }>,
+  LazyFindResult<Data>
+];
+
+/**
+ * A hook for Cedar "find" (GET) endpoints.
+ *
+ * @param serviceName  The service name in lowercase (usually corresponds to
+ * API URI path), e.g., 'room'
+ * @param id  The id for the objedt to get, e.g., 'abc-123'
+ */
+export function useLazyFind<T extends keyof ServiceTypes>(
+  serviceName: T
+): LazyFindResultTuple<ExtractData<ServiceTypes[T]>> {
+  const app = useContext(FeathersContext);
+  const room = useSelector(selectRoom);
+  const [called, setCalled] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<FeathersError | null>(null);
+  const [data, setData] = useState<any>(null);
+
+  const callFind = async (queryData: object = {}) => {
+    setCalled(true);
+    setLoading(true);
+    try {
+      const data = (await app.service(serviceName).find!({
+        query: {
+          roomId: room.id,
+          ...queryData,
+        },
+      })) as ExtractData<ServiceTypes[T]>;
+      setData(data);
+      setError(null);
+      setLoading(false);
+      return { data, error: null };
+    } catch (error) {
+      setError(error);
+      setLoading(false);
+      return { data: null, error };
+    }
+  };
+
+  return [callFind, { called, loading, error, data }];
+}
+/* ---- END LAZY FIND HOOK ---- */

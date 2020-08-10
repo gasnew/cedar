@@ -29,7 +29,12 @@ class AudioInputBufferer extends AudioWorkletProcessor {
     this.delayFrames = 0;
     this.framesDelayed = 0;
     this.port.onmessage = event => {
-      if (event.data && event.data.action && event.data.delaySeconds) {
+      console.log(event);
+      if (
+        event.data &&
+        event.data.action &&
+        event.data.delaySeconds !== undefined
+      ) {
         const { action } = event.data;
 
         if (action === 'start') {
@@ -40,6 +45,7 @@ class AudioInputBufferer extends AudioWorkletProcessor {
             (sampleRate * event.data.delaySeconds) / this.frameSize
           );
           this.framesDelayed = 0;
+          console.log('startgin!');
         }
       }
     };
