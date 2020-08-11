@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { decode } from 'js-base64';
+import { Base64, decode } from 'js-base64';
 
 import { useLazyFind } from '../feathers/FeathersHooks';
 import {
@@ -28,6 +28,8 @@ function useFetchAudioData(postWorkletMessage: (any) => void) {
   // sent the initial message from our stream or not.
   const instantiatedStreams = useRef<{ [trackId: string]: boolean }>({});
 
+  const requestOut = useRef<boolean>(false);
+
   // Instantiate this once, and reuse it for different streams/tracks
   const opusWorker = useMemo(() => new Worker('webopus.asm.min.js'), []);
 
@@ -37,11 +39,10 @@ function useFetchAudioData(postWorkletMessage: (any) => void) {
   useEffect(
     () => {
       if (recordingState === 'recording' && !fetching) {
-        console.log('delay', delaySeconds);
-        console.log(precedingTracks.length);
+        console.log('initialize');
         postWorkletMessage({
           action: 'initialize',
-          delaySeconds,
+          delaySeconds: 2,
           trackCount: precedingTracks.length,
         });
         setFetching(true);
@@ -74,7 +75,7 @@ function useFetchAudioData(postWorkletMessage: (any) => void) {
   // Wire the opusWorker to the audioWorklet
   useEffect(
     () => {
-      opusWorker.onmessage = async ({ data: { error, stream, frames } }) => {
+      opusWorker.onmessage = async ({ data: { error, stream, frames, sampleRate } }) => {
         // Sometimes we receive undefined packets at the end of a stream
         if (!frames) return;
         if (error) {
@@ -82,10 +83,6 @@ function useFetchAudioData(postWorkletMessage: (any) => void) {
           return;
         }
 
-        console.log(
-          'stream index',
-          _.findIndex(precedingTracks, ['id', stream])
-        );
         postWorkletMessage({
           action: 'buffer',
           pcm: frames,
@@ -96,90 +93,89 @@ function useFetchAudioData(postWorkletMessage: (any) => void) {
     [opusWorker, postWorkletMessage, precedingTracks]
   );
 
-  // Fetch audio data, and post it to the opusWorker
   useEffect(
     () => {
-      const streamName = trackId => trackId;
-
       if (!fetching && !_.isEmpty(instantiatedStreams.current)) {
         _.each(cursorsByTrack, (_, trackId) => {
-          console.log('enddo', trackId);
           opusWorker.postMessage({
             op: 'end',
-            stream: streamName(trackId),
+            stream: trackId,
           });
         });
         instantiatedStreams.current = {};
-        return;
       }
-
-      const retrieveTrackData = async () => {
-        const { data, error } = await findTracks({ cursorsByTrack });
-        // NOTE(gnewman): Need to do this because Feathers allows find to
-        // return a single instance
-        const tracks = data as ServerTrack[] | null;
-        if (!tracks) {
-          console.error(
-            'Whoops! An error occurred while finding track data',
-            error
-          );
-          return;
-        }
-        _.each(tracks, track => {
-          // Don't even try to decode an empty array
-          if (track.data.length === 0) return;
-
-          const stream = streamName(track.id);
-          if (!instantiatedStreams.current[track.id]) {
-            console.log('begin tracko!!', track.id);
-            opusWorker.postMessage({
-              op: 'begin',
-              stream,
-              sampleRate: 48000,
-              numChannels: 1,
-              frames: decode(track.data[0]),
-            });
-            _.each(_.tail(track.data), packet =>
-              opusWorker.postMessage({
-                op: 'proc',
-                stream,
-                frames: decode(packet),
-              })
-            );
-            instantiatedStreams.current[track.id] = true;
-          } else {
-            _.each(track.data, packet => {
-              opusWorker.postMessage({
-                op: 'proc',
-                stream,
-                frames: decode(packet),
-              });
-            });
-          }
-        });
-
-        return tracks;
-      };
-      retrieveTrackData().then(tracks =>
-        setCursorsByTrack(
-          _.reduce(
-            tracks,
-            (cursorsByTrack, track) => ({
-              ...cursorsByTrack,
-              [track.id]: track.cursor,
-            }),
-            {}
-          )
-        )
-      );
     },
-    // We can ignore the findTracks dependency because that one isn't dependent
-    // on anything but roomId. This is a bit of a hack to get around using the
-    // feathers client directly (which we could do instead).
-    // TODO: use the feathers client directly when we allow changing rooms
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [fetching, cursorsByTrack, opusWorker]
   );
+
+  // Fetch audio data, and post it to the opusWorker
+  useInterval(() => {
+    // We only want one request out at a time
+    if (!fetching || requestOut.current) return;
+    requestOut.current = true;
+
+    const streamName = trackId => trackId;
+
+    const retrieveTrackData = async () => {
+      const { data, error } = await findTracks({ cursorsByTrack });
+      // NOTE(gnewman): Need to do this because Feathers allows find to
+      // return a single instance
+      const tracks = data as ServerTrack[] | null;
+      if (!tracks) {
+        console.error(
+          'Whoops! An error occurred while finding track data',
+          error
+        );
+        return;
+      }
+      _.each(tracks, track => {
+        // Don't even try to decode an empty array
+        if (track.data.length === 0) return;
+
+        const stream = streamName(track.id);
+        if (!instantiatedStreams.current[track.id]) {
+          opusWorker.postMessage({
+            op: 'begin',
+            stream,
+            sampleRate: 48000,
+            numChannels: 1,
+            packet: Base64.toUint8Array(track.data[0]),
+          });
+          _.each(_.tail(track.data), packet =>
+            opusWorker.postMessage({
+              op: 'proc',
+              stream,
+              packet: Base64.toUint8Array(packet),
+            })
+          );
+          instantiatedStreams.current[track.id] = true;
+        } else {
+          _.each(track.data, packet => {
+            opusWorker.postMessage({
+              op: 'proc',
+              stream,
+              packet: Base64.toUint8Array(packet),
+            });
+          });
+        }
+      });
+
+      return tracks;
+    };
+    retrieveTrackData().then(tracks => {
+      setCursorsByTrack(
+        _.reduce(
+          tracks,
+          (cursorsByTrack, track) => ({
+            ...cursorsByTrack,
+            [track.id]: track.cursor,
+          }),
+          {}
+        )
+      );
+      requestOut.current = false;
+    });
+  }, 500);
 }
 
 interface DataResponse {
@@ -199,6 +195,7 @@ export function useRoomAudio(): DataResponse {
 
   useEffect(() => {
     const audioContext = new window.AudioContext();
+    audioContext.resume();
     const launchAudioNodes = async () => {
       await audioContext.audioWorklet.addModule('RoomAudioPlayer.js');
       const gainNode = audioContext.createGain();

@@ -10,12 +10,12 @@ class RoomAudioPlayer extends AudioWorkletProcessor {
 
     // Buffer up to a whole minute of PCM data
     const sampleRate = 48000;
-    this.bufferLength = sampleRate * 60;
+    this.bufferLength = sampleRate * 6;
     this.pcmBuffers = [];
     this.bufferWriteIndices = [];
     this.bufferReadIndex = 0;
 
-    this.onmessage = event => {
+    this.port.onmessage = event => {
       if (event.data && event.data.action) {
         if (event.data.action === 'initialize') {
           // Initialize buffers and write indices, and set delay
@@ -27,15 +27,16 @@ class RoomAudioPlayer extends AudioWorkletProcessor {
             this.bufferWriteIndices[i] = 0;
           }
           this.delaySamples = Math.floor(sampleRate * delaySeconds);
-          this.bufferReadIndex = 0;
+          this.bufferReadIndex = this.bufferLength - this.delaySamples;
         } else if (event.data.action === 'buffer') {
           // Append data to buffers, assuming stream data always comes in in
           // the same order
           const { pcm, pcmIndex } = event.data;
+          if (this.pcmBuffers.length === 0 || pcm.length === 0) return;
 
           //for (let pcmIndex = 0; pcmIndex < pcmStreams.length; pcmIndex++) {
           // Append PCM data
-          const stream = pcmStreams[pcmIndex];
+          const stream = pcm;
           const dataLength = stream.length;
           const bufferWriteIndex = this.bufferWriteIndices[pcmIndex];
           for (let i = 0; i < dataLength; i++) {
@@ -49,10 +50,13 @@ class RoomAudioPlayer extends AudioWorkletProcessor {
           //}
         } else if (event.data.action === 'stop') {
           // Clear buffers
-          for (let i = 0; i < this.pcmBuffers.length; i++) {
-            this.pcmBuffers[i] = new Float32Array(this.bufferLength);
-            this.bufferWriteIndices[i] = 0;
-          }
+          this.pcmBuffers = [];
+          this.bufferWriteIndices = [];
+          this.bufferReadIndex = 0;
+          //for (let i = 0; i < this.pcmBuffers.length; i++) {
+          //this.pcmBuffers[i] = new Float32Array(this.bufferLength);
+          //this.bufferWriteIndices[i] = 0;
+          //}
         }
       }
     };
@@ -65,11 +69,16 @@ class RoomAudioPlayer extends AudioWorkletProcessor {
     // We only support one channel right now
     const channel = output[0];
 
+    if (this.pcmBuffers.length === 0) {
+      for (let i = 0; i < this.frameSize; i++) channel[i] = 0.0;
+      return true;
+    }
+
     const bufferCount = this.pcmBuffers.length;
     for (let frameIndex = 0; frameIndex < this.frameSize; frameIndex++) {
       const readIndex = (this.bufferReadIndex + frameIndex) % this.bufferLength;
       for (let pcmIndex = 0; pcmIndex < bufferCount; pcmIndex++) {
-        channel[i] += this.pcmBuffers[pcmIndex][readIndex];
+        channel[frameIndex] = this.pcmBuffers[pcmIndex][readIndex];
         // We need to zero this out in case we've gone through the buffer once,
         // and we haven't received data for this part of the track yet. This is
         // likely to happen if another musician loses connection or has a spotty

@@ -65,6 +65,7 @@ Incoming worklet:
   + VolumeBar now displays audio decibel-scaled from 0 to -40 dB
 - Documentation on how the frontend sends and receives audio data (include how
   we compiled webopus)
+- Don't patch so crazy man
 
 Put it on DigitalOcean
 - Put it on a droplet

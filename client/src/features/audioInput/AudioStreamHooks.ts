@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { encode } from 'js-base64';
+import { Base64, encode } from 'js-base64';
 
 import { usePatch } from '../feathers/FeathersHooks';
 import {
@@ -70,7 +70,7 @@ function useChunkPoster(trackId: string | null): (event: MessageEvent) => void {
           return;
         }
 
-        const data = encode(packet);
+        const data = Base64.fromUint8Array(packet);
         dataBuffer.current = dataBuffer.current.concat([data]);
 
         // WARNING--IMPORTANT CONDITIONAL AHEAD: We must not allow more than
@@ -81,14 +81,15 @@ function useChunkPoster(trackId: string | null): (event: MessageEvent) => void {
           // This needs to be set to true before anything else
           requestOut.current = true;
 
+          const dataToSend = dataBuffer.current;
+          dataBuffer.current = [];
           const response = await patchTrack(trackId, {
             cursor: cursor.current,
-            data: dataBuffer.current,
+            data: dataToSend,
           });
 
           if (response.data) {
             // If success, get ready for next request
-            dataBuffer.current = [];
             cursor.current = response.data.cursor;
           } else {
             //console.error('WHOAT THERE', response.error);
@@ -124,7 +125,6 @@ function useChunkPoster(trackId: string | null): (event: MessageEvent) => void {
 
       setPostChunk(() => event => {
         if (!instantiatedStream) {
-          console.log('encode!');
           opusWorker.postMessage({
             op: 'begin',
             stream,
@@ -189,7 +189,7 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
         console.log('staht!');
         postWorkletMessage({
           action: 'start',
-          delaySeconds,
+          delaySeconds: 0,
         });
       }
     },

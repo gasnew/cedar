@@ -29,7 +29,6 @@ class AudioInputBufferer extends AudioWorkletProcessor {
     this.delayFrames = 0;
     this.framesDelayed = 0;
     this.port.onmessage = event => {
-      console.log(event);
       if (
         event.data &&
         event.data.action &&
@@ -38,6 +37,7 @@ class AudioInputBufferer extends AudioWorkletProcessor {
         const { action } = event.data;
 
         if (action === 'start') {
+          console.log(this.playing);
           if (this.playing) return;
           this.playing = true;
           // Assume we don't need to delay by less than 128-sample granularity
@@ -70,6 +70,7 @@ class AudioInputBufferer extends AudioWorkletProcessor {
 
       // Post chunk if the buffer is full
       if (this.framesInBuffer === this.framesPerChunk) {
+        //console.log(this.chunkBuffer);
         this.port.postMessage(this.chunkBuffer);
         this.framesInBuffer = 0;
       }
