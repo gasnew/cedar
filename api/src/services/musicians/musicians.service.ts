@@ -2,7 +2,7 @@ import { Unprocessable } from '@feathersjs/errors';
 import _ from 'lodash';
 
 import { Application } from '../../declarations';
-import { Redis, rKey, withRedis } from '../../redis';
+import { Redis, withRedis } from '../../models';
 import { ServiceMethods } from '@feathersjs/feathers';
 import { Musician } from '../../room';
 import { QueryParams } from '../index.d';
@@ -29,7 +29,7 @@ function buildMusicianService(redisClient: Redis): MusicianService {
       // return type of `find` to be formed.
       return _.values(await redisClient.getMusicians(roomId));
     },
-    create: async (
+    create: (
       { name }: { name: string },
       { query: { roomId } }: QueryParams<{ roomId: string }>
     ) => redisClient.createMusician(roomId, name),

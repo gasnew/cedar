@@ -1,10 +1,10 @@
-import { Tedis } from 'tedis';
+import IORedis from 'ioredis';
 
 import logger from './logger';
 import createApp from './app';
-import { withHelpers } from './redis';
+import { withHelpers } from './models';
 
-const app = createApp(withHelpers(new Tedis()));
+const app = createApp(withHelpers(new IORedis()));
 const port = app.get('port');
 const server = app.listen(port);
 
