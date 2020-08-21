@@ -1,6 +1,7 @@
 import React from 'react';
-import { Classes } from '@blueprintjs/core';
+import { Classes, Colors } from '@blueprintjs/core';
 
+import AudioInput from './features/audioInput/AudioInput';
 import Navbar from './features/navbar/Navbar';
 import RoomOverlay from './features/roomOverlay/RoomOverlay';
 
@@ -8,7 +9,7 @@ function App() {
   return (
     <div
       style={{
-        backgroundColor: '#30404d', // Not sure how to not hard-code this?
+        backgroundColor: Colors.DARK_GRAY3,
         position: 'absolute',
         width: '100%',
         top: 0,
@@ -17,6 +18,7 @@ function App() {
       className={Classes.DARK}
     >
       <Navbar />
+      <AudioInput />
       <RoomOverlay />
     </div>
   );
