@@ -23,12 +23,12 @@
     "yarn": ">= 0.18.0"
   },
   "scripts": {
-    "compile-and-test": "yarn run compile && yarn run jest",
-    "dev": "ts-node-dev --no-notify src/",
-    "start": "yarn run compile && node lib/",
-    "test": "jest  --forceExit",
-    "test:watch": "jest  --forceExit --watchAll",
-    "compile": "shx rm -rf lib/ && tsc -p tsconfig.build.json"
+    "start": "ts-node-dev --no-notify src/",
+    "build": "shx rm -rf lib/ && tsc -p tsconfig.build.json",
+    "build-and-test": "yarn run build && yarn run jest",
+    "build-and-start": "yarn run build && node lib/",
+    "test": "jest --forceExit",
+    "test:watch": "jest --forceExit --watchAll"
   },
   "standard": {
     "env": [
