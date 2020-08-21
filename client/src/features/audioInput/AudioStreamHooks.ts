@@ -40,15 +40,16 @@ export function useStream(deviceId: string | null) {
   return stream;
 }
 
-function useChunkPoster(trackId: string | null): (event: MessageEvent) => void {
+type WorkletCallback = (event: MessageEvent) => void;
+function useChunkPoster(
+  trackId: string | null,
+  setWorkletCallback: (WorkletCallback) => void
+) {
   // TODO: Make robust to network failures
   const cursor = useRef<string | null>(null);
   const dataBuffer = useRef<string[]>([]);
   const requestOut = useRef<boolean>(false);
   const [patchTrack] = usePatch('tracks');
-  const [postChunk, setPostChunk] = useState<(event: MessageEvent) => void>(
-    _ => null
-  );
 
   // Instantiate this once, and reuse it for different streams/tracks
   const opusWorker = useMemo(() => new Worker('webopus.asm.min.js'), []);
@@ -56,6 +57,9 @@ function useChunkPoster(trackId: string | null): (event: MessageEvent) => void {
   useEffect(
     () => {
       const stream = `track-${trackId}`;
+      cursor.current = null;
+      dataBuffer.current = [];
+      requestOut.current = false;
 
       // This onmessage function receives opus-encoded packets or opus/webopus
       // errors
@@ -123,7 +127,8 @@ function useChunkPoster(trackId: string | null): (event: MessageEvent) => void {
       // whether we've sent the initial message from our stream or not.
       var instantiatedStream = false;
 
-      setPostChunk(() => event => {
+      setWorkletCallback(event => {
+        //console.log(event);
         if (!instantiatedStream) {
           opusWorker.postMessage({
             op: 'begin',
@@ -148,7 +153,6 @@ function useChunkPoster(trackId: string | null): (event: MessageEvent) => void {
             stream,
           });
           instantiatedStream = false;
-          cursor.current = null;
         }
       };
     },
@@ -158,8 +162,6 @@ function useChunkPoster(trackId: string | null): (event: MessageEvent) => void {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [trackId, opusWorker]
   );
-
-  return postChunk;
 }
 
 interface DataResponse {
@@ -174,23 +176,30 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
   const [gainNode, setGainNode] = useState<GainNode | null>(null);
   const [dataArray, setDataArray] = useState<Uint8Array>(new Uint8Array());
   const [postWorkletMessage, setPostWorkletMessage] = useState<(any) => void>(
-    _ => null
+    _ => _ => null
   );
   const [canChangeStream, setCanChangeStream] = useState<boolean>(true);
-  const postChunk = useChunkPoster(useSelector(selectMyTrackId));
+  const [setWorkletCallback, setSetWorkletCallback] = useState<
+    (WorkletCallback) => void
+  >(_ => _ => null);
+  useChunkPoster(useSelector(selectMyTrackId), setWorkletCallback);
   const recordingState = useSelector(selectRecordingState);
   const delaySeconds = useSelector(selectRecordingDelaySeconds);
 
   // Hook to start the worklet when recordingState says so. Starting the audio
-  // worklet is idempotent, so it's OK if send the message multiple times
+  // worklet is idempotent, so it's OK ifsend the message multiple times
   useEffect(
     () => {
       if (recordingState === 'recording') {
         console.log('staht!');
         postWorkletMessage({
           action: 'start',
-          delaySeconds: 0,
+          // more negative -> delay mic more
+          delaySeconds: delaySeconds + 0.1,
         });
+      } else if (recordingState === 'stopped') {
+        console.log('stopper');
+        postWorkletMessage({ action: 'stop' });
       }
     },
     [recordingState, postWorkletMessage, delaySeconds]
@@ -200,7 +209,9 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
     () => {
       if (!stream) setAnalyzer(null);
       else {
-        const audioContext = new window.AudioContext();
+        const audioContext = new window.AudioContext({
+          sampleRate: 48000,
+        });
         const updateStream = async () => {
           await audioContext.audioWorklet.addModule('AudioInputBufferer.js');
           const analyzer = audioContext.createAnalyser();
@@ -210,11 +221,14 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
             audioContext,
             'AudioInputBufferer'
           );
-          audioInputBufferNode.port.onmessage = postChunk;
+          setSetWorkletCallback(() => callback =>
+            (audioInputBufferNode.port.onmessage = callback)
+          );
 
           mediaSource.connect(gainNode);
           gainNode.connect(analyzer);
           gainNode.connect(audioInputBufferNode);
+          //audioContext.resume();
           audioInputBufferNode.connect(audioContext.destination);
 
           // Has to be a power of 2. At the default sample rate of 48000, this
@@ -223,6 +237,11 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
           analyzer.fftSize = 1024;
           gainNode.gain.value = 1;
 
+          console.log(
+            'input latency',
+            audioContext.baseLatency,
+            audioContext.outputLatency
+          );
           setAnalyzer(analyzer);
           setGainNode(gainNode);
           setDataArray(new Uint8Array(analyzer.fftSize));
@@ -241,7 +260,7 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
         };
       }
     },
-    [postChunk, stream]
+    [stream]
   );
 
   const fetchData = () => {

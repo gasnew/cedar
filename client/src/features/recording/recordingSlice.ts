@@ -111,8 +111,9 @@ export const selectRecordingDelaySeconds = (state: RootState) => {
   const index = state.room.musicianIdsChain.indexOf(
     state.room.musicianId || ''
   );
-  return index === -1 ? 0 : index;
+  return index === -1 ? 0 : index * 5;
 };
+
 export const selectCurrentTracks = (state: RootState) => {
   const recording = selectCurrentRecording(state);
   if (!recording) return [];
@@ -127,10 +128,10 @@ export const selectPrecedingTracks = (state: RootState): Track[] => {
   );
   const currentTracks = selectCurrentTracks(state);
   const precedingTracks = _.map(precedingMusicians, id =>
-    _.find(currentTracks, ['musicianId', id])
+    _.find(currentTracks, track => track.musicianId === id)
   );
-  if (_.some(precedingTracks, undefined)) return [];
-  return currentTracks;
+  if (_.some(precedingTracks, track => track === undefined)) return [];
+  //return currentTracks;
   return precedingTracks as Track[];
 };
 

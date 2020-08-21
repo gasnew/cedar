@@ -20,6 +20,7 @@ function useFetchAudioData(postWorkletMessage: (any) => void) {
   }>({});
   const recordingState = useSelector(selectRecordingState);
   const delaySeconds = useSelector(selectRecordingDelaySeconds);
+  //console.log('delay', delaySeconds);
   const precedingTracks = useSelector(selectPrecedingTracks);
   const [findTracks] = useLazyFind('tracks');
 
@@ -39,12 +40,17 @@ function useFetchAudioData(postWorkletMessage: (any) => void) {
   useEffect(
     () => {
       if (recordingState === 'recording' && !fetching) {
-        console.log('initialize');
+        console.log('initialize', precedingTracks, delaySeconds);
         postWorkletMessage({
           action: 'initialize',
-          delaySeconds: 2,
+          // more positive -> delay mic more
+          // NOTE(gnewman): I found my laptop has a loopback delay of about 100
+          // ms, but we still need to implement calculating that easily in
+          // Cedar!
+          delaySeconds: delaySeconds,
           trackCount: precedingTracks.length,
         });
+        requestOut.current = false;
         setFetching(true);
         setCursorsByTrack(
           _.reduce(
@@ -61,6 +67,16 @@ function useFetchAudioData(postWorkletMessage: (any) => void) {
           action: 'stop',
         });
         setFetching(false);
+        //setCursorsByTrack(
+        //_.reduce(
+        //precedingTracks,
+        //(cursorsByTrack, track) => ({
+        //...cursorsByTrack,
+        //[track.id]: null,
+        //}),
+        //{}
+        //)
+        //);
       }
     },
     [
@@ -75,7 +91,9 @@ function useFetchAudioData(postWorkletMessage: (any) => void) {
   // Wire the opusWorker to the audioWorklet
   useEffect(
     () => {
-      opusWorker.onmessage = async ({ data: { error, stream, frames, sampleRate } }) => {
+      opusWorker.onmessage = async ({
+        data: { error, stream, frames, sampleRate },
+      }) => {
         // Sometimes we receive undefined packets at the end of a stream
         if (!frames) return;
         if (error) {
@@ -176,6 +194,8 @@ function useFetchAudioData(postWorkletMessage: (any) => void) {
       requestOut.current = false;
     });
   }, 500);
+
+  return fetching;
 }
 
 interface DataResponse {
@@ -191,11 +211,13 @@ export function useRoomAudio(): DataResponse {
   const [postWorkletMessage, setPostWorkletMessage] = useState<(any) => void>(
     () => _ => null
   );
-  useFetchAudioData(postWorkletMessage);
+  const fetching = useFetchAudioData(postWorkletMessage);
 
   useEffect(() => {
-    const audioContext = new window.AudioContext();
-    audioContext.resume();
+    console.log('creati');
+    const audioContext = new window.AudioContext({
+      sampleRate: 48000,
+    });
     const launchAudioNodes = async () => {
       await audioContext.audioWorklet.addModule('RoomAudioPlayer.js');
       const gainNode = audioContext.createGain();
@@ -214,6 +236,11 @@ export function useRoomAudio(): DataResponse {
       // fetching every 1/60th of a second (48000 / 60 = 800 samples).
       analyzer.fftSize = 1024;
       gainNode.gain.value = 1;
+      console.log(
+        'output latency',
+        audioContext.baseLatency,
+        audioContext.outputLatency
+      );
 
       setAnalyzer(analyzer);
       setGainNode(gainNode);
@@ -227,6 +254,8 @@ export function useRoomAudio(): DataResponse {
     return () => {
       audioContext.close();
     };
+    // NOTE(gnewman): We do this so we recreate the AudioContext, just like in
+    // AudioStreamHooks
   }, []);
 
   const fetchData = () => {

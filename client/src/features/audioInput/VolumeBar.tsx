@@ -33,7 +33,7 @@ export default function({ height, width, fetchData, disabled }: Props) {
     setClipOpacity(
       normalizedDB === 1.0 ? 1 : _.max([clipOpacity - 0.02, 0]) || 0
     );
-  }, 1000 / 20);
+  }, 1000 / 1);
 
   return (
     <Stage height={height} width={width}>

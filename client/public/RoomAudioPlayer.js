@@ -8,9 +8,9 @@ class RoomAudioPlayer extends AudioWorkletProcessor {
     // This is currently not configurable via Web Audio API
     this.frameSize = 128;
 
-    // Buffer up to a whole minute of PCM data
     const sampleRate = 48000;
-    this.bufferLength = sampleRate * 6;
+    // Buffer up to a whole minute of PCM data
+    this.bufferLength = sampleRate * 60;
     this.pcmBuffers = [];
     this.bufferWriteIndices = [];
     this.bufferReadIndex = 0;
@@ -19,6 +19,7 @@ class RoomAudioPlayer extends AudioWorkletProcessor {
       if (event.data && event.data.action) {
         if (event.data.action === 'initialize') {
           // Initialize buffers and write indices, and set delay
+          console.log('INITIALIZE');
           const { delaySeconds, trackCount } = event.data;
           this.pcmBuffers = new Array(trackCount);
           this.bufferWriteIndices = new Array(trackCount);
@@ -28,6 +29,8 @@ class RoomAudioPlayer extends AudioWorkletProcessor {
           }
           this.delaySamples = Math.floor(sampleRate * delaySeconds);
           this.bufferReadIndex = this.bufferLength - this.delaySamples;
+          console.log('delay samples', this.delaySamples)
+          console.log('read index', this.bufferReadIndex)
         } else if (event.data.action === 'buffer') {
           // Append data to buffers, assuming stream data always comes in in
           // the same order
@@ -73,12 +76,17 @@ class RoomAudioPlayer extends AudioWorkletProcessor {
       for (let i = 0; i < this.frameSize; i++) channel[i] = 0.0;
       return true;
     }
+    //console.log('buffer read index', this.bufferReadIndex);
+    if (this.bufferReadIndex <= this.frameSize) {
+      //console.log("BEGIN PLAYBACK", this.bufferReadIndex);
+    }
 
     const bufferCount = this.pcmBuffers.length;
     for (let frameIndex = 0; frameIndex < this.frameSize; frameIndex++) {
       const readIndex = (this.bufferReadIndex + frameIndex) % this.bufferLength;
+      channel[frameIndex] = 0.0;
       for (let pcmIndex = 0; pcmIndex < bufferCount; pcmIndex++) {
-        channel[frameIndex] = this.pcmBuffers[pcmIndex][readIndex];
+        channel[frameIndex] += this.pcmBuffers[pcmIndex][readIndex];
         // We need to zero this out in case we've gone through the buffer once,
         // and we haven't received data for this part of the track yet. This is
         // likely to happen if another musician loses connection or has a spotty

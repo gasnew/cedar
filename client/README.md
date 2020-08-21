@@ -6,6 +6,7 @@ whether to use [this npm package](https://www.npmjs.com/package/opusscript)
 https://stackoverflow.com/questions/41346699/how-to-stream-audio-chunks-using-web-audio-api-coming-from-web-socket
 https://developer.mozilla.org/en-US/docs/Web/API/AudioBufferSourceNode
 https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletNode
+https://padenot.github.io/web-audio-perf/
 
 This project was bootstrapped with [Create React
 App](https://github.com/facebook/create-react-app), using the

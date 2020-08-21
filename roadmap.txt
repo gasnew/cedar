@@ -16,6 +16,11 @@ Then, to start recording, the main thread will post a message to the audio
 worklet for outgoing audio and to the audio worklet for incoming audio to say
 "start"
 
+Try using a real-time thread for audioworklet (https://bugs.chromium.org/p/chromium/issues/detail?id=813825)
+Try using an oscillator instead of user media (https://github.com/GoogleChromeLabs/web-audio-samples/blob/master/audio-worklet/design-pattern/wasm/wasm-worklet-processor.js)
+Look into why useFetchAudioData has to rerun so often (could result in CPU load)
+Try introducing a delay node (long shot--I wouldn't understand why it works if it does)
+
 Outgoing worklet:
 - audio input piped into this
 - load wasm script on instantiation
@@ -65,7 +70,8 @@ Incoming worklet:
   + VolumeBar now displays audio decibel-scaled from 0 to -40 dB
 - Documentation on how the frontend sends and receives audio data (include how
   we compiled webopus)
-- Don't patch so crazy man
+- Don't patch so crazy man. DONE
+- Call audiocontext.resume on user interaction? (not necessary in electron) https://developers.google.com/web/updates/2017/09/autoplay-policy-changes#webaudio
 
 Put it on DigitalOcean
 - Put it on a droplet

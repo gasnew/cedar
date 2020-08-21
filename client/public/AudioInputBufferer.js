@@ -7,6 +7,7 @@ class AudioInputBufferer extends AudioWorkletProcessor {
   constructor() {
     super();
 
+    console.log('construct-y');
     // TODO: Move chunksPerSecond, etc. out into parameters
     // This is currently not configurable via Web Audio API
     this.frameSize = 128;
@@ -29,23 +30,27 @@ class AudioInputBufferer extends AudioWorkletProcessor {
     this.delayFrames = 0;
     this.framesDelayed = 0;
     this.port.onmessage = event => {
-      if (
-        event.data &&
-        event.data.action &&
-        event.data.delaySeconds !== undefined
-      ) {
+      if (event.data && event.data.action) {
         const { action } = event.data;
 
         if (action === 'start') {
           console.log(this.playing);
+          console.log('MAYBE STAHT!');
           if (this.playing) return;
           this.playing = true;
+          this.framesInBuffer = 0;
           // Assume we don't need to delay by less than 128-sample granularity
           this.delayFrames = Math.floor(
             (sampleRate * event.data.delaySeconds) / this.frameSize
           );
           this.framesDelayed = 0;
-          console.log('startgin!');
+          console.log('STAHT!');
+        } else if (action === 'stop') {
+          console.log('NO MORE PLAY');
+          this.playing = false;
+          this.delayFrames = 0;
+          this.framesDelayed = 0;
+          this.framesInBuffer = 0;
         }
       }
     };
@@ -53,6 +58,7 @@ class AudioInputBufferer extends AudioWorkletProcessor {
 
   process(inputs, outputs, parameters) {
     if (!this.playing) return true;
+    //console.log('playing!', this.framesDelayed, this.delayFrames);
 
     // We assume we only have one input connection
     const input = inputs[0];
@@ -61,6 +67,7 @@ class AudioInputBufferer extends AudioWorkletProcessor {
     // Delay this frame, or buffer input
     if (this.framesDelayed < this.delayFrames) this.framesDelayed += 1;
     else {
+      //if (this.framesInBuffer === 0) console.log('NOW BUFFERING AUDIO', this.framesDelayed);
       // We only support one channel right now
       const channel = input[0];
       for (let i = 0; i < this.frameSize; i++) {
@@ -70,7 +77,6 @@ class AudioInputBufferer extends AudioWorkletProcessor {
 
       // Post chunk if the buffer is full
       if (this.framesInBuffer === this.framesPerChunk) {
-        //console.log(this.chunkBuffer);
         this.port.postMessage(this.chunkBuffer);
         this.framesInBuffer = 0;
       }
