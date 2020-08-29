@@ -33,7 +33,11 @@ export default function({ height, width, fetchData, disabled }: Props) {
     setClipOpacity(
       normalizedDB === 1.0 ? 1 : _.max([clipOpacity - 0.02, 0]) || 0
     );
-  }, 1000 / 1);
+  },
+  // TODO (gnewman): Optimize this component so we can render faster. For now,
+  // it's far too expensive to update at 60 Hz. Based on my testing, this
+  // interval function is plenty fast, but rendering is super expensive
+  1000);
 
   return (
     <Stage height={height} width={width}>

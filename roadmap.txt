@@ -2,6 +2,24 @@ A simple text file outlining future features and how to get there
 -----------------------------------------------------------------
 
 TODO: Put this data into actual issue tracking software
+TODO: Audio seems to get out of sync over time (even just a few minutes). How do we correct this?
+- Gradually adjust playback using relative-to-root annotations
+- Fix... audio buffering?
+- Use real-time thread? (this *may* not totally solve the problem though but could be two birds with one stone)
+- Try using DelayNode to build up a buffer hopefully (this node *may* run in an RT thread)
+- Make sure we're using 48k hz sample rate everywhere (e.g., mic at 44.1 and playback at 48 is big problemo)
+- Check audio input buffering to make sure we're copying data when necessary
+- The read index is catching up to the write index!?!?
+
+OK, so stuff about audio glitches
+- Link to resources on debugging
+- We need to do time stretching for microphone skips (happens sometimes, and we
+  CANNOT tolerate it because we need sample n on every audio stream to refer to
+  the same time point). We currently play the same frame twice.
+- Sometimes rendering audio takes a long time, and we end up with underflow on
+  the speaker end of things. We can *maybe* help with this by using a
+  SharedArrayBuffer to cut down on message-posting costs. Other than that, I'm
+  not sure what's best here.
 
 Audio streaming
 I'm hoping to use Web Assembly for encoding/decoding because it's like 10x

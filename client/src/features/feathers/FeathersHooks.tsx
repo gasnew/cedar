@@ -104,7 +104,8 @@ type PatchResultTuple<Data> = [
 export function usePatch<T extends keyof ServiceTypes>(
   serviceName: T,
   id: string = '',
-  requestData: Partial<ExtractData<ServiceTypes[T]>> = {}
+  requestData: Partial<ExtractData<ServiceTypes[T]>> = {},
+  optimized: boolean = false
 ): PatchResultTuple<ExtractData<ServiceTypes[T]>> {
   const app = useContext(FeathersContext);
   const room = useSelector(selectRoom);
@@ -117,21 +118,27 @@ export function usePatch<T extends keyof ServiceTypes>(
     trueId: string = '',
     trueRequestData: Partial<ExtractData<ServiceTypes[T]>> = {}
   ) => {
-    setCalled(true);
-    setLoading(true);
+    if (!optimized) {
+      setCalled(true);
+      setLoading(true);
+    }
     try {
       const data = (await app.service(serviceName).patch!(
         trueId || id,
         _.isEmpty(trueRequestData) ? requestData : trueRequestData,
         { query: { roomId: room.id } }
       )) as ExtractData<ServiceTypes[T]>;
-      setData(data);
-      setError(null);
-      setLoading(false);
+      if (!optimized) {
+        setData(data);
+        setError(null);
+        setLoading(false);
+      }
       return { data, error: null };
     } catch (error) {
-      setError(error);
-      setLoading(false);
+      if (!optimized) {
+        setError(error);
+        setLoading(false);
+      }
       return { data: null, error };
     }
   };
@@ -281,8 +288,6 @@ export function useLazyFind<T extends keyof ServiceTypes>(
   const [data, setData] = useState<any>(null);
 
   const callFind = async (queryData: object = {}) => {
-    setCalled(true);
-    setLoading(true);
     try {
       const data = (await app.service(serviceName).find!({
         query: {
@@ -290,13 +295,8 @@ export function useLazyFind<T extends keyof ServiceTypes>(
           ...queryData,
         },
       })) as ExtractData<ServiceTypes[T]>;
-      setData(data);
-      setError(null);
-      setLoading(false);
       return { data, error: null };
     } catch (error) {
-      setError(error);
-      setLoading(false);
       return { data: null, error };
     }
   };

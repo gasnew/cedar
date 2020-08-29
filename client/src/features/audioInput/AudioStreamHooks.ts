@@ -49,7 +49,7 @@ function useChunkPoster(
   const cursor = useRef<string | null>(null);
   const dataBuffer = useRef<string[]>([]);
   const requestOut = useRef<boolean>(false);
-  const [patchTrack] = usePatch('tracks');
+  const [patchTrack] = usePatch('tracks', '', {}, true);
 
   // Instantiate this once, and reuse it for different streams/tracks
   const opusWorker = useMemo(() => new Worker('webopus.asm.min.js'), []);
@@ -63,16 +63,16 @@ function useChunkPoster(
 
       // This onmessage function receives opus-encoded packets or opus/webopus
       // errors
-      opusWorker.onmessage = async ({ data: { error, packet } }) => {
+      opusWorker.onmessage = async ({ data: { error, packet, sampleRate } }) => {
+        if (error) {
+          console.error('webopus worker error: ', error);
+          return;
+        }
         // Sometimes we receive undefined packets at the end of a stream
         if (!packet) return;
         // Sometimes the worklet takes a moment to stop, even after we've
         // stopped recording
         if (!trackId) return;
-        if (error) {
-          console.error('webopus worker error: ', error);
-          return;
-        }
 
         const data = Base64.fromUint8Array(packet);
         dataBuffer.current = dataBuffer.current.concat([data]);
@@ -81,7 +81,7 @@ function useChunkPoster(
         // one request to be out at a time to guarantee we always send complete
         // data in order, so we use requestOut to flag whether a request is in
         // progress
-        if (!requestOut.current) {
+        if (!requestOut.current && dataBuffer.current.length > 15) {
           // This needs to be set to true before anything else
           requestOut.current = true;
 
@@ -216,6 +216,7 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
           await audioContext.audioWorklet.addModule('AudioInputBufferer.js');
           const analyzer = audioContext.createAnalyser();
           const mediaSource = audioContext.createMediaStreamSource(stream);
+
           const gainNode = audioContext.createGain();
           const audioInputBufferNode = new AudioWorkletNode(
             audioContext,
@@ -228,7 +229,6 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
           mediaSource.connect(gainNode);
           gainNode.connect(analyzer);
           gainNode.connect(audioInputBufferNode);
-          //audioContext.resume();
           audioInputBufferNode.connect(audioContext.destination);
 
           // Has to be a power of 2. At the default sample rate of 48000, this

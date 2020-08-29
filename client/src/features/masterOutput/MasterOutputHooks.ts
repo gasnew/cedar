@@ -15,7 +15,7 @@ import { Track as ServerTrack } from '../../../../api/src/room';
 
 function useFetchAudioData(postWorkletMessage: (any) => void) {
   const [fetching, setFetching] = useState<boolean>(false);
-  const [cursorsByTrack, setCursorsByTrack] = useState<{
+  const cursorsByTrack = useRef<{
     [trackId: string]: string | null;
   }>({});
   const recordingState = useSelector(selectRecordingState);
@@ -52,15 +52,13 @@ function useFetchAudioData(postWorkletMessage: (any) => void) {
         });
         requestOut.current = false;
         setFetching(true);
-        setCursorsByTrack(
-          _.reduce(
-            precedingTracks,
-            (cursorsByTrack, track) => ({
-              ...cursorsByTrack,
-              [track.id]: null,
-            }),
-            {}
-          )
+        cursorsByTrack.current = _.reduce(
+          precedingTracks,
+          (cursorsByTrack, track) => ({
+            ...cursorsByTrack,
+            [track.id]: null,
+          }),
+          {}
         );
       } else if (recordingState === 'stopped' && fetching) {
         postWorkletMessage({
@@ -95,11 +93,12 @@ function useFetchAudioData(postWorkletMessage: (any) => void) {
         data: { error, stream, frames, sampleRate },
       }) => {
         // Sometimes we receive undefined packets at the end of a stream
-        if (!frames) return;
         if (error) {
           console.error('webopus worker decoding error: ', error);
           return;
         }
+        if (!frames) return;
+        //console.log('incoming', frames);
 
         postWorkletMessage({
           action: 'buffer',
@@ -114,7 +113,7 @@ function useFetchAudioData(postWorkletMessage: (any) => void) {
   useEffect(
     () => {
       if (!fetching && !_.isEmpty(instantiatedStreams.current)) {
-        _.each(cursorsByTrack, (_, trackId) => {
+        _.each(cursorsByTrack.current, (_, trackId) => {
           opusWorker.postMessage({
             op: 'end',
             stream: trackId,
@@ -123,7 +122,7 @@ function useFetchAudioData(postWorkletMessage: (any) => void) {
         instantiatedStreams.current = {};
       }
     },
-    [fetching, cursorsByTrack, opusWorker]
+    [fetching, opusWorker]
   );
 
   // Fetch audio data, and post it to the opusWorker
@@ -135,7 +134,9 @@ function useFetchAudioData(postWorkletMessage: (any) => void) {
     const streamName = trackId => trackId;
 
     const retrieveTrackData = async () => {
-      const { data, error } = await findTracks({ cursorsByTrack });
+      const { data, error } = await findTracks({
+        cursorsByTrack: cursorsByTrack.current,
+      });
       // NOTE(gnewman): Need to do this because Feathers allows find to
       // return a single instance
       const tracks = data as ServerTrack[] | null;
@@ -181,15 +182,13 @@ function useFetchAudioData(postWorkletMessage: (any) => void) {
       return tracks;
     };
     retrieveTrackData().then(tracks => {
-      setCursorsByTrack(
-        _.reduce(
-          tracks,
-          (cursorsByTrack, track) => ({
-            ...cursorsByTrack,
-            [track.id]: track.cursor,
-          }),
-          {}
-        )
+      cursorsByTrack.current = _.reduce(
+        tracks,
+        (cursorsByTrack, track) => ({
+          ...cursorsByTrack,
+          [track.id]: track.cursor,
+        }),
+        {}
       );
       requestOut.current = false;
     });
@@ -207,7 +206,7 @@ interface DataResponse {
 export function useRoomAudio(): DataResponse {
   const [analyzer, setAnalyzer] = useState<AnalyserNode | null>(null);
   const [gainNode, setGainNode] = useState<GainNode | null>(null);
-  const [dataArray, setDataArray] = useState<Uint8Array>(new Uint8Array());
+  const dataArray = useRef<Uint8Array>(new Uint8Array());
   const [postWorkletMessage, setPostWorkletMessage] = useState<(any) => void>(
     () => _ => null
   );
@@ -217,6 +216,7 @@ export function useRoomAudio(): DataResponse {
     console.log('creati');
     const audioContext = new window.AudioContext({
       sampleRate: 48000,
+      //latencyHint: 'playback'
     });
     const launchAudioNodes = async () => {
       await audioContext.audioWorklet.addModule('RoomAudioPlayer.js');
@@ -244,7 +244,7 @@ export function useRoomAudio(): DataResponse {
 
       setAnalyzer(analyzer);
       setGainNode(gainNode);
-      setDataArray(new Uint8Array(analyzer.fftSize));
+      dataArray.current = new Uint8Array(analyzer.fftSize);
       setPostWorkletMessage(() => message =>
         roomAudioNode.port.postMessage(message)
       );
@@ -259,8 +259,8 @@ export function useRoomAudio(): DataResponse {
   }, []);
 
   const fetchData = () => {
-    if (analyzer) analyzer.getByteTimeDomainData(dataArray);
-    return dataArray;
+    if (analyzer) analyzer.getByteTimeDomainData(dataArray.current);
+    return dataArray.current;
   };
   const setGainDB = gainDB => {
     if (gainNode) gainNode.gain.value = Math.pow(10, gainDB / 20);

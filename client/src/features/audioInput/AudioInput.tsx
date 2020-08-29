@@ -65,6 +65,7 @@ function useInputDevices(): [() => void, InputDeviceData] {
 }
 
 export default function() {
+  console.log('INPUTTT');
   // Device selection
   const [
     requestPermission,

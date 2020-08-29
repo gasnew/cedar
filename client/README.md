@@ -8,6 +8,15 @@ https://developer.mozilla.org/en-US/docs/Web/API/AudioBufferSourceNode
 https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletNode
 https://padenot.github.io/web-audio-perf/
 
+Audio debugging
+https://web.dev/profiling-web-audio-apps-in-chrome/
+https://developers.google.com/web/updates/2018/06/audio-worklet-design-pattern
+https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer
+https://googlechromelabs.github.io/web-audio-samples/audio-worklet/
+
+React debugging
+- Look at component; copy hook values; diff the files! Super useful
+
 This project was bootstrapped with [Create React
 App](https://github.com/facebook/create-react-app), using the
 [Redux](https://redux.js.org/) and [Redux
