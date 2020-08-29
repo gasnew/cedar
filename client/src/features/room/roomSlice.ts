@@ -10,9 +10,9 @@ export interface RoomState {
 }
 
 const initialState: RoomState = {
-  id: null, //'649c6f70-e771-4a22-bed5-4e16161ac4b1',
-  name: null, //'Phresh Room',
-  musicianId: null, //'45abbee5-5f2b-42bd-a516-2c799f011d48',
+  id: null,
+  name: null,
+  musicianId: null,
   musicianIdsChain: [],
 };
 

@@ -1,22 +1,5 @@
 # Cedar Client
 
-TODO: Think about whether to use [opus](https://opus-codec.org/) and, if so,
-whether to use [this npm package](https://www.npmjs.com/package/opusscript)
-)
-https://stackoverflow.com/questions/41346699/how-to-stream-audio-chunks-using-web-audio-api-coming-from-web-socket
-https://developer.mozilla.org/en-US/docs/Web/API/AudioBufferSourceNode
-https://developer.mozilla.org/en-US/docs/Web/API/AudioWorkletNode
-https://padenot.github.io/web-audio-perf/
-
-Audio debugging
-https://web.dev/profiling-web-audio-apps-in-chrome/
-https://developers.google.com/web/updates/2018/06/audio-worklet-design-pattern
-https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer
-https://googlechromelabs.github.io/web-audio-samples/audio-worklet/
-
-React debugging
-- Look at component; copy hook values; diff the files! Super useful
-
 This project was bootstrapped with [Create React
 App](https://github.com/facebook/create-react-app), using the
 [Redux](https://redux.js.org/) and [Redux
@@ -129,3 +112,70 @@ https://facebook.github.io/create-react-app/docs/deployment
 
 This section has moved here:
 https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify
+
+## App design
+
+### Opus audio encoding
+
+We use the [Opus codec](https://opus-codec.org/) to encode and decode audio
+data. It is way too fast, audio quality remains very high, and it reduces
+space/bandwidth requirements by ~10x. We currently run encoding and decoding in
+a worker thread using a compiled file from
+[webopus](https://github.com/srikumarks/webopus).
+
+### Web Audio API
+
+TODO: Link to diagrams of how Cedar uses the Web Audio API.
+
+The most difficult-to-understand parts of the Cedar client are the parts
+involving the Web Audio API, which is used for piping data from audio input
+devices to the Cedar backend and playing audio from the Cedar backend through
+the speakers. The [MDN Web Audio
+API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API) page
+provides a useful intro to the concepts, and Google has a great overview of Web
+Audio API best practices in [their Audio Worklet Design Pattern
+article](https://developers.google.com/web/updates/2018/06/audio-worklet-design-pattern).
+
+#### Debugging web audio
+
+Web audio is notoriously difficult to troubleshoot, unfortunately, but there
+are some great resources out there:
+
+* [Web Audio API performance and debugging notes](https://padenot.github.io/web-audio-perf/)
+* [Profiling Web Audio apps in Chrome](https://web.dev/profiling-web-audio-apps-in-chrome/)
+
+#### Future work
+
+The current implementation of the Cedar client is far from perfect. Here are
+some potential optimizations:
+* We currently copy audio data buffers across threads, which can be costly (but
+  hasn't been yet in my small-scale tests). Still, one optimization here would
+  be to use the
+  [SharedArrayBuffer](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/SharedArrayBuffer),
+  on which we could perform atomic operations across threads.
+* If we need our AudioWorkletProcessors to be more performant (and perhaps more
+  importantly not get blocked by garbage collection now and then), we should
+  rewrite them in WebAssembly.
+* Generally, there are good tips and best-practice examples on [Google's Audio
+  Worklet examples
+  page](https://googlechromelabs.github.io/web-audio-samples/audio-worklet/)
+* Integration tests! By far the hardest part of this app to test is making sure
+  audio stays synced across multiple clients. This means the microphone and
+  speaker data need to start moving at the same time (delta some loopback
+  delay), sample count needs to match progression of time one-to-one, etc. This
+  is a pain to test manually and is a critical failure if an update breaks this
+  feature. I'll be doing more thinking about how to automate testing this.
+
+### React
+
+React! React everywhere! When things look sluggish, don't hesitate to use the
+React Dev Tools.
+
+Tips:
+* Debugging hook-related renders: Sometimes hooks cause a bajillion re-renders,
+  but the dev tools don't give us much insight into this. However, a good way
+  to see what hooks are being troublesome, you can do something like this:
+  1. Inspect the component in the React Dev Tools
+  2. Copy the hooks state JSON into a file
+  3. Repeat step 2 after state has updated
+  4. Diff the two files

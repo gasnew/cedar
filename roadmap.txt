@@ -1,98 +1,28 @@
 A simple text file outlining future features and how to get there
------------------------------------------------------------------
+=================================================================
 
-TODO: Put this data into actual issue tracking software
-TODO: Audio seems to get out of sync over time (even just a few minutes). How do we correct this?
-- Gradually adjust playback using relative-to-root annotations
-- Fix... audio buffering?
-- Use real-time thread? (this *may* not totally solve the problem though but could be two birds with one stone)
-- Try using DelayNode to build up a buffer hopefully (this node *may* run in an RT thread)
-- Make sure we're using 48k hz sample rate everywhere (e.g., mic at 44.1 and playback at 48 is big problemo)
-- Check audio input buffering to make sure we're copying data when necessary
-- The read index is catching up to the write index!?!?
-
-OK, so stuff about audio glitches
-- Link to resources on debugging
-- We need to do time stretching for microphone skips (happens sometimes, and we
-  CANNOT tolerate it because we need sample n on every audio stream to refer to
-  the same time point). We currently play the same frame twice.
-- Sometimes rendering audio takes a long time, and we end up with underflow on
-  the speaker end of things. We can *maybe* help with this by using a
-  SharedArrayBuffer to cut down on message-posting costs. Other than that, I'm
-  not sure what's best here.
-
-Audio streaming
-I'm hoping to use Web Assembly for encoding/decoding because it's like 10x
-faster than plain JS. But for this, we need to load/compile a .wasm module in
-an audio worklet or web worker (EDIT: probably a web worker; will look into
-this), which can be a sync or async operation. We *may* need, then, to post a
-message from the worklet when this is complete, but I'm not 100% sure we need
-to since we should be instantiating the worklet as soon as an input audio
-device is selected (should be sufficiently long before initiating recording).
-
-Then, to start recording, the main thread will post a message to the audio
-worklet for outgoing audio and to the audio worklet for incoming audio to say
-"start"
-
-Try using a real-time thread for audioworklet (https://bugs.chromium.org/p/chromium/issues/detail?id=813825)
-Try using an oscillator instead of user media (https://github.com/GoogleChromeLabs/web-audio-samples/blob/master/audio-worklet/design-pattern/wasm/wasm-worklet-processor.js)
-Look into why useFetchAudioData has to rerun so often (could result in CPU load)
-Try introducing a delay node (long shot--I wouldn't understand why it works if it does)
-
-Outgoing worklet:
-- audio input piped into this
-- load wasm script on instantiation
-- once started, buffer raw PCM data from input, then encode a frame (0.2
-  seconds?) and post the message to the main thread
-- main thread sends this out to Cedar server
-- should update the patch endpoint to, if it receives data with the wrong
-  cursor,
-  * if the incoming data matches the data from that cursor onward, return the
-    saved cursor with a 200 (truly idempotent, which is handy for when a server
-    dies before responding)
-  * if the incoming data does not match the data from that cursor onward, fail
-    the request by saying something like, "The provided data is not contiguous
-    with/adjacent to previous data"
-
-Incoming worklet:
-- piped into the audio context destination
-- load wasm script on instantiation
-- main thread fetches audio data and sends opus-encoded sets of frames from all
-  incoming streams to the worklet.
-- After {musicianIndex * chainDelay} time, "start" will be sent to this worklet
-  and to "Outgoing worklet" at the same time to sync our musician's data with
-  the root musician's data.
-- received data sets will be decoded and added to a buffer (decoded in this
-  async callback to keep the main process() loop fast)
-- when started, the data from the buffer will be progressively loaded into the
-  worklet's output
-- make sure to free up the buffer periodically so we don't keep raw PCM data
-  sitting in memory forever
-- NOTE: When we allow client-side gain alteration, this should be handled as a
-  worklet param so we can update gain dynamically in real time during playback.
-
-- Start/Stop recording
-- Probably use webopus to encode/decode in separate threads
+FEATURE PACKAGES
+----------------
+Full streaming through Cedar client and server
++ Start/Stop recording
++ Use webopus to encode/decode in separate threads
 - Disable input selection while recording
-- Musicians placed in chain automatically
-- Only root musician can start recording (eventually host maybe?)
-- Audio recording delayed by 1 second per musician
-- Server track PATCH endpoint is truly idempotent (returns the same response if
-  the same input is received)
++ Musicians placed in chain automatically
+x Only root musician can start recording (eventually host maybe?)
++ Audio recording delayed by x seconds per musician
 + Make sure we don't needlessly create audio nodes when switching audio inputs
-/ Features
-  / New MasterOutput component that launches the RoomAudioPlayer node and
++ Features
+  + New MasterOutput component that launches the RoomAudioPlayer node and
     includes a gain control and volume bar
-  / AudioInputBufferer, which takes raw audio input PCM data, buffers it for a
+  + AudioInputBufferer, which takes raw audio input PCM data, buffers it for a
     bit, then sends it back out to the main thread
   + VolumeBar now displays audio decibel-scaled from 0 to -40 dB
-- Documentation on how the frontend sends and receives audio data (include how
-  we compiled webopus)
-- Don't patch so crazy man. DONE
-- Call audiocontext.resume on user interaction? (not necessary in electron) https://developers.google.com/web/updates/2017/09/autoplay-policy-changes#webaudio
++ Don't patch so crazy man. DONE
 
 Put it on DigitalOcean
 - Put it on a droplet
+- Build the electron app for MacOS and Windows
+- Test that it works on Windows
 - See if it works with friends!
 
 Modifying the chain
@@ -113,6 +43,11 @@ Client-side mixing
 - Tooltip about the fact that this only mixes for you (maybe just call it
   "Personal Mixer"?)
 - Master output and slider
+
+Make web app version public (for ChromeOS, etc.)
+- autoplay-policy makes me sad, and we need to get around it: Call
+  audiocontext.resume on user interaction? (not necessary in electron)
+  https://developers.google.com/web/updates/2017/09/autoplay-policy-changes#webaudio
 
 Allow rejoining stream mid-stream (if you lose your place entirely). This can
 be for audience members first, though we should be able to do it for musicians
@@ -147,8 +82,14 @@ Cedar audience
 - Can join in whenever and hear the audio of the room (definitely need
   rejoining mid-stream to be a thing for this)
 
+FEATURE PACKAGES THAT NEED TO BE SPECCED OUT
+--------------------------------------------
 Future features
 - Display errors (esp. for streaming failures)
+- Server track PATCH endpoint is truly idempotent (returns the same response if
+  the same input is received). This will help make us robust to servers that
+  die (i.e., it's OK if we don't get the new cursor immediately when writing
+  audio data)
 - Support multiple channels (stereo+)
 - Visualize and allow playback of recordings
 - Download recordings
@@ -159,3 +100,52 @@ Future features
 - Intercom feature? I really, really hope we don't need this (managing multiple
   input devices sounds like UX hell). But it may be better than using two
   applications for some people
+
+WHEN I GET BORED OR IF SOMEONE JOINS THE PROJECT
+------------------------------------------------
+- Documentation on how the frontend sends and receives audio data (include how
+  we compiled webopus)
+
+MISC NOTES
+----------
+OK, so stuff about audio glitches
+- Link to resources on debugging
+- We need to do time stretching for microphone skips (happens sometimes, and we
+  CANNOT tolerate it because we need sample n on every audio stream to refer to
+  the same time point). We currently play the same frame twice.
+- Sometimes rendering audio takes a long time, and we end up with underflow on
+  the speaker end of things. We can *maybe* help with this by using a
+  SharedArrayBuffer to cut down on message-posting costs. Other than that, I'm
+  not sure what's best here.
+
+Outgoing worklet:
+- audio input piped into this
+- load wasm script on instantiation
+- once started, buffer raw PCM data from input, then encode a frame (0.2
+  seconds?) and post the message to the main thread
+- main thread sends this out to Cedar server
+- should update the patch endpoint to, if it receives data with the wrong
+  cursor,
+  * if the incoming data matches the data from that cursor onward, return the
+    saved cursor with a 200 (truly idempotent, which is handy for when a server
+    dies before responding)
+  * if the incoming data does not match the data from that cursor onward, fail
+    the request by saying something like, "The provided data is not contiguous
+    with/adjacent to previous data"
+
+Incoming worklet:
+- piped into the audio context destination
+- load wasm script on instantiation
+- main thread fetches audio data and sends opus-encoded sets of frames from all
+  incoming streams to the worklet.
+- After {musicianIndex * chainDelay} time, "start" will be sent to this worklet
+  and to "Outgoing worklet" at the same time to sync our musician's data with
+  the root musician's data.
+- received data sets will be decoded and added to a buffer (decoded in this
+  async callback to keep the main process() loop fast)
+- when started, the data from the buffer will be progressively loaded into the
+  worklet's output
+- make sure to free up the buffer periodically so we don't keep raw PCM data
+  sitting in memory forever
+- NOTE: When we allow client-side gain alteration, this should be handled as a
+  worklet param so we can update gain dynamically in real time during playback.

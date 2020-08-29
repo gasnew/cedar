@@ -29,13 +29,6 @@ function createWindow() {
   mainWindow.webContents.openDevTools();
 }
 
-// Configure Electron to not require user interaction before allowing audio to
-// be played
-// TODO: Maybe remove this if we don't need it
-//app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
-app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
-app.commandLine.appendSwitch('--enable-features=AudioWorkletRealtimeThreadLol');
-
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.

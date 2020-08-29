@@ -44,9 +44,6 @@ function useFetchAudioData(postWorkletMessage: (any) => void) {
         postWorkletMessage({
           action: 'initialize',
           // more positive -> delay mic more
-          // NOTE(gnewman): I found my laptop has a loopback delay of about 100
-          // ms, but we still need to implement calculating that easily in
-          // Cedar!
           delaySeconds: delaySeconds,
           trackCount: precedingTracks.length,
         });
@@ -65,16 +62,6 @@ function useFetchAudioData(postWorkletMessage: (any) => void) {
           action: 'stop',
         });
         setFetching(false);
-        //setCursorsByTrack(
-        //_.reduce(
-        //precedingTracks,
-        //(cursorsByTrack, track) => ({
-        //...cursorsByTrack,
-        //[track.id]: null,
-        //}),
-        //{}
-        //)
-        //);
       }
     },
     [

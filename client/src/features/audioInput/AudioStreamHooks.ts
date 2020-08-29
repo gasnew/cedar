@@ -96,19 +96,20 @@ function useChunkPoster(
             // If success, get ready for next request
             cursor.current = response.data.cursor;
           } else {
-            //console.error('WHOAT THERE', response.error);
             // For now, data that failed to send will stay in the buffer, and
             // the cursor won't change, so we'll just try again in a sec.
             // TODO: In some cases, the request succeeds, but we get a failed
-            // response, meaning we never update the cursor. We should update the server thus:
+            // response, meaning we never update the cursor. We should update
+            // the server thus:
             //- should update the patch endpoint to, if it receives data with the
             //  wrong cursor,
-            //  * if the incoming data matches the data from that cursor onward,
-            //    return the saved cursor with a 200 (truly idempotent, which is
-            //    handy for when a server dies before responding)
+            //  * if the incoming data matches the data from that cursor
+            //    onward, return the saved cursor with a 200 (truly idempotent,
+            //    which is handy for when a server dies before responding)
             //  * if the incoming data does not match the data from that cursor
-            //    onward, fail the request by saying something like, "The provided
-            //    data is not contiguous with/adjacent to previous data"
+            //    onward, fail the request by saying something like, "The
+            //    provided data is not contiguous with/adjacent to previous
+            //    data"
             if (dataBuffer.current.length > 150) {
               console.error(
                 'Resetting data buffer because it got too hecka long!'
@@ -195,6 +196,9 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
         postWorkletMessage({
           action: 'start',
           // more negative -> delay mic more
+          // NOTE(gnewman): I found my laptop has a loopback delay of about 100
+          // ms, but we still need to implement calculating that easily in
+          // Cedar!
           delaySeconds: delaySeconds + 0.1,
         });
       } else if (recordingState === 'stopped') {
