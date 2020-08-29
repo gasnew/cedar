@@ -15,14 +15,13 @@ describe('recording methods', () => {
     const mockRedis = new MockIORedis();
     const client = withHelpers(mockRedis);
     mockRedis.exists.mockResolvedValue(true);
-
-    mockRedis.hgetall.mockResolvedValueOnce({
-      abc: JSON.stringify({
-        id: 'abc',
-        state: 'running',
-        trackIds: [],
-      }),
-    });
+    const roomMeta = {
+      id: 'abc',
+      name: 'Roomy McRoomface',
+      recordingId: 'some-recording-uuid',
+      musicianIdsChain: ['musician1-id'],
+    };
+    mockRedis.hget.mockResolvedValue(JSON.stringify(roomMeta));
 
     await expect(() =>
       client.createRecording('room-uuid')
@@ -30,30 +29,43 @@ describe('recording methods', () => {
   });
 
   it('creates a recording, along with a track for each musician', async () => {
-    expect.assertions(4);
+    expect.assertions(5);
     const mockRedis = new MockIORedis();
     const client = withHelpers(mockRedis);
     mockRedis.exists.mockResolvedValue(true);
-    mocked(uuidv4).mockReturnValueOnce('track1-uuid');
-    mocked(uuidv4).mockReturnValueOnce('track2-uuid');
-    mocked(uuidv4).mockReturnValueOnce('recording-uuid');
-
     const musicians = {
       abc: {
         id: 'abc',
         name: 'Bob Tuba',
-        previousMusicianId: null,
       },
       def: {
         id: 'def',
         name: 'Bob Tuba',
-        previousMusicianId: 'abc',
       },
     };
+    const roomMeta = {
+      id: 'abc',
+      name: 'Roomy McRoomface',
+      recordingId: null,
+      musicianIdsChain: ['abc', 'def'],
+    };
+    mockRedis.hget.mockResolvedValue(JSON.stringify(roomMeta));
+    mocked(uuidv4).mockReturnValueOnce('recording-uuid');
+    mocked(uuidv4).mockReturnValueOnce('track1-uuid');
+    mocked(uuidv4).mockReturnValueOnce('track2-uuid');
+
     mockRedis.hgetall.mockResolvedValue(_.mapValues(musicians, JSON.stringify));
 
     const response = await client.createRecording('room-uuid');
 
+    expect(client.hset).toHaveBeenCalledWith(
+      'room-uuid',
+      'meta',
+      JSON.stringify({
+        ...roomMeta,
+        recordingId: 'recording-uuid',
+      })
+    );
     expect(client.hset).toHaveBeenCalledWith(
       'room-uuid:tracks',
       'track1-uuid',

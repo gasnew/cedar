@@ -35,11 +35,18 @@ describe('musician methods', () => {
     expect(response).toEqual(musicians);
   });
 
-  it('can create a musician', async () => {
-    expect.assertions(1);
+  it('can create a musician and add to the chain', async () => {
+    expect.assertions(2);
     const mockRedis = new MockIORedis();
     const client = withHelpers(mockRedis);
     mockRedis.exists.mockResolvedValue(true);
+    const roomMeta = {
+      id: 'abc',
+      name: 'Roomy McRoomface',
+      recordingId: null,
+      musicianIdsChain: ['musician1-id'],
+    };
+    mockRedis.hget.mockResolvedValue(JSON.stringify(roomMeta));
     mocked(uuidv4).mockReturnValueOnce('musician-uuid');
 
     await client.createMusician('room-uuid', 'Bobby Tuba');
@@ -50,7 +57,14 @@ describe('musician methods', () => {
       JSON.stringify({
         id: 'musician-uuid',
         name: 'Bobby Tuba',
-        previousMusicianId: null,
+      })
+    );
+    expect(client.hset).toHaveBeenCalledWith(
+      'room-uuid',
+      'meta',
+      JSON.stringify({
+        ...roomMeta,
+        musicianIdsChain: ['musician1-id', 'musician-uuid'],
       })
     );
   });
