@@ -1,4 +1,4 @@
-import { Params, ServiceMethods } from '@feathersjs/feathers';
+import { ServiceMethods } from '@feathersjs/feathers';
 import { FeathersError } from '@feathersjs/errors';
 import _ from 'lodash';
 import { useContext, useState } from 'react';
@@ -282,10 +282,10 @@ export function useLazyFind<T extends keyof ServiceTypes>(
 ): LazyFindResultTuple<ExtractData<ServiceTypes[T]>> {
   const app = useContext(FeathersContext);
   const room = useSelector(selectRoom);
-  const [called, setCalled] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<FeathersError | null>(null);
-  const [data, setData] = useState<any>(null);
+  const [called] = useState<boolean>(false);
+  const [loading] = useState<boolean>(false);
+  const [error] = useState<FeathersError | null>(null);
+  const [data] = useState<any>(null);
 
   const callFind = async (queryData: object = {}) => {
     try {

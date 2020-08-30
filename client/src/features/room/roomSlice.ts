@@ -1,6 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../../app/store';
-import { setRecordingState, addRecording } from '../recording/recordingSlice';
 
 export interface RoomState {
   id: string | null;

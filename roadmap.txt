@@ -6,7 +6,7 @@ FEATURE PACKAGES
 Full streaming through Cedar client and server
 + Start/Stop recording
 + Use webopus to encode/decode in separate threads
-- Disable input selection while recording
++ Disable input selection while recording
 + Musicians placed in chain automatically
 x Only root musician can start recording (eventually host maybe?)
 + Audio recording delayed by x seconds per musician

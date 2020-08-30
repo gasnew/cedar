@@ -1,7 +1,6 @@
 import _ from 'lodash';
-import React, { useEffect, useState } from 'react';
-import { Card, H4, Button, MenuItem, Slider } from '@blueprintjs/core';
-import { ItemRenderer, Select } from '@blueprintjs/select';
+import React, { useState } from 'react';
+import { Card, H4, Slider } from '@blueprintjs/core';
 
 import { useRoomAudio } from './MasterOutputHooks';
 import VolumeBar from '../audioInput/VolumeBar';

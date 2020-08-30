@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { Stage, Layer, Rect } from 'react-konva';
 import { Colors } from '@blueprintjs/core';
 

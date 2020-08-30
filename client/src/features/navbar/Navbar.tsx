@@ -36,7 +36,7 @@ function RoomNameplate({ id, name }: { id: string; name: string }) {
   const dispatch = useDispatch();
   const recordingState = useSelector(selectRecordingState);
 
-  const remoteRoom = useGet('rooms', id, {
+  useGet('rooms', id, {
     pollingInterval: 1000,
     // Keep recordingId up-to-date (indicates whether the server expects us to
     // be recording)

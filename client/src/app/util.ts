@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { BIRD_NAMES } from './resources/birdNames';
 

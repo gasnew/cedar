@@ -87,7 +87,6 @@ class AudioInputBufferer extends AudioWorkletProcessor {
       // implementing a smarter way of keeping the mic in time will
       // significantly improve perceived audio quality.
       if (this.timeDeltaMs > this.timeThresholdMs) {
-        console.log('WHOATTT', this.timeDeltaMs, this.timeThresholdMs, 128/48);
         for (let half = 0; half < 2; half++) {
           for (let i = 0; i < this.frameSize; i++) {
             const newSample = (channel[i] + channel[i]) / 2;

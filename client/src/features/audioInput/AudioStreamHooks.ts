@@ -1,7 +1,6 @@
-import _ from 'lodash';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Base64, encode } from 'js-base64';
+import { Base64 } from 'js-base64';
 
 import { usePatch } from '../feathers/FeathersHooks';
 import {
@@ -129,7 +128,6 @@ function useChunkPoster(
       var instantiatedStream = false;
 
       setWorkletCallback(event => {
-        //console.log(event);
         if (!instantiatedStream) {
           opusWorker.postMessage({
             op: 'begin',
@@ -192,7 +190,6 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
   useEffect(
     () => {
       if (recordingState === 'recording') {
-        console.log('staht!');
         postWorkletMessage({
           action: 'start',
           // more negative -> delay mic more
@@ -202,7 +199,6 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
           delaySeconds: delaySeconds + 0.1,
         });
       } else if (recordingState === 'stopped') {
-        console.log('stopper');
         postWorkletMessage({ action: 'stop' });
       }
     },
@@ -241,11 +237,6 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
           analyzer.fftSize = 1024;
           gainNode.gain.value = 1;
 
-          console.log(
-            'input latency',
-            audioContext.baseLatency,
-            audioContext.outputLatency
-          );
           setAnalyzer(analyzer);
           setGainNode(gainNode);
           setDataArray(new Uint8Array(analyzer.fftSize));

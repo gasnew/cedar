@@ -1,11 +1,10 @@
 import _ from 'lodash';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Base64, decode } from 'js-base64';
+import { Base64 } from 'js-base64';
 
 import { useLazyFind } from '../feathers/FeathersHooks';
 import {
-  selectCurrentTracks,
   selectPrecedingTracks,
   selectRecordingState,
   selectRecordingDelaySeconds,
@@ -20,7 +19,6 @@ function useFetchAudioData(postWorkletMessage: (any) => void) {
   }>({});
   const recordingState = useSelector(selectRecordingState);
   const delaySeconds = useSelector(selectRecordingDelaySeconds);
-  //console.log('delay', delaySeconds);
   const precedingTracks = useSelector(selectPrecedingTracks);
   const [findTracks] = useLazyFind('tracks');
 
@@ -40,7 +38,6 @@ function useFetchAudioData(postWorkletMessage: (any) => void) {
   useEffect(
     () => {
       if (recordingState === 'recording' && !fetching) {
-        console.log('initialize', precedingTracks, delaySeconds);
         postWorkletMessage({
           action: 'initialize',
           // more positive -> delay mic more
@@ -85,7 +82,6 @@ function useFetchAudioData(postWorkletMessage: (any) => void) {
           return;
         }
         if (!frames) return;
-        //console.log('incoming', frames);
 
         postWorkletMessage({
           action: 'buffer',
@@ -180,8 +176,6 @@ function useFetchAudioData(postWorkletMessage: (any) => void) {
       requestOut.current = false;
     });
   }, 500);
-
-  return fetching;
 }
 
 interface DataResponse {
@@ -197,10 +191,9 @@ export function useRoomAudio(): DataResponse {
   const [postWorkletMessage, setPostWorkletMessage] = useState<(any) => void>(
     () => _ => null
   );
-  const fetching = useFetchAudioData(postWorkletMessage);
+  useFetchAudioData(postWorkletMessage);
 
   useEffect(() => {
-    console.log('creati');
     const audioContext = new window.AudioContext({
       sampleRate: 48000,
       //latencyHint: 'playback'
@@ -223,11 +216,6 @@ export function useRoomAudio(): DataResponse {
       // fetching every 1/60th of a second (48000 / 60 = 800 samples).
       analyzer.fftSize = 1024;
       gainNode.gain.value = 1;
-      console.log(
-        'output latency',
-        audioContext.baseLatency,
-        audioContext.outputLatency
-      );
 
       setAnalyzer(analyzer);
       setGainNode(gainNode);

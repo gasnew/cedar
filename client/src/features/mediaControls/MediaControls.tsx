@@ -1,16 +1,9 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext } from 'react';
 
 import {
   Button,
   ButtonGroup,
   Card,
-  Classes,
-  Colors,
-  Dialog,
-  Divider,
-  FormGroup,
-  InputGroup,
-  ControlGroup,
 } from '@blueprintjs/core';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -35,7 +28,7 @@ export default function() {
     'recordings',
     {}
   );
-  const [patchRecording, { loading: patchLoading }] = usePatch('recordings');
+  const [patchRecording] = usePatch('recordings');
 
   const networkedStartRecording = async () => {
     const { error, data } = await createRecording();

@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React, { useState } from 'react';
 
 import {
@@ -125,7 +124,7 @@ export default function() {
               placeholder="abc-123-def-456"
             />
             <Button
-              disabled={createLoading}
+              disabled={createLoading || musicianLoading}
               icon="arrow-right"
               onClick={joinRoom}
               loading={getLoading}
@@ -155,7 +154,7 @@ export default function() {
               intent="primary"
               outlined
               icon="arrow-right"
-              loading={createLoading}
+              loading={createLoading || musicianLoading}
               onClick={createRoom}
             >
               Create
