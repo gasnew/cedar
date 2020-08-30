@@ -1,27 +1,10 @@
 import _ from 'lodash';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { Stage, Layer, Rect } from 'react-konva';
 import { Colors } from '@blueprintjs/core';
 
-export function useInterval(callback: () => void, delay: number) {
-  const savedCallback = useRef<() => void>();
+import { useInterval } from '../../app/util';
 
-  // Remember the latest callback.
-  useEffect(() => {
-    savedCallback.current = callback;
-  }, [callback]);
-
-  // Set up the interval.
-  useEffect(() => {
-    function tick() {
-      if (savedCallback.current) savedCallback.current();
-    }
-    if (delay !== null) {
-      let id = setInterval(tick, delay);
-      return () => clearInterval(id);
-    }
-  }, [delay]);
-}
 
 interface Props {
   fetchData: () => Uint8Array;
@@ -39,16 +22,22 @@ export default function({ height, width, fetchData, disabled }: Props) {
     const offset = 128.0; // The offset of the signal from 0 amplitude
     const amplitudeNormalized =
       ((_.max(fetchData()) || offset) - offset) / 127.0;
-    const newBarWidth = disabled ? 0 : amplitudeNormalized * (width || 0);
+    const amplitudeDB = 20 * Math.log10(amplitudeNormalized);
+    const normalizedDB = (40 + (_.max([amplitudeDB, -40]) ?? -40)) / 40;
+    const newBarWidth = disabled ? 0 : normalizedDB * (width || 0);
 
     setBarWidth(newBarWidth);
     setDampedBarWidth(
       _.max([newBarWidth, dampedBarWidth - 0.6]) || newBarWidth
     );
     setClipOpacity(
-      amplitudeNormalized === 1.0 ? 1 : _.max([clipOpacity - 0.02, 0]) || 0
+      normalizedDB === 1.0 ? 1 : _.max([clipOpacity - 0.02, 0]) || 0
     );
-  }, 1000 / 60);
+  },
+  // TODO (gnewman): Optimize this component so we can render faster. For now,
+  // it's far too expensive to update at 60 Hz. Based on my testing, this
+  // interval function is plenty fast, but rendering is super expensive
+  1000);
 
   return (
     <Stage height={height} width={width}>

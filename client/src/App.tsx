@@ -2,8 +2,10 @@ import React from 'react';
 import { Classes, Colors } from '@blueprintjs/core';
 
 import AudioInput from './features/audioInput/AudioInput';
+import MediaControls from './features/mediaControls/MediaControls';
+import MasterOutput from './features/masterOutput/MasterOutput';
 import Navbar from './features/navbar/Navbar';
-import RoomOverlay from './features/roomOverlay/RoomOverlay';
+import RoomDialog from './features/roomDialog/RoomDialog';
 
 function App() {
   return (
@@ -18,8 +20,12 @@ function App() {
       className={Classes.DARK}
     >
       <Navbar />
+      <div style={{ position: 'relative' }}>
+        <MediaControls />
+      </div>
       <AudioInput />
-      <RoomOverlay />
+      <MasterOutput />
+      <RoomDialog />
     </div>
   );
 }

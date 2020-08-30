@@ -24,7 +24,7 @@ function buildTracks(redisClient: Redis): TracksService {
     },
     patch: async (
       id: string,
-      { data, cursor }: { data: string[]; cursor: string },
+      { data, cursor }: { data: string[]; cursor: string | null },
       { query: { roomId } }: QueryParams<{ roomId: string }>
     ) => {
       return redisClient.appendTrackData(roomId, { id, data, cursor });

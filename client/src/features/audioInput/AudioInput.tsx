@@ -1,9 +1,11 @@
 import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { Card, H4, Button, MenuItem, Slider } from '@blueprintjs/core';
 import { ItemRenderer, Select } from '@blueprintjs/select';
 
 import { useStream, useStreamData } from './AudioStreamHooks';
+import { selectRecordingState } from '../recording/recordingSlice';
 import VolumeBar from './VolumeBar';
 
 interface IInputDevice {
@@ -39,7 +41,6 @@ function useInputDevices(): [() => void, InputDeviceData] {
       .getUserMedia({ audio: true })
       .then(() => setHasPermission(true))
       .catch(error => {
-        console.log('no');
         console.error(`Input device permission denied: ${error}`);
         setHasPermission(false);
       });
@@ -47,19 +48,22 @@ function useInputDevices(): [() => void, InputDeviceData] {
   useEffect(() => {
     requestPermission();
   }, []);
-  useEffect(() => {
-    navigator.mediaDevices.enumerateDevices().then(devices => {
-      setInputDevices(
-        _.filter(
-          devices,
-          device =>
-            device.kind === 'audioinput' &&
-            !!device.deviceId &&
-            device.deviceId !== 'default'
-        )
-      );
-    });
-  }, [hasPermission]);
+  useEffect(
+    () => {
+      navigator.mediaDevices.enumerateDevices().then(devices => {
+        setInputDevices(
+          _.filter(
+            devices,
+            device =>
+              device.kind === 'audioinput' &&
+              !!device.deviceId &&
+              device.deviceId !== 'default'
+          )
+        );
+      });
+    },
+    [hasPermission]
+  );
 
   return [requestPermission, { hasPermission, inputDevices }];
 }
@@ -75,20 +79,28 @@ export default function() {
   );
 
   // Audio data
-  const { someData, fetchData, setGainDB } = useStreamData(
-    useStream(selectedDevice?.deviceId || null)
+  const { canChangeStream, someData, fetchData, setGainDB } = useStreamData(
+    useStream(selectedDevice ? selectedDevice.deviceId : null)
   );
 
-  // Slider state
-  const [sliderGainDB, setSliderGainDB] = useState(0);
+  // Slider state (default to 0.01 to get around UI bug)
+  const [sliderGainDB, setSliderGainDB] = useState(0.01);
+
+  // Redux state
+  const recordingState = useSelector(selectRecordingState);
 
   if (!hasPermission && selectedDevice) setSelectedDevice(null);
+  if (hasPermission && !selectedDevice && inputDevices.length > 0)
+    setSelectedDevice(inputDevices[0]);
+
+  const selectionDisabled = !canChangeStream || recordingState !== 'stopped';
 
   return (
     <Card style={{ width: 300 }}>
       <H4>Audio input</H4>
       <div style={{ marginBottom: 10 }}>
         <InputDeviceSelect
+          disabled={selectionDisabled}
           filterable={false}
           items={inputDevices}
           itemRenderer={inputDeviceRenderer}
@@ -109,6 +121,7 @@ export default function() {
           <Button
             icon="headset"
             rightIcon="caret-down"
+            disabled={selectionDisabled}
             onClick={requestPermission}
           >
             {selectedDevice ? (
@@ -128,13 +141,14 @@ export default function() {
         />
       </div>
       <Slider
-        min={-60}
+        min={-40}
         max={6}
         stepSize={0.2}
         labelStepSize={66}
         onChange={value => {
-          setSliderGainDB(value);
-          setGainDB(value);
+          const newValue = Math.abs(value) < 0.5 ? 0.01 : value;
+          setSliderGainDB(newValue);
+          setGainDB(newValue);
         }}
         value={sliderGainDB}
         labelRenderer={value =>

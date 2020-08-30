@@ -3,7 +3,7 @@ import { ServiceMethods } from '@feathersjs/feathers';
 import { Application } from '../../declarations';
 import { Redis, withRedis } from '../../models';
 import { QueryParams } from '../index.d';
-import { Recording } from '../../room';
+import { Recording, RecordingState } from '../../room';
 
 type RecordingsService = Partial<ServiceMethods<Recording>>;
 type FindQueryParams = QueryParams<{
@@ -13,10 +13,19 @@ type FindQueryParams = QueryParams<{
 
 function buildRecordings(redisClient: Redis): RecordingsService {
   return {
+    get: (
+      recordingId: string,
+      { query: { roomId } }: QueryParams<{ roomId: string }>
+    ) => redisClient.getRecording(roomId, recordingId),
     create: (
-      {}: {},
+      {  }: {},
       { query: { roomId } }: QueryParams<{ roomId: string }>
     ) => redisClient.createRecording(roomId),
+    patch: (
+      id: string,
+      { state }: { state: RecordingState },
+      { query: { roomId } }: QueryParams<{ roomId: string }>
+    ) => redisClient.patchRecording(roomId, id, state),
   };
 }
 

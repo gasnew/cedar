@@ -37,6 +37,8 @@ describe('room methods', () => {
     const roomMeta = {
       id: 'abc',
       name: 'Roomy McRoomface',
+      recordingId: 'rec-123',
+      musicianIdsChain: ['musician-uuid'],
     };
     mockRedis.hget.mockResolvedValue(JSON.stringify(roomMeta));
 
@@ -66,6 +68,8 @@ describe('room methods', () => {
       JSON.stringify({
         id: 'room-uuid',
         name: 'Roomy McRoomface',
+        recordingId: null,
+        musicianIdsChain: [],
       })
     );
   });
