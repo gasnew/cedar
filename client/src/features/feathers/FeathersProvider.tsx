@@ -14,7 +14,7 @@ export function FeathersProvider({ children }: { children: React.ReactNode }) {
   // Set up Socket.io client with the socket
   const app: FeathersApp<ServiceTypes> = feathers();
   // TODO(gnewman): Let's put this in an env variable someday
-  app.configure(feathersSocketIO(socketIO('http://localhost:3030')));
+  app.configure(feathersSocketIO(socketIO('http://cedar-app.com:3030')));
 
   return (
     <FeathersContext.Provider value={app}>{children}</FeathersContext.Provider>
