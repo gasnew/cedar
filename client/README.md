@@ -57,6 +57,15 @@ See the section about
 [deployment](https://facebook.github.io/create-react-app/docs/deployment) for
 more information.
 
+### `yarn dist`
+
+Builds executables and installers for MacOS and Windows in the `dist` folder
+using [electron-builder](https://www.electron.build/). In the future, I'm
+planning to add a GitHub action to bump the Cedar version, build new
+distributables, and upload them as a
+[release](https://docs.github.com/en/github/administering-a-repository/managing-releases-in-a-repository).
+This should also dovetail with automatic updates via electron-builder.
+
 ### `yarn eject`
 
 **Note: this is a one-way operation. Once you `eject`, you can’t go back!**

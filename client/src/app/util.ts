@@ -32,3 +32,13 @@ export function useInterval(callback: () => void, delay: number) {
 export function randomBirdName() {
   return _.sample(BIRD_NAMES);
 }
+
+export function getEnv(variableName: string): string {
+  const fullName = `REACT_APP_${variableName}`;
+  const variable = process.env[fullName];
+  if (!variable) throw new Error(`No environment variable called ${fullName}!`);
+  if (!(typeof variable === 'string'))
+    throw new Error(`Environment variable ${fullName} is not a string!`);
+
+  return variable;
+}

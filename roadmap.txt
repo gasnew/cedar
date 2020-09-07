@@ -20,14 +20,16 @@ x Only root musician can start recording (eventually host maybe?)
 + Don't patch so crazy man. DONE
 
 Put it on DigitalOcean
-- Put it on a droplet
-- Build the electron app for MacOS and Windows
-- Test that it works on Windows
-- See if it works with friends!
++ Put it on a droplet
++ Build the electron app for MacOS and Windows
++ Test that it works on Windows
+x See if it works with friends!
++ Set up environment solution
 
 Modifying the chain
 - Two lists: audience and musicians; can move participants between lists
 - Musicians are not added to the chain automatically
+- We can set the delay between musicians manually
 - Need to be able to set musician names
   - Simple: shows name in top-right corner--can edit the field to update name
   - Defaults to a bird or type of tree (probably a bird)
@@ -37,12 +39,37 @@ Modifying the chain
 - Cannot update chain during recording
 - Last musician in chain is considered the mixer
 
+Loopback delay calculation
+- Play a ping of a certain frequency
+- Use a bandpass filter to find the peak
+- Measure the delay
+- (bonus) Visualize the audio received by the client!
+- This value should be manually editable as well
+
 Client-side mixing
 - Optimize volume bar. Is rendering slow? Is getting data slow?
 - Can only see musicians behind you
 - Tooltip about the fact that this only mixes for you (maybe just call it
   "Personal Mixer"?)
 - Master output and slider
+
+Set up authentication
+- Google auth?
+
+Downtimeless updates
+- Use infrastructure-as-code to provision Cedar server
+- Use load balancer for downtimeless deploys
+- Automatically upload Electron app to CMS
+- Landing page?
+- Accounts with subscriptions?
+
+Other bugs/features before wider release
+- Microphone permission detection broken in Electron
+- Auto-updates https://www.electron.build/auto-update
+- Auth
+- Optimize the VolumeSlider
+
+Wider release milestone!
 
 Make web app version public (for ChromeOS, etc.)
 - autoplay-policy makes me sad, and we need to get around it: Call
@@ -85,6 +112,7 @@ Cedar audience
 FEATURE PACKAGES THAT NEED TO BE SPECCED OUT
 --------------------------------------------
 Future features
+- Use JWT + Google OAuth for authentication
 - Display errors (esp. for streaming failures)
 - Server track PATCH endpoint is truly idempotent (returns the same response if
   the same input is received). This will help make us robust to servers that

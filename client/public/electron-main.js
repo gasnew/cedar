@@ -10,6 +10,7 @@
 //            ES6-style imports are not supported by electron.
 const { app, BrowserWindow } = require('electron');
 const path = require('path');
+const url = require('url');
 
 function createWindow() {
   // Create the browser window.
@@ -17,16 +18,24 @@ function createWindow() {
     width: 1000,
     height: 800,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.ts'),
+      preload: path.join(__dirname, 'preload.js'),
     },
   });
 
-  // and load the index.html of the app.
-  // TODO(gnewman): Put this URL into an env variable someday
-  mainWindow.loadURL('http://localhost:3000');
+  // Open the DevTools (we can's use NODE_ENV because public/ and electron so
+  // we check for the absence of an env variable we set in dev mode)
+  if (process.env.ELECTRON_START_URL)
+    mainWindow.webContents.openDevTools();
 
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // and load the index.html of the app.
+  const startUrl =
+    process.env.ELECTRON_START_URL ||
+    url.format({
+      pathname: path.join(__dirname, '../build/index.html'),
+      protocol: 'file:',
+      slashes: true,
+    });
+  mainWindow.loadURL(startUrl);
 }
 
 // This method will be called when Electron has finished
