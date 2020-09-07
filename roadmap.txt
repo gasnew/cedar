@@ -21,17 +21,10 @@ x Only root musician can start recording (eventually host maybe?)
 
 Put it on DigitalOcean
 + Put it on a droplet
-- Build the electron app for MacOS and Windows
-- Test that it works on Windows
-- See if it works with friends!
-- Set up environment solution
-
-Loopback delay calculation
-- Play a ping of a certain frequency
-- Use a bandpass filter to find the peak
-- Measure the delay
-- (bonus) Visualize the audio received by the client!
-- This value should be manually editable as well
++ Build the electron app for MacOS and Windows
++ Test that it works on Windows
+x See if it works with friends!
++ Set up environment solution
 
 Modifying the chain
 - Two lists: audience and musicians; can move participants between lists
@@ -45,6 +38,13 @@ Modifying the chain
     change their name for the room like in Zoom
 - Cannot update chain during recording
 - Last musician in chain is considered the mixer
+
+Loopback delay calculation
+- Play a ping of a certain frequency
+- Use a bandpass filter to find the peak
+- Measure the delay
+- (bonus) Visualize the audio received by the client!
+- This value should be manually editable as well
 
 Client-side mixing
 - Optimize volume bar. Is rendering slow? Is getting data slow?
@@ -67,6 +67,7 @@ Other bugs/features before wider release
 - Microphone permission detection broken in Electron
 - Auto-updates https://www.electron.build/auto-update
 - Auth
+- Optimize the VolumeSlider
 
 Wider release milestone!
 
