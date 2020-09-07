@@ -1,8 +1,16 @@
 {
-  "name": "cedar-client",
+  "name": "cedar",
+  "productName": "cedar",
   "version": "0.1.0",
   "private": true,
-  "main": "src/electron-main.ts",
+  "author": {
+    "name": "Garrett Newman",
+    "email": "garrett.s.newman@gmail.com",
+    "url": "https://github.com/gasnew"
+  },
+  "license": "MIT",
+  "main": "public/electron-main.js",
+  "homepage": "./",
   "dependencies": {
     "@blueprintjs/core": "^3.28.1",
     "@blueprintjs/select": "^3.13.4",
@@ -18,7 +26,6 @@
     "@types/react": "^16.9.0",
     "@types/react-dom": "^16.9.0",
     "@types/react-redux": "^7.1.9",
-    "electron": "^9.0.2",
     "js-base64": "^3.4.4",
     "konva": "^7.0.2",
     "lodash": "^4.17.19",
@@ -30,14 +37,33 @@
     "socket.io-client": "^2.3.0",
     "typescript": "~3.7.5"
   },
+  "build": {
+    "appId": "com.electron.cedar",
+    "productName": "cedar",
+    "copyright": "Copyright © 2020 gasnew",
+    "mac": {
+      "category": "public.app-category.utilities"
+    },
+    "files": [
+      "build/**/*",
+      "node_modules/**/*",
+      "public/**/*"
+    ],
+    "directories": {
+      "buildResources": "assets"
+    },
+    "extends": null
+  },
   "scripts": {
     "start": "nf start -p 3000",
     "start-react": "BROWSER=none react-scripts start",
-    "start-electron": "electron .",
+    "start-electron": "ELECTRON_START_URL=http://localhost:3000 electron .",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "lint": "eslint ./src/**/*.{ts,tsx}"
+    "lint": "eslint ./src/**/*.{ts,tsx}",
+    "dist": "yarn build && electron-builder -mw",
+    "postinstall": "electron-builder install-app-deps"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -55,6 +81,8 @@
     ]
   },
   "devDependencies": {
+    "electron": "10.1.1",
+    "electron-builder": "^22.8.0",
     "foreman": "^3.0.1",
     "wait-on": "^5.0.0"
   }

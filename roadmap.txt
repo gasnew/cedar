@@ -63,6 +63,11 @@ Downtimeless updates
 - Landing page?
 - Accounts with subscriptions?
 
+Other bugs/features before wider release
+- Microphone permission detection broken in Electron
+- Auto-updates https://www.electron.build/auto-update
+- Auth
+
 Wider release milestone!
 
 Make web app version public (for ChromeOS, etc.)
