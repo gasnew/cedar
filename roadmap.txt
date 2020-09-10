@@ -37,7 +37,7 @@ Modifying the chain
   - In the future, we'll let people have profiles with names, and people can
     change their name for the room like in Zoom
 - Cannot update chain during recording
-- Last musician in chain is considered the mixer
+- Last musician in chain is considered the mixer; first considered host?
 
 Loopback delay calculation
 - Play a ping of a certain frequency

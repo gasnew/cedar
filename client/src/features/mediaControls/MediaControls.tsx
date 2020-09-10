@@ -1,10 +1,6 @@
 import React, { useContext } from 'react';
 
-import {
-  Button,
-  ButtonGroup,
-  Card,
-} from '@blueprintjs/core';
+import { Button, ButtonGroup, Card } from '@blueprintjs/core';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { FeathersContext } from '../feathers/FeathersProvider';
