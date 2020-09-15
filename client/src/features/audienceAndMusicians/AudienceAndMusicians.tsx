@@ -8,14 +8,18 @@ import {
   FormGroup,
   H4,
   H5,
+  Icon,
   InputGroup,
   ControlGroup,
 } from '@blueprintjs/core';
+import { IconNames } from '@blueprintjs/icons';
 import _ from 'lodash';
 import React, { useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import { useSelector } from 'react-redux';
 
 import styles from './AudienceAndMusicians.module.css';
+import { selectRecordingState } from '../recording/recordingSlice';
 
 const TEST_DATA = {
   columns: {
@@ -85,6 +89,8 @@ export default function() {
   const [listsState, setListsState] = useState(TEST_DATA);
   const [dragSourceId, setDragSourceId] = useState<string | null>(null);
 
+  const recordingState = useSelector(selectRecordingState);
+
   function onDragStart(start) {
     setDragSourceId(start.source.droppableId);
   }
@@ -153,6 +159,7 @@ export default function() {
 
   const musiciansColumn = listsState.columns.musicians;
   const audienceColumn = listsState.columns.audience;
+  const musiciansLocked = recordingState !== 'stopped';
 
   return (
     <Card>
@@ -167,15 +174,28 @@ export default function() {
                 backgroundColor: Colors.DARK_GRAY3,
               }}
             >
+              {musiciansLocked && (
+                <Icon
+                  icon={IconNames.LOCK}
+                  iconSize={10}
+                  style={{
+                    position: 'relative',
+                    bottom: 4,
+                    right: 4,
+                  }}
+                />
+              )}
               Musicians
             </H5>
             <div className={styles.listContainer}>
               <PersonList
                 column={musiciansColumn}
                 isDropDisabled={
-                  dragSourceId === audienceColumn.id &&
-                  musiciansColumn.items.length === 8
+                  (dragSourceId === audienceColumn.id &&
+                    musiciansColumn.items.length === 8) ||
+                  musiciansLocked
                 }
+                isDragDisabled={musiciansLocked}
               />
               <div className={styles.listHighlightsContainer}>
                 {_.map(_.range(8), index => (
@@ -203,7 +223,10 @@ export default function() {
           <Card
             elevation={2}
             className={styles.listCard}
-            style={{ width: 180 - 12 }}
+            style={{
+              width: 180 - 12,
+              backgroundColor: Colors.DARK_GRAY5,
+            }}
           >
             <H5
               style={{
@@ -261,12 +284,13 @@ function getStyle({ draggableStyle, virtualStyle, isDragging }) {
           borderColor: 'rgb(152, 161, 170)',
         }
       : {}),
+    userSelect: 'none',
   };
 
   return result;
 }
 
-function Person({ provided, item, style, isDragging }) {
+function Person({ provided, item, style, isDragging, disabled = false }) {
   return (
     <div
       {...provided.draggableProps}
@@ -280,14 +304,14 @@ function Person({ provided, item, style, isDragging }) {
         }),
         color: '#f5f8fa',
       }}
-      className="bp3-button bp3-outlined"
+      className={'bp3-button bp3-outlined' + (disabled ? ' bp3-disabled' : '')}
     >
       {item.name}
     </div>
   );
 }
 
-function PersonList({ column, isDropDisabled }) {
+function PersonList({ column, isDropDisabled, isDragDisabled = false }) {
   return (
     <Droppable
       droppableId={column.id}
@@ -304,13 +328,19 @@ function PersonList({ column, isDropDisabled }) {
       {(provided, snapshot) => (
         <div ref={provided.innerRef} className={styles.personList}>
           {_.map(column.items, (item, index) => (
-            <Draggable draggableId={item.id} index={index} key={item.id}>
+            <Draggable
+              draggableId={item.id}
+              index={index}
+              key={item.id}
+              isDragDisabled={isDragDisabled}
+            >
               {provided => (
                 <Person
                   provided={provided}
                   item={item}
                   style={{ left: 8 }}
                   isDragging={false}
+                  disabled={isDragDisabled}
                 />
               )}
             </Draggable>
