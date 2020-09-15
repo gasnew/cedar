@@ -15,7 +15,7 @@ import _ from 'lodash';
 import React, { useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
-//import './AudienceAndMusicians.css';
+import styles from './AudienceAndMusicians.module.css';
 
 const TEST_DATA = {
   columns: {
@@ -49,14 +49,45 @@ const TEST_DATA = {
           id: 'id:789',
           name: 'Molly',
         },
+        {
+          id: 'id:defa',
+          name: 'Bob',
+        },
+        {
+          id: 'id:efa',
+          name: 'Bab',
+        },
+        {
+          id: 'id:fa',
+          name: 'Beb',
+        },
+        {
+          id: 'id:dea',
+          name: 'Bib',
+        },
       ],
     },
   },
   columnOrder: ['audience', 'musicians'],
 };
+const MUSICIAN_COLORS = [
+  Colors.VERMILION1,
+  Colors.ROSE1,
+  Colors.VIOLET1,
+  Colors.INDIGO1,
+  Colors.COBALT1,
+  Colors.TURQUOISE1,
+  Colors.FOREST1,
+  Colors.LIME1,
+];
 
 export default function() {
   const [listsState, setListsState] = useState(TEST_DATA);
+  const [dragSourceId, setDragSourceId] = useState<string | null>(null);
+
+  function onDragStart(start) {
+    setDragSourceId(start.source.droppableId);
+  }
 
   function onDragEnd(result) {
     if (!result.destination) {
@@ -120,20 +151,15 @@ export default function() {
     setListsState(newState);
   }
 
+  const musiciansColumn = listsState.columns.musicians;
+  const audienceColumn = listsState.columns.audience;
+
   return (
     <Card>
       <H4>Da Cedar House</H4>
-      <DragDropContext onDragEnd={onDragEnd}>
+      <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
         <div style={{ display: 'flex', flexDirection: 'row' }}>
-          <Card
-            elevation={2}
-            style={{
-              width: 180,
-              marginRight: 8,
-              padding: 0,
-              backgroundColor: Colors.DARK_GRAY5,
-            }}
-          >
+          <Card elevation={2} className={styles.listCard}>
             <H5
               style={{
                 padding: 10,
@@ -143,24 +169,41 @@ export default function() {
             >
               Musicians
             </H5>
-            <div
-              style={{
-                padding: 15,
-                boxShadow:
-                  'inset 0 1px 1px rgba(16, 22, 26, 0.4), inset 0 5px 6px rgba(16, 22, 26, 0.4)',
-              }}
-            >
-              <PersonList column={listsState.columns.musicians} />
+            <div className={styles.listContainer}>
+              <PersonList
+                column={musiciansColumn}
+                isDropDisabled={
+                  dragSourceId === audienceColumn.id &&
+                  musiciansColumn.items.length === 8
+                }
+              />
+              <div className={styles.listHighlightsContainer}>
+                {_.map(_.range(8), index => (
+                  <div
+                    key={index}
+                    className={styles.listHighlight}
+                    style={{
+                      backgroundColor:
+                        index % 2 ? Colors.DARK_GRAY5 : Colors.DARK_GRAY4,
+                    }}
+                  >
+                    <span
+                      className={styles.listHighlightIndex}
+                      style={{
+                        color: index % 2 ? Colors.GRAY2 : Colors.GRAY1,
+                      }}
+                    >
+                      {index + 1}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           </Card>
           <Card
             elevation={2}
-            style={{
-              width: 180,
-              marginRight: 8,
-              padding: 0,
-              backgroundColor: Colors.DARK_GRAY5,
-            }}
+            className={styles.listCard}
+            style={{ width: 180 - 12 }}
           >
             <H5
               style={{
@@ -171,14 +214,14 @@ export default function() {
             >
               Audience
             </H5>
-            <div
-              style={{
-                padding: 15,
-                boxShadow:
-                  'inset 0 1px 1px rgba(16, 22, 26, 0.4), inset 0 5px 6px rgba(16, 22, 26, 0.4)',
-              }}
-            >
-              <PersonList column={listsState.columns.audience} />
+            <div className={styles.listContainer} style={{ paddingLeft: 4 }}>
+              <PersonList
+                column={audienceColumn}
+                isDropDisabled={
+                  dragSourceId === musiciansColumn.id &&
+                  audienceColumn.items.length === 8
+                }
+              />
             </div>
           </Card>
         </div>
@@ -209,8 +252,13 @@ function getStyle({ draggableStyle, virtualStyle, isDragging }) {
     marginBottom: grid,
     ...(isDragging
       ? {
-          backgroundColor: 'rgba(167, 182, 194, 0.3)',
-          borderColor: 'rgba(255, 255, 255, 0.4)',
+          // NOTE(gnewman): These colors were picked from what an outlined
+          // activated bp3-button looks like over the component. The native
+          // colors are translucent, so we use these hardcoded values while
+          // dragging so that musicians can be truly opaque and won't look
+          // janky when they overlap.
+          backgroundColor: 'rgb(83, 99, 112)',
+          borderColor: 'rgb(152, 161, 170)',
         }
       : {}),
   };
@@ -219,7 +267,6 @@ function getStyle({ draggableStyle, virtualStyle, isDragging }) {
 }
 
 function Person({ provided, item, style, isDragging }) {
-  console.log(provided.dragHandleProps);
   return (
     <div
       {...provided.draggableProps}
@@ -240,7 +287,7 @@ function Person({ provided, item, style, isDragging }) {
   );
 }
 
-function PersonList({ column }) {
+function PersonList({ column, isDropDisabled }) {
   return (
     <Droppable
       droppableId={column.id}
@@ -252,12 +299,10 @@ function PersonList({ column }) {
           style={{ left: 8 }}
         />
       )}
+      isDropDisabled={isDropDisabled}
     >
       {(provided, snapshot) => (
-        <div
-          ref={provided.innerRef}
-          style={{ display: 'flex', flexDirection: 'column', height: 300 }}
-        >
+        <div ref={provided.innerRef} className={styles.personList}>
           {_.map(column.items, (item, index) => (
             <Draggable draggableId={item.id} index={index} key={item.id}>
               {provided => (
