@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import React, { useContext, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -17,7 +18,7 @@ import {
 import { useInterval } from '../../app/util';
 import { useGet } from '../feathers/FeathersHooks';
 import { FeathersContext } from '../feathers/FeathersProvider';
-import { selectRoom } from '../room/roomSlice';
+import { selectRoom, updateChain } from '../room/roomSlice';
 import {
   selectRecordingState,
   startRecording,
@@ -31,7 +32,15 @@ function RecordingIcon() {
   return <Icon icon="record" color={bright ? Colors.RED4 : Colors.RED3} />;
 }
 
-function RoomNameplate({ id, name }: { id: string; name: string }) {
+function RoomNameplate({
+  id,
+  name,
+  musicianIdsChain,
+}: {
+  id: string;
+  name: string;
+  musicianIdsChain: string[];
+}) {
   const app = useContext(FeathersContext);
   const dispatch = useDispatch();
   const recordingState = useSelector(selectRecordingState);
@@ -41,11 +50,14 @@ function RoomNameplate({ id, name }: { id: string; name: string }) {
     // Keep recordingId up-to-date (indicates whether the server expects us to
     // be recording)
     // TODO: Add a check that I am not the host
-    onUpdate: ({ recordingId }) => {
+    onUpdate: ({ recordingId, musicianIdsChain: newMusicianIdsChain }) => {
       if (recordingId && recordingState === 'stopped')
         dispatch(startRecording(app, id, recordingId));
       if (!recordingId && recordingState === 'recording')
         dispatch(stopRecording());
+      if (!_.isEqual(newMusicianIdsChain, musicianIdsChain)) {
+        dispatch(updateChain({ musicianIdsChain: newMusicianIdsChain }));
+      }
     },
   });
 
@@ -84,7 +96,13 @@ export default function() {
         <NavbarDivider />
         {recordingState === 'recording' && <RecordingIcon />}
         {room.id &&
-          room.name && <RoomNameplate id={room.id} name={room.name} />}
+          room.name && (
+            <RoomNameplate
+              id={room.id}
+              name={room.name}
+              musicianIdsChain={room.musicianIdsChain}
+            />
+          )}
       </NavbarGroup>
     </Navbar>
   );

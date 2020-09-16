@@ -16,80 +16,94 @@ import { IconNames } from '@blueprintjs/icons';
 import _ from 'lodash';
 import React, { useState } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 import styles from './AudienceAndMusicians.module.css';
+import { usePatch } from '../feathers/FeathersHooks';
 import { selectRecordingState } from '../recording/recordingSlice';
+import { selectRoom, updateChain } from '../room/roomSlice';
+import { useFind } from '../feathers/FeathersHooks';
 
-const TEST_DATA = {
-  columns: {
-    audience: {
-      id: 'audience',
-      title: 'Audience',
-      items: [
-        {
-          id: 'id:abc',
-          name: 'Garrett',
-        },
-        {
-          id: 'id:def',
-          name: 'Jesse',
-        },
-      ],
-    },
-    musicians: {
-      id: 'musicians',
-      title: 'Musicians',
-      items: [
-        {
-          id: 'id:123',
-          name: 'Calob',
-        },
-        {
-          id: 'id:456',
-          name: 'Isaac',
-        },
-        {
-          id: 'id:789',
-          name: 'Molly',
-        },
-        {
-          id: 'id:defa',
-          name: 'Bob',
-        },
-        {
-          id: 'id:efa',
-          name: 'Bab',
-        },
-        {
-          id: 'id:fa',
-          name: 'Beb',
-        },
-        {
-          id: 'id:dea',
-          name: 'Bib',
-        },
-      ],
-    },
+interface Musician {
+  id: string;
+  name: string;
+}
+
+interface ListState {
+  audience: {
+    id: 'audience';
+    items: Musician[];
+  };
+  musicians: {
+    id: 'musicians';
+    items: Musician[];
+  };
+}
+
+const DEFAULT_LIST_STATE: ListState = {
+  audience: {
+    id: 'audience',
+    items: [],
   },
-  columnOrder: ['audience', 'musicians'],
+  musicians: {
+    id: 'musicians',
+    items: [],
+  },
 };
-const MUSICIAN_COLORS = [
-  Colors.VERMILION1,
-  Colors.ROSE1,
-  Colors.VIOLET1,
-  Colors.INDIGO1,
-  Colors.COBALT1,
-  Colors.TURQUOISE1,
-  Colors.FOREST1,
-  Colors.LIME1,
-];
 
-export default function() {
-  const [listsState, setListsState] = useState(TEST_DATA);
+function useLists() {
+  const [listsState, setListsState] = useState<ListState>(DEFAULT_LIST_STATE);
   const [dragSourceId, setDragSourceId] = useState<string | null>(null);
 
-  const recordingState = useSelector(selectRecordingState);
+  const dispatch = useDispatch();
+  const { musicianIdsChain, id: roomId } = useSelector(selectRoom);
+
+  const [patchRoom] = usePatch('rooms');
+
+  const audienceColumn = listsState.audience;
+  const musiciansColumn = listsState.musicians;
+
+  useFind('musicians', {
+    pollingInterval: 1000,
+    onUpdate: musicians => {
+      // NOTE(gnewman): It's possible/likely that we will get an updated ID
+      // chain before the updated musician list. We want to filter out these
+      // cases for this pass, until the inconsistency is resolved.
+      const musicianIdsWeKnowAbout = _.filter(musicianIdsChain, id =>
+        _.some(musicians, ['id', id])
+      );
+      const musiciansInOrder = _.map(musicianIdsWeKnowAbout, id =>
+        _.find(musicians, ['id', id])
+      );
+      const knownAudienceMembers: Musician[] = _.filter(
+        audienceColumn.items,
+        ({ id }) => _.some(musicians, ['id', id])
+      );
+      const audienceInOrder = _.reject(
+        [
+          ...knownAudienceMembers,
+          ..._.filter(
+            musicians,
+            ({ id }) =>
+              !_.includes(musicianIdsWeKnowAbout, id) &&
+              !_.some(knownAudienceMembers, ['id', id])
+          ),
+        ],
+        ({ id }) => _.some(musiciansInOrder, ['id', id])
+      );
+
+      setListsState({
+        audience: {
+          id: 'audience',
+          items: audienceInOrder,
+        },
+        musicians: {
+          id: 'musicians',
+          items: musiciansInOrder,
+        },
+      });
+    },
+  });
 
   function onDragStart(start) {
     setDragSourceId(start.source.droppableId);
@@ -100,9 +114,8 @@ export default function() {
       return;
     }
 
-    // reordering in same list
-    if (result.source.droppableId === result.destination.droppableId) {
-      const column = listsState.columns[result.source.droppableId];
+    const reorderWithinList = () => {
+      const column = listsState[result.source.droppableId];
       const items = reorderList(
         column.items,
         result.source.index,
@@ -110,55 +123,80 @@ export default function() {
       );
 
       // updating column entry
-      const newState = {
+      return {
         ...listsState,
-        columns: {
-          ...listsState.columns,
-          [column.id]: {
-            ...column,
-            items,
-          },
+        [column.id]: {
+          ...column,
+          items,
         },
       };
-      setListsState(newState);
-      return;
-    }
-
-    // moving between lists
-    const sourceColumn = listsState.columns[result.source.droppableId];
-    const destinationColumn =
-      listsState.columns[result.destination.droppableId];
-    const item = sourceColumn.items[result.source.index];
-
-    // 1. remove item from source column
-    const newSourceColumn = {
-      ...sourceColumn,
-      items: [...sourceColumn.items],
     };
-    newSourceColumn.items.splice(result.source.index, 1);
+    const moveBetweenLists = () => {
+      // moving between lists
+      const sourceColumn = listsState[result.source.droppableId];
+      const destinationColumn = listsState[result.destination.droppableId];
+      const item = sourceColumn.items[result.source.index];
 
-    // 2. insert into destination column
-    const newDestinationColumn = {
-      ...destinationColumn,
-      items: [...destinationColumn.items],
-    };
-    // in line modification of items
-    newDestinationColumn.items.splice(result.destination.index, 0, item);
+      // 1. remove item from source column
+      const newSourceColumn = {
+        ...sourceColumn,
+        items: [...sourceColumn.items],
+      };
+      newSourceColumn.items.splice(result.source.index, 1);
 
-    const newState = {
-      ...listsState,
-      columns: {
-        ...listsState.columns,
+      // 2. insert into destination column
+      const newDestinationColumn = {
+        ...destinationColumn,
+        items: [...destinationColumn.items],
+      };
+      // in line modification of items
+      newDestinationColumn.items.splice(result.destination.index, 0, item);
+
+      return {
+        ...listsState,
         [newSourceColumn.id]: newSourceColumn,
         [newDestinationColumn.id]: newDestinationColumn,
-      },
+      };
     };
 
+    const newState =
+      result.source.droppableId === result.destination.droppableId
+        ? reorderWithinList()
+        : moveBetweenLists();
+
     setListsState(newState);
+    if (
+      result.source.droppableId === 'musicians' ||
+      result.destination.droppableId === 'musicians'
+    ) {
+      const newMusicianIdsChain = _.map(newState.musicians.items, 'id');
+      dispatch(updateChain({ musicianIdsChain: newMusicianIdsChain }));
+      patchRoom(roomId, {
+        musicianIdsChain: newMusicianIdsChain,
+      });
+    }
   }
 
-  const musiciansColumn = listsState.columns.musicians;
-  const audienceColumn = listsState.columns.audience;
+  return {
+    audienceColumn,
+    musiciansColumn,
+    onDragStart,
+    onDragEnd,
+    dragSourceId,
+  };
+}
+
+export default function() {
+  const {
+    audienceColumn,
+    musiciansColumn,
+    onDragStart,
+    onDragEnd,
+    dragSourceId,
+  } = useLists();
+
+  const recordingState = useSelector(selectRecordingState);
+
   const musiciansLocked = recordingState !== 'stopped';
 
   return (

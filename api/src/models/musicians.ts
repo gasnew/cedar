@@ -28,14 +28,6 @@ export default function(redisClient: IORedisClient): MusicianInterface {
         newMusician.id,
         JSON.stringify(newMusician)
       );
-      await redisClient.hset(
-        rKey({ roomId }),
-        'meta',
-        JSON.stringify({
-          ...room,
-          musicianIdsChain: [...room.musicianIdsChain, newMusician.id],
-        })
-      );
 
       return newMusician;
     },

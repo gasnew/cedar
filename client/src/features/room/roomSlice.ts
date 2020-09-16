@@ -9,9 +9,9 @@ export interface RoomState {
 }
 
 const initialState: RoomState = {
-  id: null || '86b04b3e-8162-45a8-932b-0f5522712d9c',
-  name: null || 'Test',
-  musicianId: '52f7195c-8856-48b6-9b13-faa061428cd7',
+  id: null,// || '86b04b3e-8162-45a8-932b-0f5522712d9c',
+  name: null,// || 'Test',
+  musicianId: null,// || '52f7195c-8856-48b6-9b13-faa061428cd7',
   musicianIdsChain: [],
 };
 
@@ -48,5 +48,6 @@ export const { setRoom, updateChain } = roomSlice.actions;
 // of in the slice file. For example: `useSelector((state: RootState) =>
 // state.room)`
 export const selectRoom = (state: RootState) => state.room;
+export const selectMusicianIdsChain = (state: RootState) => state.room.musicianIdsChain;
 
 export default roomSlice.reducer;
