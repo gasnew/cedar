@@ -18,7 +18,13 @@ import {
 import { useInterval } from '../../app/util';
 import { useGet } from '../feathers/FeathersHooks';
 import { FeathersContext } from '../feathers/FeathersProvider';
-import { selectRoom, updateChain } from '../room/roomSlice';
+import {
+  RoomState,
+  selectAmHost,
+  selectRoom,
+  setSecondsBetweenMusicians,
+  updateChain,
+} from '../room/roomSlice';
 import {
   selectRecordingState,
   startRecording,
@@ -35,29 +41,32 @@ function RecordingIcon() {
 function RoomNameplate({
   id,
   name,
-  musicianIdsChain,
+  room,
 }: {
   id: string;
   name: string;
-  musicianIdsChain: string[];
+  room: RoomState;
 }) {
   const app = useContext(FeathersContext);
   const dispatch = useDispatch();
   const recordingState = useSelector(selectRecordingState);
+  const amHost = useSelector(selectAmHost);
 
   useGet('rooms', id, {
     pollingInterval: 1000,
     // Keep recordingId up-to-date (indicates whether the server expects us to
     // be recording)
-    // TODO: Add a check that I am not the host
-    onUpdate: ({ recordingId, musicianIdsChain: newMusicianIdsChain }) => {
-      if (recordingId && recordingState === 'stopped')
-        dispatch(startRecording(app, id, recordingId));
-      if (!recordingId && recordingState === 'recording')
-        dispatch(stopRecording());
-      if (!_.isEqual(newMusicianIdsChain, musicianIdsChain)) {
-        dispatch(updateChain({ musicianIdsChain: newMusicianIdsChain }));
+    onUpdate: ({ recordingId, musicianIdsChain, secondsBetweenMusicians }) => {
+      if (!amHost) {
+        if (recordingId && recordingState === 'stopped')
+          dispatch(startRecording(app, id, recordingId));
+        if (!recordingId && recordingState === 'recording')
+          dispatch(stopRecording());
+        if (!amHost && secondsBetweenMusicians !== room.secondsBetweenMusicians)
+          dispatch(setSecondsBetweenMusicians({ secondsBetweenMusicians }));
       }
+      if (!_.isEqual(musicianIdsChain, room.musicianIdsChain))
+        dispatch(updateChain({ musicianIdsChain }));
     },
   });
 
@@ -97,11 +106,7 @@ export default function() {
         {recordingState === 'recording' && <RecordingIcon />}
         {room.id &&
           room.name && (
-            <RoomNameplate
-              id={room.id}
-              name={room.name}
-              musicianIdsChain={room.musicianIdsChain}
-            />
+            <RoomNameplate id={room.id} name={room.name} room={room} />
           )}
       </NavbarGroup>
     </Navbar>

@@ -30,6 +30,7 @@ export default function(redisClient: IORedisClient): RoomInterface {
         name,
         recordingId: null,
         musicianIdsChain: [],
+        secondsBetweenMusicians: 2,
       };
       await redisClient.hset(
         rKey({ roomId: newRoom.id }),
@@ -44,6 +45,14 @@ export default function(redisClient: IORedisClient): RoomInterface {
       if (room.recordingId)
         throw new Unprocessable(
           'Rooms cannot be modified while a recording is happening!'
+        );
+      if (
+        roomUpdates.secondsBetweenMusicians &&
+        (roomUpdates.secondsBetweenMusicians < 0.4 ||
+          roomUpdates.secondsBetweenMusicians > 6)
+      )
+        throw new Unprocessable(
+          'secondsBetweenMusicians must be between 0.4 and 6 seconds'
         );
 
       const updatedRoom = {

@@ -11,6 +11,7 @@ import {
   Icon,
   InputGroup,
   ControlGroup,
+  NumericInput,
 } from '@blueprintjs/core';
 import { IconNames } from '@blueprintjs/icons';
 import _ from 'lodash';
@@ -22,7 +23,13 @@ import styles from './AudienceAndMusicians.module.css';
 import { useLists } from './AudienceAndMusiciansHooks';
 import { usePatch } from '../feathers/FeathersHooks';
 import { selectRecordingState } from '../recording/recordingSlice';
-import { selectRoom, updateChain } from '../room/roomSlice';
+import {
+  selectRoom,
+  selectSecondsBetweenMusicians,
+  setSecondsBetweenMusicians,
+  selectAmHost,
+  updateChain,
+} from '../room/roomSlice';
 import { useFind } from '../feathers/FeathersHooks';
 
 function getStyle({ draggableStyle, virtualStyle, isDragging }) {
@@ -133,15 +140,86 @@ export default function() {
     dragSourceId,
   } = useLists();
 
+  const dispatch = useDispatch();
   const recordingState = useSelector(selectRecordingState);
+  const { secondsBetweenMusicians, id: roomId } = useSelector(selectRoom);
+  const amHost = useSelector(selectAmHost);
+
+  const [patchRoom] = usePatch('rooms');
 
   const musiciansLocked = recordingState !== 'stopped';
 
   return (
     <Card>
-      <H4>Da Cedar House</H4>
+      <div style={{ display: 'flex', flexDirection: 'row' }}>
+        <H4>Da Cedar House</H4>
+        <div
+          style={{
+            marginBottom: 10,
+            marginLeft: 'auto',
+            display: 'flex',
+            flexDirection: 'row',
+            maxWidth: 180,
+          }}
+        >
+          <NumericInput
+            buttonPosition="none"
+            min={0.4}
+            max={6}
+            value={secondsBetweenMusicians || ''}
+            selectAllOnFocus
+            disabled={!amHost || musiciansLocked}
+            onBlur={() => {
+              const value = secondsBetweenMusicians;
+              const newValue = value < 0.4 ? 0.4 : value > 6 ? 6 : value;
+              dispatch(
+                setSecondsBetweenMusicians({
+                  secondsBetweenMusicians: newValue,
+                })
+              );
+              patchRoom(roomId, { secondsBetweenMusicians: newValue });
+            }}
+            onValueChange={value =>
+              dispatch(
+                setSecondsBetweenMusicians({
+                  secondsBetweenMusicians: value,
+                })
+              )
+            }
+            style={{ width: 40 }}
+          />
+          <span style={{ marginLeft: 5 }}>seconds between musicians</span>
+        </div>
+      </div>
       <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
         <div style={{ display: 'flex', flexDirection: 'row' }}>
+          <Card
+            elevation={2}
+            className={styles.listCard}
+            style={{
+              width: 180 - 12,
+              backgroundColor: Colors.DARK_GRAY5,
+            }}
+          >
+            <H5
+              style={{
+                padding: 10,
+                margin: 0,
+                backgroundColor: Colors.DARK_GRAY3,
+              }}
+            >
+              Audience
+            </H5>
+            <div className={styles.listContainer} style={{ paddingLeft: 4 }}>
+              <PersonList
+                column={audienceColumn}
+                isDropDisabled={
+                  dragSourceId === musiciansColumn.id &&
+                  audienceColumn.items.length === 8
+                }
+              />
+            </div>
+          </Card>
           <Card elevation={2} className={styles.listCard}>
             <H5
               style={{
@@ -194,33 +272,6 @@ export default function() {
                   </div>
                 ))}
               </div>
-            </div>
-          </Card>
-          <Card
-            elevation={2}
-            className={styles.listCard}
-            style={{
-              width: 180 - 12,
-              backgroundColor: Colors.DARK_GRAY5,
-            }}
-          >
-            <H5
-              style={{
-                padding: 10,
-                margin: 0,
-                backgroundColor: Colors.DARK_GRAY3,
-              }}
-            >
-              Audience
-            </H5>
-            <div className={styles.listContainer} style={{ paddingLeft: 4 }}>
-              <PersonList
-                column={audienceColumn}
-                isDropDisabled={
-                  dragSourceId === musiciansColumn.id &&
-                  audienceColumn.items.length === 8
-                }
-              />
             </div>
           </Card>
         </div>

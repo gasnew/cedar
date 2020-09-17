@@ -36,8 +36,11 @@ Modifying the chain
   - Name saved somehow?
   - In the future, we'll let people have profiles with names, and people can
     change their name for the room like in Zoom
+  - Little musical instrument icons?
 + Cannot update chain during recording
 + Last musician in chain is considered the mixer; first considered host?
+- Use react-beautiful-dnd sensors to make other people's list changes look less
+  janky
 
 Loopback delay calculation
 - Play a ping of a certain frequency
@@ -114,6 +117,8 @@ FEATURE PACKAGES THAT NEED TO BE SPECCED OUT
 Future features
 - Use JWT + Google OAuth for authentication
 - Display errors (esp. for streaming failures)
+  - Maybe allow handle in FeathersHooks to make these pop up if I don't handle
+    them in a particular way?
 - Server track PATCH endpoint is truly idempotent (returns the same response if
   the same input is received). This will help make us robust to servers that
   die (i.e., it's OK if we don't get the new cursor immediately when writing

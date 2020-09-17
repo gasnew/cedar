@@ -111,7 +111,8 @@ export const selectRecordingDelaySeconds = (state: RootState) => {
   const index = state.room.musicianIdsChain.indexOf(
     state.room.musicianId || ''
   );
-  return index === -1 ? 0 : index * 5;
+  const secondsBetweenMusicians = state.room.secondsBetweenMusicians;
+  return index === -1 ? 0 : index * secondsBetweenMusicians;
 };
 
 export const selectCurrentTracks = (state: RootState) => {

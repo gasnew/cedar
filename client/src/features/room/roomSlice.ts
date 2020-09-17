@@ -6,13 +6,15 @@ export interface RoomState {
   name: string | null;
   musicianId: string | null;
   musicianIdsChain: string[];
+  secondsBetweenMusicians: number;
 }
 
 const initialState: RoomState = {
-  id: null,// || '86b04b3e-8162-45a8-932b-0f5522712d9c',
-  name: null,// || 'Test',
-  musicianId: null,// || '52f7195c-8856-48b6-9b13-faa061428cd7',
+  id: null,// || '0ce84d84-6a3d-48c6-bce4-c5e6ee595c4e',
+  name: null,// || 'asdf',
+  musicianId: null,// || 'b1d8cfb6-babc-4523-8dc8-3a456fd7f8de',
   musicianIdsChain: [],
+  secondsBetweenMusicians: 2,
 };
 
 export const roomSlice = createSlice({
@@ -38,16 +40,32 @@ export const roomSlice = createSlice({
     ) => {
       state.musicianIdsChain = action.payload.musicianIdsChain;
     },
+    setSecondsBetweenMusicians: (
+      state,
+      action: PayloadAction<{ secondsBetweenMusicians: number }>
+    ) => {
+      state.secondsBetweenMusicians = action.payload.secondsBetweenMusicians;
+    },
   },
 });
 
-export const { setRoom, updateChain } = roomSlice.actions;
+export const {
+  setRoom,
+  setSecondsBetweenMusicians,
+  updateChain,
+} = roomSlice.actions;
 
 // The function below is called a selector and allows us to select a value from
 // the state. Selectors can also be defined inline where they're used instead
 // of in the slice file. For example: `useSelector((state: RootState) =>
 // state.room)`
 export const selectRoom = (state: RootState) => state.room;
-export const selectMusicianIdsChain = (state: RootState) => state.room.musicianIdsChain;
+export const selectMusicianIdsChain = (state: RootState) =>
+  state.room.musicianIdsChain;
+export const selectSecondsBetweenMusicians = (state: RootState) =>
+  state.room.secondsBetweenMusicians;
+export const selectAmHost = (state: RootState) =>
+  state.room.musicianIdsChain.length > 0 &&
+  state.room.musicianId === state.room.musicianIdsChain[0];
 
 export default roomSlice.reducer;
