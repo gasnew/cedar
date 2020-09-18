@@ -226,7 +226,8 @@ export function useGet<T extends keyof ServiceTypes>(
   options: GetOptions<ExtractData<ServiceTypes[T]>> = {
     pollingInterval: 1000,
     onUpdate: _ => null,
-  }
+  },
+  optimized: boolean = false
 ): GetResult<ExtractData<ServiceTypes[T]>> {
   const app = useContext(FeathersContext);
   const room = useSelector(selectRoom);
@@ -238,19 +239,23 @@ export function useGet<T extends keyof ServiceTypes>(
     // Skip if we already have a request out
     if (loading) return;
 
-    setLoading(true);
+    if (!optimized) setLoading(true);
     try {
       const newData = (await app.service(serviceName).get!(id, {
         query: { roomId: room.id },
       })) as ExtractData<ServiceTypes[T]>;
       if (options.onUpdate) options.onUpdate(newData);
-      setData(newData);
-      setError(null);
-      setLoading(false);
+      if (!optimized) {
+        setData(newData);
+        setError(null);
+        setLoading(false);
+      }
       return { data, error: null };
     } catch (error) {
-      setError(error);
-      setLoading(false);
+      if (!optimized) {
+        setError(error);
+        setLoading(false);
+      }
       return { data: null, error };
     }
   }, options.pollingInterval);
