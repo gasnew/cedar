@@ -41,6 +41,7 @@ Modifying the chain
 + Last musician in chain is considered the mixer; first considered host?
 - Use react-beautiful-dnd sensors to make other people's list changes look less
   janky
+- enter and exit room
 
 Loopback delay calculation
 - Play a ping of a certain frequency

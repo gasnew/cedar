@@ -11,7 +11,7 @@ export interface RoomState {
 
 const initialState: RoomState = {
   id: null,// || '0ce84d84-6a3d-48c6-bce4-c5e6ee595c4e',
-  name: null,// || 'asdf',
+  name: null ,//|| 'asdf',
   musicianId: null,// || 'b1d8cfb6-babc-4523-8dc8-3a456fd7f8de',
   musicianIdsChain: [],
   secondsBetweenMusicians: 2,

@@ -74,27 +74,29 @@ export function useLists() {
   useFind('musicians', {
     pollingInterval: 1000,
     onUpdate: musicians => {
+      const musiciansById = _.keyBy(musicians, 'id');
       // NOTE(gnewman): It's possible/likely that we will get an updated ID
       // chain before the updated musician list. We want to filter out these
       // cases for this pass, until the inconsistency is resolved.
       const musicianIdsWeKnowAbout = _.filter(musicianIdsChain, id =>
-        _.some(musicians, ['id', id])
+        _.has(musiciansById, id)
       );
-      const musiciansInOrder = _.map(musicianIdsWeKnowAbout, id =>
-        _.find(musicians, ['id', id])
+      const musiciansInOrder = _.map(
+        musicianIdsWeKnowAbout,
+        id => musiciansById[id]
       );
-      const knownAudienceMembers: Musician[] = _.filter(
-        audienceColumn.items,
-        ({ id }) => _.some(musicians, ['id', id])
+      const alreadyPresentAudienceIds = _.filter(
+        _.map(audienceColumn.items, 'id'),
+        id => _.has(musiciansById, id)
       );
       const audienceInOrder = _.reject(
         [
-          ...knownAudienceMembers,
+          ..._.map(alreadyPresentAudienceIds, id => musiciansById[id]),
           ..._.filter(
             musicians,
             ({ id }) =>
               !_.includes(musicianIdsWeKnowAbout, id) &&
-              !_.some(knownAudienceMembers, ['id', id])
+              !_.includes(alreadyPresentAudienceIds, id)
           ),
         ],
         ({ id }) => _.some(musiciansInOrder, ['id', id])

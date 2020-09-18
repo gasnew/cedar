@@ -1,7 +1,7 @@
 import { ServiceMethods } from '@feathersjs/feathers';
 import { FeathersError } from '@feathersjs/errors';
 import _ from 'lodash';
-import { useContext, useState } from 'react';
+import { useCallback, useContext, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { FeathersContext } from './FeathersProvider';
@@ -171,28 +171,32 @@ export function useLazyGet<T extends keyof ServiceTypes>(
   id: number | string
 ): LazyGetResultTuple<ExtractData<ServiceTypes[T]>> {
   const app = useContext(FeathersContext);
+  const room = useSelector(selectRoom);
   const [called, setCalled] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<FeathersError | null>(null);
   const [data, setData] = useState<any>(null);
 
-  const callGet = async () => {
-    setCalled(true);
-    setLoading(true);
-    try {
-      const data = (await app.service(serviceName).get!(id)) as ExtractData<
-        ServiceTypes[T]
-      >;
-      setData(data);
-      setError(null);
-      setLoading(false);
-      return { data, error: null };
-    } catch (error) {
-      setError(error);
-      setLoading(false);
-      return { data: null, error };
-    }
-  };
+  const callGet = useCallback(
+    async () => {
+      setCalled(true);
+      setLoading(true);
+      try {
+        const data = (await app.service(serviceName).get!(id, {
+          query: { roomId: room.id },
+        })) as ExtractData<ServiceTypes[T]>;
+        setData(data);
+        setError(null);
+        setLoading(false);
+        return { data, error: null };
+      } catch (error) {
+        setError(error);
+        setLoading(false);
+        return { data: null, error };
+      }
+    },
+    [app, id, serviceName, room]
+  );
 
   return [callGet, { called, loading, error, data }];
 }

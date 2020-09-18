@@ -1,11 +1,12 @@
 import _ from 'lodash';
-import React, { useContext, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Alignment,
   Button,
   Classes,
   Colors,
+  EditableText,
   H4,
   Icon,
   Navbar,
@@ -16,7 +17,7 @@ import {
 } from '@blueprintjs/core';
 
 import { useInterval } from '../../app/util';
-import { useGet } from '../feathers/FeathersHooks';
+import { useGet, useLazyGet, usePatch } from '../feathers/FeathersHooks';
 import { FeathersContext } from '../feathers/FeathersProvider';
 import {
   RoomState,
@@ -94,6 +95,44 @@ function RoomNameplate({
   );
 }
 
+function MusianName() {
+  const [cachedName, setCachedName] = useState<string | null>(null);
+  const [canonicalName, setCanonicalName] = useState(cachedName);
+  const { musicianId } = useSelector(selectRoom);
+
+  const [getMusician] = useLazyGet('musicians', musicianId || '');
+  const [patchMusician] = usePatch('musicians');
+
+  useEffect(
+    () => {
+      if (!musicianId) return;
+      getMusician().then(({ data, error }) => {
+        if (!data) return;
+        setCachedName(data.name);
+        setCanonicalName(data.name);
+      });
+    },
+    [getMusician, musicianId]
+  );
+
+  return (
+    <EditableText
+      value={cachedName || ''}
+      placeholder="Loading..."
+      disabled={cachedName === null}
+      onChange={setCachedName}
+      onCancel={() => setCachedName(canonicalName)}
+      onConfirm={() => {
+        if (cachedName === '') setCachedName(canonicalName);
+        else {
+          setCanonicalName(cachedName);
+          patchMusician(musicianId, { name: cachedName });
+        }
+      }}
+    />
+  );
+}
+
 export default function() {
   const recordingState = useSelector(selectRecordingState);
   const room = useSelector(selectRoom);
@@ -108,6 +147,9 @@ export default function() {
           room.name && (
             <RoomNameplate id={room.id} name={room.name} room={room} />
           )}
+      </NavbarGroup>
+      <NavbarGroup align={Alignment.RIGHT}>
+        <MusianName />
       </NavbarGroup>
     </Navbar>
   );
