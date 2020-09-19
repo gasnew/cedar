@@ -10,6 +10,7 @@ import {
   useLazyGet,
   usePatch,
 } from '../feathers/FeathersHooks';
+import { selectMusicians } from '../musicians/musiciansSlice';
 import { selectAmHost, selectHostId, selectRoom } from '../room/roomSlice';
 import {
   State as RecordingState,
@@ -24,36 +25,9 @@ function RecordingStateIndicator({
 }: {
   recordingState: RecordingState;
 }) {
-  const [hostName, setHostName] = useState<string | null>(null);
-
   const hostId = useSelector(selectHostId);
-  const [getMusician] = useLazyGet('musicians', hostId || '');
-
-  useEffect(
-    () => {
-      if (!hostId) setHostName(null);
-      else
-        getMusician().then(({ data, error }) => {
-          if (!data) return;
-          setHostName(data.name);
-        });
-    },
-    [getMusician, hostId]
-  );
-  // NOTE(gnewman): We need this extra polling to account for name changes.
-  // TODO: Store musician names in redux, so we can just subscribe to them
-  // across the board.
-  useGet(
-    'musicians',
-    hostId || '',
-    {
-      pollingInterval: 1000,
-      onUpdate: ({ name }) => {
-        if (name !== hostName) setHostName(name);
-      },
-    },
-    true
-  );
+  const musicians = useSelector(selectMusicians);
+  const hostName = hostId && musicians[hostId] ? musicians[hostId].name : null;
 
   return recordingState === 'stopped' ? (
     <span>

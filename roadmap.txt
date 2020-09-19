@@ -29,19 +29,17 @@ x See if it works with friends!
 Modifying the chain
 + Two lists: audience and musicians; can move participants between lists
 + Musicians are not added to the chain automatically
-- We can set the delay between musicians manually
-- Need to be able to set musician names
-  - Simple: shows name in top-right corner--can edit the field to update name
-  - Defaults to a bird or type of tree (probably a bird)
-  - Name saved somehow?
-  - In the future, we'll let people have profiles with names, and people can
++ We can set the delay between musicians manually
+/ Need to be able to set musician names
+  + Simple: shows name in top-right corner--can edit the field to update name
+  + Defaults to a bird or type of tree (probably a bird)
+  + Name saved somehow?
+  + In the future, we'll let people have profiles with names, and people can
     change their name for the room like in Zoom
   - Little musical instrument icons?
 + Cannot update chain during recording
 + Last musician in chain is considered the mixer; first considered host?
-- Use react-beautiful-dnd sensors to make other people's list changes look less
-  janky
-- enter and exit room
++ real-time name updates
 
 Loopback delay calculation
 - Play a ping of a certain frequency
@@ -72,6 +70,10 @@ Other bugs/features before wider release
 - Auto-updates https://www.electron.build/auto-update
 - Auth
 - Optimize the VolumeSlider
+- enter and exit room ("active" and "inactive" users... Inactive users in the
+  chain are removed from the chain when recording stops)
+- Use react-beautiful-dnd sensors to make other people's list changes look less
+  janky?
 
 Wider release milestone!
 

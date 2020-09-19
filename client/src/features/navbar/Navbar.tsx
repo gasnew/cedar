@@ -19,6 +19,7 @@ import {
 import { useInterval } from '../../app/util';
 import { useGet, useLazyGet, usePatch } from '../feathers/FeathersHooks';
 import { FeathersContext } from '../feathers/FeathersProvider';
+import { selectMusicians, setMusicianName } from '../musicians/musiciansSlice';
 import {
   RoomState,
   selectAmHost,
@@ -96,12 +97,20 @@ function RoomNameplate({
 }
 
 function MusianName() {
-  const [cachedName, setCachedName] = useState<string | null>(null);
-  const [canonicalName, setCanonicalName] = useState(cachedName);
   const { musicianId } = useSelector(selectRoom);
+  const musicians = useSelector(selectMusicians);
+  const cachedName =
+    musicianId && musicians[musicianId] ? musicians[musicianId].name : null;
+
+  const [canonicalName, setCanonicalName] = useState(cachedName);
 
   const [getMusician] = useLazyGet('musicians', musicianId || '');
   const [patchMusician] = usePatch('musicians');
+
+  const dispatch = useDispatch();
+  const setCachedName = (name: string | null) => {
+    if (musicianId && name !== null) dispatch(setMusicianName({ musicianId, name }));
+  };
 
   useEffect(
     () => {

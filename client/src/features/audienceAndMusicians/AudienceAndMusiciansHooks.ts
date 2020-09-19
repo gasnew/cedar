@@ -20,11 +20,16 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import styles from './AudienceAndMusicians.module.css';
 import { usePatch } from '../feathers/FeathersHooks';
+import {
+  addMusicians,
+  selectMusicians,
+  updateMusicians,
+} from '../musicians/musiciansSlice';
 import { selectRecordingState } from '../recording/recordingSlice';
 import { selectRoom, updateChain } from '../room/roomSlice';
 import { useFind } from '../feathers/FeathersHooks';
 
-interface Musician {
+interface IPerson {
   id: string;
   name: string;
 }
@@ -32,11 +37,11 @@ interface Musician {
 interface ListState {
   audience: {
     id: 'audience';
-    items: Musician[];
+    items: IPerson[];
   };
   musicians: {
     id: 'musicians';
-    items: Musician[];
+    items: IPerson[];
   };
 }
 
@@ -59,17 +64,41 @@ export function reorderList(list, startIndex, endIndex) {
   return result;
 }
 
+function withUpdatedMusicianName(column, musicians, musicianId) {
+  if (!musicianId || !musicians[musicianId]) return column;
+  const myItemIndex = _.findIndex(column.items, ['id', musicianId]);
+  if (myItemIndex === -1) return column;
+
+  return {
+    ...column,
+    items: [
+      ..._.slice(column.items, 0, myItemIndex),
+      musicians[musicianId],
+      ..._.slice(column.items, myItemIndex + 1),
+    ],
+  };
+}
+
 export function useLists() {
   const [listsState, setListsState] = useState<ListState>(DEFAULT_LIST_STATE);
   const [dragSourceId, setDragSourceId] = useState<string | null>(null);
 
   const dispatch = useDispatch();
-  const { musicianIdsChain, id: roomId } = useSelector(selectRoom);
+  const { musicianId, musicianIdsChain, id: roomId } = useSelector(selectRoom);
+  const musicians = useSelector(selectMusicians);
 
   const [patchRoom] = usePatch('rooms');
 
-  const audienceColumn = listsState.audience;
-  const musiciansColumn = listsState.musicians;
+  const audienceColumn = withUpdatedMusicianName(
+    listsState.audience,
+    musicians,
+    musicianId
+  );
+  const musiciansColumn = withUpdatedMusicianName(
+    listsState.musicians,
+    musicians,
+    musicianId
+  );
 
   useFind('musicians', {
     pollingInterval: 1000,
@@ -112,6 +141,11 @@ export function useLists() {
           items: musiciansInOrder,
         },
       });
+      // Only adds new musicians
+      dispatch(addMusicians(musiciansById));
+      // Only update names of other musicians (we don't want the server telling
+      // us what our name should be)
+      dispatch(updateMusicians(_.omit(musiciansById, musicianId || '')));
     },
   });
 

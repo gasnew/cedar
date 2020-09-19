@@ -1,9 +1,11 @@
 import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit';
+import musiciansReducer from '../features/musicians/musiciansSlice';
 import roomReducer from '../features/room/roomSlice';
 import recordingReducer from '../features/recording/recordingSlice';
 
 export const store = configureStore({
   reducer: {
+    musicians: musiciansReducer,
     room: roomReducer,
     recording: recordingReducer,
   },
