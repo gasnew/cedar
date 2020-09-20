@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Base64 } from 'js-base64';
 
@@ -258,10 +258,10 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
     [stream]
   );
 
-  const fetchData = () => {
+  const fetchData = useCallback(() => {
     if (analyzer) analyzer.getByteTimeDomainData(dataArray);
     return dataArray;
-  };
+  }, [analyzer, dataArray]);
   const setGainDB = gainDB => {
     if (gainNode) gainNode.gain.value = Math.pow(10, gainDB / 20);
   };

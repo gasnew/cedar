@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Alignment,
@@ -108,9 +108,13 @@ function MusianName() {
   const [patchMusician] = usePatch('musicians');
 
   const dispatch = useDispatch();
-  const setCachedName = (name: string | null) => {
-    if (musicianId && name !== null) dispatch(setMusicianName({ musicianId, name }));
-  };
+  const setCachedName = useCallback(
+    (name: string | null) => {
+      if (musicianId && name !== null)
+        dispatch(setMusicianName({ musicianId, name }));
+    },
+    [musicianId, dispatch]
+  );
 
   useEffect(
     () => {
@@ -121,7 +125,7 @@ function MusianName() {
         setCanonicalName(data.name);
       });
     },
-    [getMusician, musicianId]
+    [getMusician, musicianId, setCachedName]
   );
 
   return (
