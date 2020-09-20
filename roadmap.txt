@@ -30,16 +30,22 @@ Modifying the chain
 + Two lists: audience and musicians; can move participants between lists
 + Musicians are not added to the chain automatically
 + We can set the delay between musicians manually
-/ Need to be able to set musician names
++ Need to be able to set musician names
   + Simple: shows name in top-right corner--can edit the field to update name
   + Defaults to a bird or type of tree (probably a bird)
   + Name saved somehow?
   + In the future, we'll let people have profiles with names, and people can
     change their name for the room like in Zoom
-  - Little musical instrument icons?
 + Cannot update chain during recording
 + Last musician in chain is considered the mixer; first considered host?
-+ real-time name updates
++ Real-time name updates
++ Optimize volume bar. Rendering with react-konva was costly
+
+Client-side mixing
+- Can only see musicians behind you
+- Tooltip about the fact that this only mixes for you (maybe just call it
+  "Personal Mixer"?)
+- Master output and slider
 
 Loopback delay calculation
 - Play a ping of a certain frequency
@@ -47,13 +53,6 @@ Loopback delay calculation
 - Measure the delay
 - (bonus) Visualize the audio received by the client!
 - This value should be manually editable as well
-
-Client-side mixing
-- Optimize volume bar. Is rendering slow? Is getting data slow?
-- Can only see musicians behind you
-- Tooltip about the fact that this only mixes for you (maybe just call it
-  "Personal Mixer"?)
-- Master output and slider
 
 Set up authentication
 - Google auth?
@@ -66,14 +65,23 @@ Downtimeless updates
 - Accounts with subscriptions?
 
 Other bugs/features before wider release
+- Signed distributions
+- Landing page
+- Sign up/in page
+- Subscription method??
+- Remembering being logged in
+- Display errors (esp. for streaming failures)
+- Free trial?
+  - Possibly decrease audio quality after 15 minutes, limit to 4 musicians,
+    limit to 2-minute recordings (with toast notification), etc.
 - Microphone permission detection broken in Electron
 - Auto-updates https://www.electron.build/auto-update
 - Auth
-- Optimize the VolumeSlider
 - enter and exit room ("active" and "inactive" users... Inactive users in the
   chain are removed from the chain when recording stops)
 - Use react-beautiful-dnd sensors to make other people's list changes look less
   janky?
+- Little musical instrument icons?
 
 Wider release milestone!
 

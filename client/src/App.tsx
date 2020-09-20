@@ -3,7 +3,7 @@ import { Classes, Colors } from '@blueprintjs/core';
 
 import AudienceAndMusicians from './features/audienceAndMusicians/AudienceAndMusicians';
 import AudioInput from './features/audioInput/AudioInput';
-import MediaControls from './features/mediaControls/MediaControls';
+import MediaBar from './features/mediaBar/MediaBar';
 import MasterOutput from './features/masterOutput/MasterOutput';
 import Navbar from './features/navbar/Navbar';
 import RoomDialog from './features/roomDialog/RoomDialog';
@@ -22,7 +22,7 @@ function App() {
     >
       <Navbar />
       <div style={{ position: 'relative' }}>
-        <MediaControls />
+        <MediaBar />
       </div>
       <div style={{ display: 'flex', flexDirection: 'row', margin: 8 }}>
         <div style={{ display: 'flex', flexDirection: 'column', marginRight: 8 }}>
