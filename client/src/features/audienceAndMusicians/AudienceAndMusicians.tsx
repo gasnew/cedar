@@ -63,7 +63,7 @@ function getStyle({ draggableStyle, virtualStyle, isDragging }) {
           borderColor: 'rgb(152, 161, 170)',
         }
       : {}),
-    userSelect: 'none',
+    color: '#f5f8fa',
   };
 
   return result;
@@ -75,15 +75,16 @@ function Person({ provided, item, style, isDragging, disabled = false }) {
       {...provided.draggableProps}
       {...provided.dragHandleProps}
       ref={provided.innerRef}
-      style={{
-        ...getStyle({
-          draggableStyle: provided.draggableProps.style,
-          virtualStyle: style,
-          isDragging,
-        }),
-        color: '#f5f8fa',
-      }}
-      className={'bp3-button bp3-outlined' + (disabled ? ' bp3-disabled' : '')}
+      style={getStyle({
+        draggableStyle: provided.draggableProps.style,
+        virtualStyle: style,
+        isDragging,
+      })}
+      className={
+        styles.person +
+        ' bp3-button bp3-outlined' +
+        (disabled ? ' bp3-disabled' : '')
+      }
     >
       {item.name}
     </div>
