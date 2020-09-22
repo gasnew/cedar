@@ -40,6 +40,7 @@ Modifying the chain
 + Last musician in chain is considered the mixer; first considered host?
 + Real-time name updates
 + Optimize volume bar. Rendering with react-konva was costly
+- Don't let musicians be multiline
 
 Client-side mixing
 - Can only see musicians behind you
