@@ -42,6 +42,17 @@ Modifying the chain
 + Optimize volume bar. Rendering with react-konva was costly
 + Don't let musicians be multiline
 
+Quality-of-life improvements
+- Animated brightness to show audio progression through chain
++ Rename "Audience" to "Standby"
+- Make name obviously editable
+- Do not listen to audio when on standby (will add mixer role later)
+- "Listen to mic" button
+- Select your instrument (need to find instrument pack)
+- Remove musicians when they leave the room
+- The host is the one who creates the room?
+- Standby scrollable?
+
 Client-side mixing
 - Can only see musicians behind you
 - Tooltip about the fact that this only mixes for you (maybe just call it
@@ -49,11 +60,33 @@ Client-side mixing
 - Master output and slider
 
 Loopback delay calculation
-- Play a ping of a certain frequency
+- Play a ping of a certain frequency (use a "chirp" signal?)
 - Use a bandpass filter to find the peak
 - Measure the delay
 - (bonus) Visualize the audio received by the client!
 - This value should be manually editable as well
+
+Download recordings
+- Mixer role?
+- Downloads final mix and individual files as zip
+- Can pick where to save files--defaults somewhere
+
+Mixer role
+- Extra slot below the chain
+- Sends their mix directly to the server
+- This is what the audience hears
+- Standby musicians don't have to be able to hear if they join late (for now)
+- This is included in the recording download
+
+Audience app
+- Unique link for every room--"click to copy audience invitation link"
+- Separate React(?) app
+- Indicates whether music is playing
+- Plays the stream from the mixer
+
+In-app chat
+- Actually use websocket subscriptions?
+- People can send links
 
 Set up authentication
 - Google auth?
@@ -142,9 +175,18 @@ Future features
 - Musician layers/lanes for grouping musicians together
   - Includes server-side mixing of each layer to minimize network data flux
 - Possibly put non-audio-streaming data into an RDBMS instead of Redis
+- Play track (file, built-in metronome, etc.) alongside root musician (can be
+  mixed separately)
 - Intercom feature? I really, really hope we don't need this (managing multiple
   input devices sounds like UX hell). But it may be better than using two
   applications for some people
+  - One advantage is that it would prevent us from needing to toggle mute on
+    and off in Zoom; also doesn't require people to have a separate
+    conferencing service (manage two links); UX greatly improved...?
+- how to select master output? <-- This was confusion about where the output
+  audio goes. I think the OS controls this?
+  - Here's a thread about it:
+    https://stackoverflow.com/questions/41863094/how-to-select-destination-output-device-using-web-audio-api
 
 WHEN I GET BORED OR IF SOMEONE JOINS THE PROJECT
 ------------------------------------------------
@@ -154,7 +196,7 @@ WHEN I GET BORED OR IF SOMEONE JOINS THE PROJECT
 MISC NOTES
 ----------
 OK, so stuff about audio glitches
-- Link to resources on debugging
++ Link to resources on debugging
 - We need to do time stretching for microphone skips (happens sometimes, and we
   CANNOT tolerate it because we need sample n on every audio stream to refer to
   the same time point). We currently play the same frame twice.
@@ -164,11 +206,6 @@ OK, so stuff about audio glitches
   not sure what's best here.
 
 Outgoing worklet:
-- audio input piped into this
-- load wasm script on instantiation
-- once started, buffer raw PCM data from input, then encode a frame (0.2
-  seconds?) and post the message to the main thread
-- main thread sends this out to Cedar server
 - should update the patch endpoint to, if it receives data with the wrong
   cursor,
   * if the incoming data matches the data from that cursor onward, return the
@@ -179,18 +216,41 @@ Outgoing worklet:
     with/adjacent to previous data"
 
 Incoming worklet:
-- piped into the audio context destination
-- load wasm script on instantiation
-- main thread fetches audio data and sends opus-encoded sets of frames from all
-  incoming streams to the worklet.
-- After {musicianIndex * chainDelay} time, "start" will be sent to this worklet
-  and to "Outgoing worklet" at the same time to sync our musician's data with
-  the root musician's data.
-- received data sets will be decoded and added to a buffer (decoded in this
-  async callback to keep the main process() loop fast)
-- when started, the data from the buffer will be progressively loaded into the
-  worklet's output
-- make sure to free up the buffer periodically so we don't keep raw PCM data
-  sitting in memory forever
 - NOTE: When we allow client-side gain alteration, this should be handled as a
   worklet param so we can update gain dynamically in real time during playback.
+
+9/28/20
++ how to select master output? <-- This was confusion about where the output
+  audio goes. I think the OS controls this?
++ playback button (listen to mic)
++ loopback latency is a pain to set
++ didn’t know could change name—why am I this weird name?
++ worthwhile to see others’ latency? compared to you or to the original
+    + know how long to wait for all musicians to hear audio
+    + IDEA TIME: Oscillating brightness (like vegas lights) to see sound
+      progress through chain
++ in-app chat/way to type messages
++ way to label which instrument (use emoji?)
++ in-app intercom—automatically toggle mute
++ nice to be able to adjust input volume
++ official host designation
++ arbitrary 8-person audience limit
++ remove musicians when leave
++ standby lobby mode—talk and interact (calob)
+    + could even be nice for rebel worship scenarios
+    + downside could be everyone downloads it
++ mixer role (adjust other people’s latencies & sound) could be admin or secondary role
+x public room list—privacy rooms via passwords
+x browse list of rooms + number of members
++ audience-only version? webpage? volume controls?
++ share lyrics/pdfs/chord chart
++ native recording
++ app is good! webapp for audience-only version maybe
++ way to mock out other musicians (play in base track). way to experience by oneself. good for click track or base track
++ light mode is ugly
++ note from me to me: be clearer about agenda ahead of time
++ daniel loopback: 70
++ emily loopback: 120
++ “click to copy audience invitation link”
++ chirp for loopback?
++ looks clean as heck —miranda

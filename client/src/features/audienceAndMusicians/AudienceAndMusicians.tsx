@@ -153,7 +153,7 @@ export default function() {
   return (
     <Card>
       <div style={{ display: 'flex', flexDirection: 'row' }}>
-        <H4>Da Cedar House</H4>
+        <H4>Session</H4>
         <div
           style={{
             marginBottom: 10,
@@ -209,7 +209,7 @@ export default function() {
                 backgroundColor: Colors.DARK_GRAY3,
               }}
             >
-              Audience
+              Standby
             </H5>
             <div className={styles.listContainer} style={{ paddingLeft: 4 }}>
               <PersonList
@@ -240,7 +240,7 @@ export default function() {
                   }}
                 />
               )}
-              Musicians
+              Musician chain
             </H5>
             <div className={styles.listContainer}>
               <PersonList
