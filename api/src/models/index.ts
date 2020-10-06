@@ -8,10 +8,7 @@
 // TODO(gnewman): Try out Redis transactions to try to cut down on the risk of race conditions.
 
 import { ServiceMethods } from '@feathersjs/feathers';
-import { Unprocessable } from '@feathersjs/errors';
-import _ from 'lodash';
 import IORedis from 'ioredis';
-import { v4 as uuidv4 } from 'uuid';
 
 import { Application } from '../declarations';
 import musicianInterface, { MusicianInterface } from './musicians';

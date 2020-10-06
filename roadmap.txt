@@ -219,6 +219,8 @@ Incoming worklet:
 - NOTE: When we allow client-side gain alteration, this should be handled as a
   worklet param so we can update gain dynamically in real time during playback.
 
+CEDAR TESTING SESSIONS
+----------------------
 9/28/20
 + how to select master output? <-- This was confusion about where the output
   audio goes. I think the OS controls this?

@@ -1,4 +1,3 @@
-import { Unprocessable } from '@feathersjs/errors';
 import _ from 'lodash';
 
 import { Application } from '../../declarations';

@@ -1,8 +1,6 @@
 import _ from 'lodash';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { Colors } from '@blueprintjs/core';
-
-import { useInterval } from '../../app/util';
 
 function Canvas({ draw, style }) {
   const canvasRef = useRef(null);

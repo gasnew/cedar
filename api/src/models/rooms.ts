@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { Unprocessable } from '@feathersjs/errors';
-import { Room, RoomMeta } from '../room';
+import { RoomMeta } from '../room';
 import commonInterface from './common';
 import { IORedisClient } from './index';
 

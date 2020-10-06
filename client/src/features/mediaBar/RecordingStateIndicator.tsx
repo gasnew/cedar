@@ -1,30 +1,13 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React from 'react';
 
 import {
-  Button,
-  ButtonGroup,
-  Card,
-  Divider,
-  NumericInput,
   Tag,
 } from '@blueprintjs/core';
-import { useDispatch, useSelector } from 'react-redux';
-
-import { FeathersContext } from '../feathers/FeathersProvider';
-import {
-  useCreate,
-  useGet,
-  useLazyGet,
-  usePatch,
-} from '../feathers/FeathersHooks';
+import { useSelector } from 'react-redux';
 import { selectMusicians } from '../musicians/musiciansSlice';
-import { selectAmHost, selectHostId, selectRoom } from '../room/roomSlice';
+import { selectHostId } from '../room/roomSlice';
 import {
   State as RecordingState,
-  selectRecordingId,
-  selectRecordingState,
-  startRecording,
-  stopRecording,
 } from '../recording/recordingSlice';
 
 export default function({

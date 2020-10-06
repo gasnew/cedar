@@ -62,7 +62,8 @@
     "eject": "react-scripts eject",
     "lint": "eslint ./src/**/*.{ts,tsx}",
     "dist": "yarn build && electron-builder -mw",
-    "postinstall": "electron-builder install-app-deps"
+    "postinstall": "electron-builder install-app-deps",
+    "remove-unused-imports": "tslint --config tslint-remove-unused-imports.json --fix --project ."
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -83,6 +84,8 @@
     "electron": "10.1.1",
     "electron-builder": "^22.8.0",
     "foreman": "^3.0.1",
+    "tslint": "^6.1.3",
+    "tslint-etc": "^1.13.7",
     "wait-on": "^5.0.0"
   }
 }

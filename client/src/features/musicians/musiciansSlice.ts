@@ -1,9 +1,6 @@
 import _ from 'lodash';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { CedarApp } from '../feathers/FeathersProvider';
-import { setSecondsBetweenMusicians, updateChain } from '../room/roomSlice';
-import { AppThunk, RootState } from '../../app/store';
-import { Track as ServerTrack } from '../../../../api/src/room';
+import { RootState } from '../../app/store';
 
 interface Musician {
   id: string;
