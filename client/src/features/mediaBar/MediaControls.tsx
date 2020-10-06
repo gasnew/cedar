@@ -3,24 +3,29 @@ import React, { useContext } from 'react';
 import {
   Button,
   ButtonGroup,
-  Card,
 } from '@blueprintjs/core';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { FeathersContext } from '../feathers/FeathersProvider';
-import { useCreate, usePatch } from '../feathers/FeathersHooks';
+import {
+  useCreate,
+  usePatch,
+} from '../feathers/FeathersHooks';
 import { selectRoom } from '../room/roomSlice';
 import {
+  State as RecordingState,
   selectRecordingId,
-  selectRecordingState,
   startRecording,
   stopRecording,
 } from '../recording/recordingSlice';
 
-export default function() {
+export default function({
+  recordingState,
+}: {
+  recordingState: RecordingState;
+}) {
   const app = useContext(FeathersContext);
   const room = useSelector(selectRoom);
-  const recordingState = useSelector(selectRecordingState);
   const recordingId = useSelector(selectRecordingId);
   const dispatch = useDispatch();
 
@@ -46,28 +51,25 @@ export default function() {
   };
 
   const waitingToStart = createLoading || recordingState === 'initializing';
-
   return (
-    <Card style={{ padding: 5, borderRadius: 0 }} elevation={2}>
-      <ButtonGroup>
-        <Button
-          intent={recordingState === 'recording' ? 'none' : 'primary'}
-          icon="record"
-          loading={waitingToStart}
-          disabled={recordingState !== 'stopped'}
-          onClick={networkedStartRecording}
-        >
-          Record
-        </Button>
-        <Button
-          intent={recordingState === 'stopped' ? 'none' : 'danger'}
-          icon="stop"
-          disabled={recordingState !== 'recording'}
-          onClick={networkedStopRecording}
-        >
-          Stop
-        </Button>
-      </ButtonGroup>
-    </Card>
+    <ButtonGroup>
+      <Button
+        intent={recordingState === 'recording' ? 'none' : 'primary'}
+        icon="record"
+        loading={waitingToStart}
+        disabled={recordingState !== 'stopped'}
+        onClick={networkedStartRecording}
+      >
+        Record
+      </Button>
+      <Button
+        intent={recordingState === 'stopped' ? 'none' : 'danger'}
+        icon="stop"
+        disabled={recordingState !== 'recording'}
+        onClick={networkedStopRecording}
+      >
+        Stop
+      </Button>
+    </ButtonGroup>
   );
 }

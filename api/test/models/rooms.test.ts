@@ -70,6 +70,41 @@ describe('room methods', () => {
         name: 'Roomy McRoomface',
         recordingId: null,
         musicianIdsChain: [],
+        secondsBetweenMusicians: 2,
+      })
+    );
+  });
+
+  it('can patch a room', async () => {
+    expect.assertions(2);
+    const mockRedis = new MockIORedis();
+    const client = withHelpers(mockRedis);
+    // Bypass the "does this room exist?" check
+    mockRedis.exists.mockResolvedValue(true);
+
+    const roomMeta = {
+      id: 'abc',
+      name: 'Roomy McRoomface',
+      recordingId: null,
+      musicianIdsChain: ['musician-1'],
+      secondsBetweenMusicians: 2,
+    };
+    mockRedis.hget.mockResolvedValue(JSON.stringify(roomMeta));
+
+    const response = await client.patchRoom('room-uuid', {
+      musicianIdsChain: ['musician-1', 'musician-2'],
+    });
+
+    expect(response).toEqual({
+      ...roomMeta,
+      musicianIdsChain: ['musician-1', 'musician-2'],
+    });
+    expect(client.hset).toHaveBeenCalledWith(
+      'room-uuid',
+      'meta',
+      JSON.stringify({
+        ...roomMeta,
+        musicianIdsChain: ['musician-1', 'musician-2'],
       })
     );
   });

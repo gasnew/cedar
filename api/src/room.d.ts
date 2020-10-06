@@ -11,6 +11,7 @@ export interface RoomMeta {
   name: string;
   recordingId: string | null;
   musicianIdsChain: string[];
+  secondsBetweenMusicians: number;
 }
 
 // Model and Collection definitions

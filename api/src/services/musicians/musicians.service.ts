@@ -1,4 +1,3 @@
-import { Unprocessable } from '@feathersjs/errors';
 import _ from 'lodash';
 
 import { Application } from '../../declarations';
@@ -29,10 +28,19 @@ function buildMusicianService(redisClient: Redis): MusicianService {
       // return type of `find` to be formed.
       return _.values(await redisClient.getMusicians(roomId));
     },
+    get: (
+      musicianId: string,
+      { query: { roomId } }: QueryParams<{ roomId: string }>
+    ) => redisClient.getMusician(roomId, musicianId),
     create: (
       { name }: { name: string },
       { query: { roomId } }: QueryParams<{ roomId: string }>
     ) => redisClient.createMusician(roomId, name),
+    patch: (
+      id: string,
+      musician: Partial<Musician>,
+      { query: { roomId } }: QueryParams<{ roomId: string }>
+    ) => redisClient.patchMusician(roomId, id, musician),
   };
 }
 

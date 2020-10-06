@@ -1,6 +1,8 @@
+import { ServiceMethods } from '@feathersjs/feathers';
+
 import { Application } from '../../declarations';
 import { Redis, withRedis } from '../../models';
-import { ServiceMethods } from '@feathersjs/feathers';
+import { QueryParams } from '../index.d';
 import { RoomMeta } from '../../room';
 import roomHooks from './rooms.hooks';
 
@@ -10,6 +12,11 @@ function buildRoomService(redisClient: Redis): RoomService {
   return {
     get: (roomId: string) => redisClient.getRoom(roomId),
     create: ({ name }: { name: string }) => redisClient.createRoom(name),
+    patch: (
+      id: string,
+      room: Partial<RoomMeta>,
+      { query: { roomId } }: QueryParams<{ roomId: string }>
+    ) => redisClient.patchRoom(id, room),
   };
 }
 

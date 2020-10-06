@@ -36,7 +36,7 @@ describe('musician methods', () => {
   });
 
   it('can create a musician and add to the chain', async () => {
-    expect.assertions(2);
+    expect.assertions(1);
     const mockRedis = new MockIORedis();
     const client = withHelpers(mockRedis);
     mockRedis.exists.mockResolvedValue(true);
@@ -57,14 +57,6 @@ describe('musician methods', () => {
       JSON.stringify({
         id: 'musician-uuid',
         name: 'Bobby Tuba',
-      })
-    );
-    expect(client.hset).toHaveBeenCalledWith(
-      'room-uuid',
-      'meta',
-      JSON.stringify({
-        ...roomMeta,
-        musicianIdsChain: ['musician1-id', 'musician-uuid'],
       })
     );
   });

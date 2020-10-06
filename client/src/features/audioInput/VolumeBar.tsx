@@ -1,10 +1,34 @@
 import _ from 'lodash';
-import React, { useState } from 'react';
-import { Stage, Layer, Rect } from 'react-konva';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { Colors } from '@blueprintjs/core';
 
-import { useInterval } from '../../app/util';
+function Canvas({ draw, style }) {
+  const canvasRef = useRef(null);
+  const animationFrameId = useRef<number | null>(null);
 
+  useEffect(
+    () => {
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+
+      const context = (canvas as HTMLCanvasElement).getContext('2d');
+
+      const render = () => {
+        draw(context);
+        animationFrameId.current = window.requestAnimationFrame(render);
+      };
+      render();
+
+      return () => {
+        if (animationFrameId.current)
+          window.cancelAnimationFrame(animationFrameId.current);
+      };
+    },
+    [draw]
+  );
+
+  return <canvas ref={canvasRef} style={style} />;
+}
 
 interface Props {
   fetchData: () => Uint8Array;
@@ -14,71 +38,46 @@ interface Props {
 }
 
 export default function({ height, width, fetchData, disabled }: Props) {
-  const [barWidth, setBarWidth] = useState(0);
-  const [dampedBarWidth, setDampedBarWidth] = useState(0);
-  const [clipOpacity, setClipOpacity] = useState(0);
+  const barWidth = useRef(0);
+  const dampedBarWidth = useRef(0);
+  const clipOpacity = useRef(0);
 
-  useInterval(() => {
-    const offset = 128.0; // The offset of the signal from 0 amplitude
-    const amplitudeNormalized =
-      ((_.max(fetchData()) || offset) - offset) / 127.0;
-    const amplitudeDB = 20 * Math.log10(amplitudeNormalized);
-    const normalizedDB = (40 + (_.max([amplitudeDB, -40]) ?? -40)) / 40;
-    const newBarWidth = disabled ? 0 : normalizedDB * (width || 0);
+  const draw = useCallback(
+    (ctx) => {
+      const offset = 128.0; // The offset of the signal from 0 amplitude
+      const amplitudeNormalized =
+        ((_.max(fetchData()) || offset) - offset) / 127.0;
+      const amplitudeDB = 20 * Math.log10(amplitudeNormalized);
+      const normalizedDB = (40 + (_.max([amplitudeDB, -40]) ?? -40)) / 40;
+      const newBarWidth = disabled ? 0 : normalizedDB * (ctx.canvas.width || 0);
 
-    setBarWidth(newBarWidth);
-    setDampedBarWidth(
-      _.max([newBarWidth, dampedBarWidth - 0.6]) || newBarWidth
-    );
-    setClipOpacity(
-      normalizedDB === 1.0 ? 1 : _.max([clipOpacity - 0.02, 0]) || 0
-    );
-  },
-  // TODO (gnewman): Optimize this component so we can render faster. For now,
-  // it's far too expensive to update at 60 Hz. Based on my testing, this
-  // interval function is plenty fast, but rendering is super expensive
-  1000);
+      barWidth.current = newBarWidth;
+      dampedBarWidth.current =
+        _.max([newBarWidth, dampedBarWidth.current - 0.6]) || newBarWidth;
+      clipOpacity.current =
+        normalizedDB === 1.0 ? 1 : _.max([clipOpacity.current - 0.02, 0]) || 0;
 
-  return (
-    <Stage height={height} width={width}>
-      <Layer>
-        <Rect
-          x={0}
-          y={0}
-          width={width}
-          height={height}
-          fill={Colors.DARK_GRAY3}
-        />
-        <Rect
-          x={0}
-          y={0}
-          width={barWidth}
-          height={height}
-          fill={Colors.GREEN3}
-        />
-        <Rect
-          x={barWidth - 10}
-          y={0}
-          width={10}
-          height={height}
-          fill={Colors.GREEN5}
-        />
-        <Rect
-          x={dampedBarWidth - 2}
-          y={0}
-          width={2}
-          height={height}
-          fill={Colors.GRAY4}
-        />
-        <Rect
-          x={width - 5}
-          y={0}
-          width={5}
-          height={height}
-          fill={Colors.RED3}
-          opacity={clipOpacity}
-        />
-      </Layer>
-    </Stage>
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      // background
+      ctx.fillStyle = Colors.DARK_GRAY3;
+      ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      // green bar
+      ctx.fillStyle = Colors.GREEN3;
+      ctx.fillRect(0, 0, barWidth.current, ctx.canvas.height);
+      // green highlight
+      ctx.fillStyle = Colors.GREEN5;
+      ctx.fillRect(barWidth.current - 10, 0, 10, ctx.canvas.height);
+      // peak marker
+      ctx.fillStyle = Colors.GRAY4;
+      ctx.fillRect(dampedBarWidth.current - 2, 0, 2, ctx.canvas.height);
+      // clip indicator
+      ctx.fillStyle = Colors.RED3;
+      ctx.globalAlpha = clipOpacity.current;
+      ctx.fillRect(ctx.canvas.width - 5, 0, 5, ctx.canvas.height);
+      ctx.globalAlpha = 1;
+    },
+    [disabled, fetchData]
   );
+
+  return <Canvas draw={draw} style={{height, width}}/>;
 }

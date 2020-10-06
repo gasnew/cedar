@@ -1,8 +1,6 @@
 // Application hooks that run for every service
 // Don't remove this comment. It's needed to format import lines nicely.
 
-import _ from 'lodash';
-
 import { HookContext } from '@feathersjs/feathers';
 import { GeneralError } from '@feathersjs/errors';
 

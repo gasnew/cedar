@@ -1,10 +1,12 @@
-import React, { useContext, useState } from 'react';
+import _ from 'lodash';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Alignment,
   Button,
   Classes,
   Colors,
+  EditableText,
   H4,
   Icon,
   Navbar,
@@ -15,9 +17,16 @@ import {
 } from '@blueprintjs/core';
 
 import { useInterval } from '../../app/util';
-import { useGet } from '../feathers/FeathersHooks';
+import { useGet, useLazyGet, usePatch } from '../feathers/FeathersHooks';
 import { FeathersContext } from '../feathers/FeathersProvider';
-import { selectRoom } from '../room/roomSlice';
+import { selectMusicians, setMusicianName } from '../musicians/musiciansSlice';
+import {
+  RoomState,
+  selectAmHost,
+  selectRoom,
+  setSecondsBetweenMusicians,
+  updateChain,
+} from '../room/roomSlice';
 import {
   selectRecordingState,
   startRecording,
@@ -31,21 +40,35 @@ function RecordingIcon() {
   return <Icon icon="record" color={bright ? Colors.RED4 : Colors.RED3} />;
 }
 
-function RoomNameplate({ id, name }: { id: string; name: string }) {
+function RoomNameplate({
+  id,
+  name,
+  room,
+}: {
+  id: string;
+  name: string;
+  room: RoomState;
+}) {
   const app = useContext(FeathersContext);
   const dispatch = useDispatch();
   const recordingState = useSelector(selectRecordingState);
+  const amHost = useSelector(selectAmHost);
 
   useGet('rooms', id, {
     pollingInterval: 1000,
     // Keep recordingId up-to-date (indicates whether the server expects us to
     // be recording)
-    // TODO: Add a check that I am not the host
-    onUpdate: ({ recordingId }) => {
-      if (recordingId && recordingState === 'stopped')
-        dispatch(startRecording(app, id, recordingId));
-      if (!recordingId && recordingState === 'recording')
-        dispatch(stopRecording());
+    onUpdate: ({ recordingId, musicianIdsChain, secondsBetweenMusicians }) => {
+      if (!amHost) {
+        if (recordingId && recordingState === 'stopped')
+          dispatch(startRecording(app, id, recordingId));
+        if (!recordingId && recordingState === 'recording')
+          dispatch(stopRecording());
+        if (!amHost && secondsBetweenMusicians !== room.secondsBetweenMusicians)
+          dispatch(setSecondsBetweenMusicians({ secondsBetweenMusicians }));
+      }
+      if (!_.isEqual(musicianIdsChain, room.musicianIdsChain))
+        dispatch(updateChain({ musicianIdsChain }));
     },
   });
 
@@ -73,6 +96,56 @@ function RoomNameplate({ id, name }: { id: string; name: string }) {
   );
 }
 
+function MusianName() {
+  const { musicianId } = useSelector(selectRoom);
+  const musicians = useSelector(selectMusicians);
+  const cachedName =
+    musicianId && musicians[musicianId] ? musicians[musicianId].name : null;
+
+  const [canonicalName, setCanonicalName] = useState(cachedName);
+
+  const [getMusician] = useLazyGet('musicians', musicianId || '');
+  const [patchMusician] = usePatch('musicians');
+
+  const dispatch = useDispatch();
+  const setCachedName = useCallback(
+    (name: string | null) => {
+      if (musicianId && name !== null)
+        dispatch(setMusicianName({ musicianId, name }));
+    },
+    [musicianId, dispatch]
+  );
+
+  useEffect(
+    () => {
+      if (!musicianId) return;
+      getMusician().then(({ data, error }) => {
+        if (!data) return;
+        setCachedName(data.name);
+        setCanonicalName(data.name);
+      });
+    },
+    [getMusician, musicianId, setCachedName]
+  );
+
+  return (
+    <EditableText
+      value={cachedName || ''}
+      placeholder="Loading..."
+      disabled={cachedName === null}
+      onChange={setCachedName}
+      onCancel={() => setCachedName(canonicalName)}
+      onConfirm={() => {
+        if (cachedName === '') setCachedName(canonicalName);
+        else {
+          setCanonicalName(cachedName);
+          patchMusician(musicianId, { name: cachedName });
+        }
+      }}
+    />
+  );
+}
+
 export default function() {
   const recordingState = useSelector(selectRecordingState);
   const room = useSelector(selectRoom);
@@ -84,7 +157,12 @@ export default function() {
         <NavbarDivider />
         {recordingState === 'recording' && <RecordingIcon />}
         {room.id &&
-          room.name && <RoomNameplate id={room.id} name={room.name} />}
+          room.name && (
+            <RoomNameplate id={room.id} name={room.name} room={room} />
+          )}
+      </NavbarGroup>
+      <NavbarGroup align={Alignment.RIGHT}>
+        <MusianName />
       </NavbarGroup>
     </Navbar>
   );

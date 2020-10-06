@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Base64 } from 'js-base64';
 
 import { usePatch } from '../feathers/FeathersHooks';
+import { selectLoopbackLatencyMs } from '../mediaBar/mediaBarSlice';
 import {
   selectMyTrackId,
   selectRecordingState,
@@ -184,6 +185,7 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
   useChunkPoster(useSelector(selectMyTrackId), setWorkletCallback);
   const recordingState = useSelector(selectRecordingState);
   const delaySeconds = useSelector(selectRecordingDelaySeconds);
+  const loopbackLatencyMs = useSelector(selectLoopbackLatencyMs);
 
   // Hook to start the worklet when recordingState says so. Starting the audio
   // worklet is idempotent, so it's OK ifsend the message multiple times
@@ -193,16 +195,13 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
         postWorkletMessage({
           action: 'start',
           // more negative -> delay mic more
-          // NOTE(gnewman): I found my laptop has a loopback delay of about 100
-          // ms, but we still need to implement calculating that easily in
-          // Cedar!
-          delaySeconds: delaySeconds + 0.1,
+          delaySeconds: delaySeconds + loopbackLatencyMs / 1000,
         });
       } else if (recordingState === 'stopped') {
         postWorkletMessage({ action: 'stop' });
       }
     },
-    [recordingState, postWorkletMessage, delaySeconds]
+    [recordingState, postWorkletMessage, delaySeconds, loopbackLatencyMs]
   );
 
   useEffect(
@@ -258,10 +257,10 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
     [stream]
   );
 
-  const fetchData = () => {
+  const fetchData = useCallback(() => {
     if (analyzer) analyzer.getByteTimeDomainData(dataArray);
     return dataArray;
-  };
+  }, [analyzer, dataArray]);
   const setGainDB = gainDB => {
     if (gainNode) gainNode.gain.value = Math.pow(10, gainDB / 20);
   };

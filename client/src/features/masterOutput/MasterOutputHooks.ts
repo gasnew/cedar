@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Base64 } from 'js-base64';
 
@@ -233,10 +233,13 @@ export function useRoomAudio(): DataResponse {
     // AudioStreamHooks
   }, []);
 
-  const fetchData = () => {
-    if (analyzer) analyzer.getByteTimeDomainData(dataArray.current);
-    return dataArray.current;
-  };
+  const fetchData = useCallback(
+    () => {
+      if (analyzer) analyzer.getByteTimeDomainData(dataArray.current);
+      return dataArray.current;
+    },
+    [analyzer, dataArray]
+  );
   const setGainDB = gainDB => {
     if (gainNode) gainNode.gain.value = Math.pow(10, gainDB / 20);
   };

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { CedarApp } from '../feathers/FeathersProvider';
-import { updateChain } from '../room/roomSlice';
+import { setSecondsBetweenMusicians, updateChain } from '../room/roomSlice';
 import { AppThunk, RootState } from '../../app/store';
 import { Track as ServerTrack } from '../../../../api/src/room';
 
@@ -13,7 +13,7 @@ interface Recording {
   id: string;
   tracks: Track[];
 }
-type State = 'stopped' | 'initializing' | 'recording';
+export type State = 'stopped' | 'initializing' | 'recording';
 interface RecordingState {
   state: State;
   currentRecordingId: string | null;
@@ -81,6 +81,7 @@ export const startRecording = (
   })) as ServerTrack[];
 
   dispatch(updateChain(room));
+  dispatch(setSecondsBetweenMusicians(room));
   dispatch(
     addRecording({
       id: recording.id,
@@ -111,7 +112,8 @@ export const selectRecordingDelaySeconds = (state: RootState) => {
   const index = state.room.musicianIdsChain.indexOf(
     state.room.musicianId || ''
   );
-  return index === -1 ? 0 : index * 5;
+  const secondsBetweenMusicians = state.room.secondsBetweenMusicians;
+  return index === -1 ? 0 : index * secondsBetweenMusicians;
 };
 
 export const selectCurrentTracks = (state: RootState) => {

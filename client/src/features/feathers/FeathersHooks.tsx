@@ -1,7 +1,7 @@
 import { ServiceMethods } from '@feathersjs/feathers';
 import { FeathersError } from '@feathersjs/errors';
 import _ from 'lodash';
-import { useContext, useState } from 'react';
+import { useCallback, useContext, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { FeathersContext } from './FeathersProvider';
@@ -171,28 +171,32 @@ export function useLazyGet<T extends keyof ServiceTypes>(
   id: number | string
 ): LazyGetResultTuple<ExtractData<ServiceTypes[T]>> {
   const app = useContext(FeathersContext);
+  const room = useSelector(selectRoom);
   const [called, setCalled] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<FeathersError | null>(null);
   const [data, setData] = useState<any>(null);
 
-  const callGet = async () => {
-    setCalled(true);
-    setLoading(true);
-    try {
-      const data = (await app.service(serviceName).get!(id)) as ExtractData<
-        ServiceTypes[T]
-      >;
-      setData(data);
-      setError(null);
-      setLoading(false);
-      return { data, error: null };
-    } catch (error) {
-      setError(error);
-      setLoading(false);
-      return { data: null, error };
-    }
-  };
+  const callGet = useCallback(
+    async () => {
+      setCalled(true);
+      setLoading(true);
+      try {
+        const data = (await app.service(serviceName).get!(id, {
+          query: { roomId: room.id },
+        })) as ExtractData<ServiceTypes[T]>;
+        setData(data);
+        setError(null);
+        setLoading(false);
+        return { data, error: null };
+      } catch (error) {
+        setError(error);
+        setLoading(false);
+        return { data: null, error };
+      }
+    },
+    [app, id, serviceName, room]
+  );
 
   return [callGet, { called, loading, error, data }];
 }
@@ -222,7 +226,8 @@ export function useGet<T extends keyof ServiceTypes>(
   options: GetOptions<ExtractData<ServiceTypes[T]>> = {
     pollingInterval: 1000,
     onUpdate: _ => null,
-  }
+  },
+  optimized: boolean = false
 ): GetResult<ExtractData<ServiceTypes[T]>> {
   const app = useContext(FeathersContext);
   const room = useSelector(selectRoom);
@@ -234,20 +239,23 @@ export function useGet<T extends keyof ServiceTypes>(
     // Skip if we already have a request out
     if (loading) return;
 
-    setLoading(true);
+    if (!optimized) setLoading(true);
     try {
       const newData = (await app.service(serviceName).get!(id, {
         query: { roomId: room.id },
       })) as ExtractData<ServiceTypes[T]>;
-      // TODO: Call onUpdate all the time!...?
       if (options.onUpdate) options.onUpdate(newData);
-      setData(newData);
-      setError(null);
-      setLoading(false);
+      if (!optimized) {
+        setData(newData);
+        setError(null);
+        setLoading(false);
+      }
       return { data, error: null };
     } catch (error) {
-      setError(error);
-      setLoading(false);
+      if (!optimized) {
+        setError(error);
+        setLoading(false);
+      }
       return { data: null, error };
     }
   }, options.pollingInterval);
@@ -304,3 +312,59 @@ export function useLazyFind<T extends keyof ServiceTypes>(
   return [callFind, { called, loading, error, data }];
 }
 /* ---- END LAZY FIND HOOK ---- */
+
+/* ---- BEGIN FIND HOOK ---- */
+interface FindResult<Data> {
+  loading: boolean;
+  error: FeathersError | null;
+  data: Data | null;
+}
+interface FindOptions<Data> {
+  pollingInterval: number;
+  onUpdate: (Data) => any;
+}
+
+/**
+ * A hook for Cedar FIND (GET) endpoints.
+ *
+ * @param serviceName  The service name in lowercase (usually corresponds to
+ * API URI path), e.g., 'room'
+ * @param id  The id for the object to find, e.g., 'abc-123'
+ */
+export function useFind<T extends keyof ServiceTypes>(
+  serviceName: T,
+  options: GetOptions<ExtractData<ServiceTypes[T]>> = {
+    pollingInterval: 1000,
+    onUpdate: _ => null,
+  }
+): GetResult<ExtractData<ServiceTypes[T]>> {
+  const app = useContext(FeathersContext);
+  const room = useSelector(selectRoom);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<FeathersError | null>(null);
+  const [data, setData] = useState<any>(null);
+
+  useInterval(async () => {
+    // Skip if we already have a request out
+    if (loading) return;
+
+    setLoading(true);
+    try {
+      const newData = (await app.service(serviceName).find!({
+        query: { roomId: room.id },
+      })) as ExtractData<ServiceTypes[T]>;
+      if (options.onUpdate) options.onUpdate(newData);
+      setData(newData);
+      setError(null);
+      setLoading(false);
+      return { data, error: null };
+    } catch (error) {
+      setError(error);
+      setLoading(false);
+      return { data: null, error };
+    }
+  }, options.pollingInterval);
+
+  return { loading, error, data };
+}
+/* ---- END FIND HOOK ---- */

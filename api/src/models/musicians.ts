@@ -7,15 +7,32 @@ import { IORedisClient } from './index';
 
 export interface MusicianInterface {
   getMusicians: (roomId: string) => Promise<Musicians>;
+  getMusician: (roomId: string, musicianId: string) => Promise<Musician>;
   createMusician: (roomId: string, name: string) => Promise<Musician>;
+  patchMusician: (
+    roomId: string,
+    musicianId: string,
+    musician: Partial<Musician>
+  ) => Promise<Musician>;
 }
 
 export default function(redisClient: IORedisClient): MusicianInterface {
-  const { getCollection, rKey } = commonInterface(redisClient);
+  const { getCollection, parseOrThrow, rKey } = commonInterface(redisClient);
   const { getRoom } = roomInterface(redisClient);
 
   return {
     getMusicians: getCollection<Musician>('musicians'),
+    getMusician: async (roomId: string, musicianId: string) => {
+      if (!(await redisClient.exists(rKey({ roomId }))))
+        throw new Unprocessable(`Room ${roomId} does not exist!`);
+
+      return parseOrThrow<Musician>(
+        await redisClient.hget(
+          rKey({ roomId, collection: 'musicians' }),
+          musicianId
+        )
+      );
+    },
     createMusician: async (roomId: string, name: string) => {
       const room = await getRoom(roomId);
 
@@ -28,16 +45,33 @@ export default function(redisClient: IORedisClient): MusicianInterface {
         newMusician.id,
         JSON.stringify(newMusician)
       );
-      await redisClient.hset(
-        rKey({ roomId }),
-        'meta',
-        JSON.stringify({
-          ...room,
-          musicianIdsChain: [...room.musicianIdsChain, newMusician.id],
-        })
-      );
 
       return newMusician;
+    },
+    patchMusician: async (
+      roomId: string,
+      musicianId: string,
+      musicianUpdates: Partial<Musician>
+    ) => {
+      const room = await getRoom(roomId);
+      const musician = parseOrThrow<Musician>(
+        await redisClient.hget(
+          rKey({ roomId, collection: 'musicians' }),
+          musicianId
+        )
+      );
+      const updatedMusician = {
+        ...musician,
+        ...musicianUpdates,
+      };
+
+      await redisClient.hset(
+        rKey({ roomId: roomId, collection: 'musicians' }),
+        musicianId,
+        JSON.stringify(updatedMusician)
+      );
+
+      return updatedMusician;
     },
   };
 }
