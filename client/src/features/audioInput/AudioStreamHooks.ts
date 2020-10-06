@@ -192,7 +192,6 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
   useEffect(
     () => {
       if (recordingState === 'recording') {
-        console.log(delaySeconds + loopbackLatencyMs / 1000);
         postWorkletMessage({
           action: 'start',
           // more negative -> delay mic more
@@ -202,7 +201,7 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
         postWorkletMessage({ action: 'stop' });
       }
     },
-    [recordingState, postWorkletMessage, delaySeconds]
+    [recordingState, postWorkletMessage, delaySeconds, loopbackLatencyMs]
   );
 
   useEffect(
