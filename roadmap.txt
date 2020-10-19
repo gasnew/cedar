@@ -251,8 +251,19 @@ x browse list of rooms + number of members
 + way to mock out other musicians (play in base track). way to experience by oneself. good for click track or base track
 + light mode is ugly
 + note from me to me: be clearer about agenda ahead of time
++ garrett loopback: 90
++ calob loopback: 90 (unverified)
 + daniel loopback: 70
-+ emily loopback: 120
++ emily loopback: 170
++ aly loopback: 175
++ isaac loopback: 145
 + “click to copy audience invitation link”
 + chirp for loopback?
 + looks clean as heck —miranda
+
+10/17/20
+- Replay recording and mix live--could also determine loopback latency from this?
+- Measuring loopback latency takes ~5 minutes per musician
+- Sound quality was actually really good
+- White screen of death occurred occasionally (should be easier to solve after
+  we capture and display errors properly)
