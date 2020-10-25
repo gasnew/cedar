@@ -1,9 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-  NumericInput,
-} from '@blueprintjs/core';
+import { Button, NumericInput } from '@blueprintjs/core';
 
+import LoopbackCalibrationButton from './LoopbackCalibrationButton';
 import { selectLoopbackLatencyMs, setLoopbackLatencyMs } from './mediaBarSlice';
 
 export default function({ disabled }: { disabled: boolean }) {
@@ -31,7 +30,8 @@ export default function({ disabled }: { disabled: boolean }) {
         }}
         style={{ width: 55 }}
       />
-      <span style={{ marginTop: 6 }}>&nbsp;ms</span>
+      <span style={{ marginTop: 6 }}>&nbsp;ms</span>&nbsp;
+      <LoopbackCalibrationButton />
     </div>
   );
 }

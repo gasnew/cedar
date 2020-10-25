@@ -42,7 +42,16 @@ Modifying the chain
 + Optimize volume bar. Rendering with react-konva was costly
 + Don't let musicians be multiline
 
+Loopback delay calculation
++ Play a ping of a certain frequency (use a "chirp" signal?)
++ Use a bandpass filter to find the peak
++ Measure the delay
+x (bonus) Visualize the audio received by the client!
++ This value should be manually editable as well
+
 Quality-of-life improvements
+- Mix all input channels into a single output channel before sending off to
+  server (make this configurable?)
 - Animated brightness to show audio progression through chain
 + Rename "Audience" to "Standby"
 - Make name obviously editable
@@ -58,13 +67,6 @@ Client-side mixing
 - Tooltip about the fact that this only mixes for you (maybe just call it
   "Personal Mixer"?)
 - Master output and slider
-
-Loopback delay calculation
-- Play a ping of a certain frequency (use a "chirp" signal?)
-- Use a bandpass filter to find the peak
-- Measure the delay
-- (bonus) Visualize the audio received by the client!
-- This value should be manually editable as well
 
 Download recordings
 - Mixer role?

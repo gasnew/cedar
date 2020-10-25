@@ -2,7 +2,7 @@ import React from 'react';
 import { Classes, Colors } from '@blueprintjs/core';
 
 import AudienceAndMusicians from './features/audienceAndMusicians/AudienceAndMusicians';
-import AudioInput from './features/audioInput/AudioInput';
+import AudioInputCard from './features/audioInput/AudioInputCard';
 import MediaBar from './features/mediaBar/MediaBar';
 import MasterOutput from './features/masterOutput/MasterOutput';
 import Navbar from './features/navbar/Navbar';
@@ -26,7 +26,7 @@ function App() {
       </div>
       <div style={{ display: 'flex', flexDirection: 'row', margin: 8 }}>
         <div style={{ display: 'flex', flexDirection: 'column', marginRight: 8 }}>
-          <AudioInput />
+          <AudioInputCard />
           <MasterOutput />
         </div>
         <AudienceAndMusicians />
