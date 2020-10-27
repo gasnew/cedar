@@ -1,19 +1,19 @@
 import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Card, H4, Button, MenuItem, Slider } from '@blueprintjs/core';
 import { ItemRenderer, Select } from '@blueprintjs/select';
 
-import AudioInputSelector, { IInputDevice } from './AudioInputSelector';
+import AudioInputSelector from './AudioInputSelector';
+import { selectInputDevice, setInputDevice, IInputDevice } from './audioSlice';
 import { useStream, useStreamData } from './AudioStreamHooks';
 import { selectRecordingState } from '../recording/recordingSlice';
 import VolumeBar from './VolumeBar';
 
 export default function() {
   // Device selection
-  const [selectedDevice, setSelectedDevice] = useState<IInputDevice | null>(
-    null
-  );
+  const dispatch = useDispatch();
+  const selectedDevice = useSelector(selectInputDevice);
 
   // Audio data
   const { canChangeStream, someData, fetchData, setGainDB } = useStreamData(
@@ -34,7 +34,7 @@ export default function() {
       <div style={{ marginBottom: 10 }}>
         <AudioInputSelector
           disabled={selectionDisabled}
-          setSelectedDevice={setSelectedDevice}
+          setSelectedDevice={device => dispatch(setInputDevice(device))}
           selectedDevice={selectedDevice}
         />
       </div>

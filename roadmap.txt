@@ -48,8 +48,17 @@ Loopback delay calculation
 + Measure the delay
 x (bonus) Visualize the audio received by the client!
 + This value should be manually editable as well
++ Loopback latency calibration closes if recording starts, and button is
+  disabled during recording
++ Default the calibration input to the canonical input
++ Include a volume bar in the calibration card
+- Default loopback latency to nothing, and require setting it before being
+  added to the chain
 
 Quality-of-life improvements
+- Button to "fix audio problems" (short-term solution to resolving audio
+  cutting in and out)
+- Can live-connect/disconnect audio input devices
 - Mix all input channels into a single output channel before sending off to
   server (make this configurable?)
 - Animated brightness to show audio progression through chain

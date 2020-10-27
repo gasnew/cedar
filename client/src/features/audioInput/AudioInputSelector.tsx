@@ -4,15 +4,11 @@ import { useSelector } from 'react-redux';
 import { Card, H4, Button, MenuItem, Slider } from '@blueprintjs/core';
 import { ItemRenderer, Select } from '@blueprintjs/select';
 
+import { IInputDevice } from './audioSlice';
 import { useStream, useStreamData } from './AudioStreamHooks';
 import { selectRecordingState } from '../recording/recordingSlice';
 import VolumeBar from './VolumeBar';
 
-export interface IInputDevice {
-  deviceId: string;
-  groupId: string;
-  label: string;
-}
 const inputDeviceRenderer: ItemRenderer<IInputDevice> = (
   inputDevice,
   { handleClick, modifiers, query }
@@ -52,12 +48,19 @@ function useInputDevices(): [() => void, InputDeviceData] {
     () => {
       navigator.mediaDevices.enumerateDevices().then(devices => {
         setInputDevices(
-          _.filter(
-            devices,
-            device =>
-              device.kind === 'audioinput' &&
-              !!device.deviceId &&
-              device.deviceId !== 'default'
+          _.map(
+            _.filter(
+              devices,
+              device =>
+                device.kind === 'audioinput' &&
+                !!device.deviceId &&
+                device.deviceId !== 'default'
+            ),
+            ({ deviceId, groupId, label }) => ({
+              deviceId,
+              groupId,
+              label,
+            })
           )
         );
       });

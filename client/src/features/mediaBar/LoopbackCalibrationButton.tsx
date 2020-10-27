@@ -1,9 +1,10 @@
 import _ from 'lodash';
 import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   Button,
   Callout,
+  Card,
   Classes,
   Dialog,
   Divider,
@@ -15,11 +16,12 @@ import {
   Tag,
 } from '@blueprintjs/core';
 
-import { useStream } from '../audioInput/AudioStreamHooks';
-import AudioInputSelector, {
-  IInputDevice,
-} from '../audioInput/AudioInputSelector';
+import { useStream, useStreamData } from '../audioInput/AudioStreamHooks';
+import { selectInputDevice, IInputDevice } from '../audioInput/audioSlice';
+import AudioInputSelector from '../audioInput/AudioInputSelector';
+import VolumeBar from '../audioInput/VolumeBar';
 import { selectLoopbackLatencyMs, setLoopbackLatencyMs } from './mediaBarSlice';
+import { selectRecordingState } from '../recording/recordingSlice';
 
 interface LoopbackLatencyResult {
   success: boolean;
@@ -154,9 +156,12 @@ async function detectLoopbackLatency(
 }
 
 export default function() {
+  const recordingState = useSelector(selectRecordingState);
+  const defaultSelectedDevice = useSelector(selectInputDevice);
+
   const [isOpen, setIsOpen] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState<IInputDevice | null>(
-    null
+    defaultSelectedDevice
   );
   const [running, setRunning] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -164,7 +169,12 @@ export default function() {
     number | null
   >(null);
 
+  // Audio data
   const stream = useStream(selectedDevice ? selectedDevice.deviceId : null);
+  const { canChangeStream, someData, fetchData, setGainDB } = useStreamData(
+    stream
+  );
+
   const dispatch = useDispatch();
 
   const handleOpen = () => setIsOpen(true);
@@ -203,12 +213,18 @@ export default function() {
   const handleClosed = () => {
     setErrorMessage(null);
     setPendingLoopbackLatencyMs(null);
+    setIsOpen(false);
   };
   const hasRunOnce = !!errorMessage || !!pendingLoopbackLatencyMs;
 
   return (
     <>
-      <Button outlined intent="primary" onClick={handleOpen}>
+      <Button
+        outlined
+        intent="primary"
+        disabled={recordingState !== 'stopped'}
+        onClick={handleOpen}
+      >
         Calibrate
       </Button>
       <Dialog
@@ -216,7 +232,11 @@ export default function() {
         style={{ width: 600 }}
         icon="tree"
         title="Calibrate loopback latency!"
-        isOpen={isOpen}
+        isOpen={isOpen && recordingState === 'stopped'}
+        onOpened={() => {
+          if (selectedDevice !== defaultSelectedDevice)
+            setSelectedDevice(defaultSelectedDevice);
+        }}
         onClose={handleClose}
         onClosed={handleClosed}
       >
@@ -260,40 +280,56 @@ export default function() {
             </li>
           </OL>
           <H3>Calibrate</H3>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ marginBottom: 5 }}>
+          <Card
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              maxWidth: 300,
+              marginLeft: 'auto',
+              marginRight: 'auto',
+            }}
+          >
+            <div style={{ marginBottom: 10 }}>
               <AudioInputSelector
                 setSelectedDevice={setSelectedDevice}
                 selectedDevice={selectedDevice}
               />
-              <Button
-                style={{ marginLeft: 5 }}
-                intent="primary"
-                outlined={!!pendingLoopbackLatencyMs}
-                onClick={handleRunClick}
-                disabled={running}
-              >
-                {running ? 'Running...' : hasRunOnce ? 'Run again' : 'Run'}
-              </Button>
             </div>
-            {errorMessage && <Callout intent="danger">{errorMessage}</Callout>}
+            <VolumeBar
+              height={20}
+              width={250}
+              fetchData={fetchData}
+              disabled={!someData}
+            />
+            <Divider />
+            <Button
+              intent="primary"
+              outlined={!!pendingLoopbackLatencyMs}
+              onClick={handleRunClick}
+              disabled={running}
+            >
+              {running ? 'Running...' : hasRunOnce ? 'Run again' : 'Run'}
+            </Button>
             {pendingLoopbackLatencyMs && (
-              <div>
-                <Tag large style={{ marginBottom: 5 }}>
+              <>
+                <Tag large style={{ marginTop: 5, marginBottom: 5 }}>
                   Loopback latency:{' '}
                   <span style={{ fontWeight: 'bold' }}>
                     {pendingLoopbackLatencyMs}
                   </span>{' '}
                   ms
                 </Tag>{' '}
-                {pendingLoopbackLatencyMs && (
-                  <Button intent="success" onClick={handleSaveAndClose}>
-                    Save and close
-                  </Button>
-                )}
-              </div>
+                <Button intent="success" onClick={handleSaveAndClose}>
+                  Save and close
+                </Button>
+              </>
             )}
-          </div>
+          </Card>
+          {errorMessage && (
+            <Callout intent="danger" style={{ marginTop: 5 }}>
+              {errorMessage}
+            </Callout>
+          )}
         </div>
       </Dialog>
     </>
