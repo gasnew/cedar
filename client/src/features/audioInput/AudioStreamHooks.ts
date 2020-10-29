@@ -195,7 +195,7 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
         postWorkletMessage({
           action: 'start',
           // more negative -> delay mic more
-          delaySeconds: delaySeconds + loopbackLatencyMs / 1000,
+          delaySeconds: delaySeconds + (loopbackLatencyMs || 0) / 1000,
         });
       } else if (recordingState === 'stopped') {
         postWorkletMessage({ action: 'stop' });

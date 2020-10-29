@@ -20,8 +20,10 @@ import { useStream, useStreamData } from '../audioInput/AudioStreamHooks';
 import { selectInputDevice, IInputDevice } from '../audioInput/audioSlice';
 import AudioInputSelector from '../audioInput/AudioInputSelector';
 import VolumeBar from '../audioInput/VolumeBar';
+import { usePatch } from '../feathers/FeathersHooks';
 import { selectLoopbackLatencyMs, setLoopbackLatencyMs } from './mediaBarSlice';
 import { selectRecordingState } from '../recording/recordingSlice';
+import { selectRoom } from '../room/roomSlice';
 
 interface LoopbackLatencyResult {
   success: boolean;
@@ -108,7 +110,6 @@ function calculateLoopbackLatency(
   }
 
   const meanLatency = _.mean(detectedPulseLatencies);
-  console.log(detectedPulseLatencies);
   if (
     detectedPulseLatencies.length === PULSE_COUNT &&
     _.every(
@@ -158,6 +159,7 @@ async function detectLoopbackLatency(
 export default function() {
   const recordingState = useSelector(selectRecordingState);
   const defaultSelectedDevice = useSelector(selectInputDevice);
+  const { musicianId } = useSelector(selectRoom);
 
   const [isOpen, setIsOpen] = useState(false);
   const [selectedDevice, setSelectedDevice] = useState<IInputDevice | null>(
@@ -175,6 +177,8 @@ export default function() {
     stream
   );
 
+  const [patchMusician] = usePatch('musicians');
+
   const dispatch = useDispatch();
 
   const handleOpen = () => setIsOpen(true);
@@ -186,7 +190,6 @@ export default function() {
     if (stream) {
       setRunning(true);
       const latencyResult = await detectLoopbackLatency(stream);
-      console.log(latencyResult);
       if (latencyResult.success) {
         setPendingLoopbackLatencyMs(latencyResult.latencyMs);
         setErrorMessage(null);
@@ -208,6 +211,9 @@ export default function() {
         loopbackLatencyMs: pendingLoopbackLatencyMs || 0,
       })
     );
+    patchMusician(musicianId, {
+      loopbackLatencyMs: pendingLoopbackLatencyMs || 0,
+    });
     handleClose();
   };
   const handleClosed = () => {
@@ -295,13 +301,14 @@ export default function() {
                 selectedDevice={selectedDevice}
               />
             </div>
-            <VolumeBar
-              height={20}
-              width={250}
-              fetchData={fetchData}
-              disabled={!someData}
-            />
-            <Divider />
+            <div style={{ marginBottom: 5 }}>
+              <VolumeBar
+                height={20}
+                width={250}
+                fetchData={fetchData}
+                disabled={!someData}
+              />
+            </div>
             <Button
               intent="primary"
               outlined={!!pendingLoopbackLatencyMs}
@@ -312,7 +319,8 @@ export default function() {
             </Button>
             {pendingLoopbackLatencyMs && (
               <>
-                <Tag large style={{ marginTop: 5, marginBottom: 5 }}>
+                <Divider />
+                <Tag large minimal style={{ marginBottom: 5 }}>
                   Loopback latency:{' '}
                   <span style={{ fontWeight: 'bold' }}>
                     {pendingLoopbackLatencyMs}

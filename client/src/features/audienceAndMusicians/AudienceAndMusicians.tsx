@@ -1,5 +1,7 @@
 import {
+  Callout,
   Card,
+  Classes,
   Colors,
   H4,
   H5,
@@ -59,40 +61,79 @@ function getStyle({ draggableStyle, virtualStyle, isDragging }) {
   return result;
 }
 
-function Person({ provided, item, style, isDragging, disabled = false }) {
+function Person({
+  provided,
+  item,
+  style,
+  isDragging,
+  disabled = false,
+  renderLoopbackReminder = false,
+}) {
   return (
-    <div
-      {...provided.draggableProps}
-      {...provided.dragHandleProps}
-      ref={provided.innerRef}
-      style={getStyle({
-        draggableStyle: provided.draggableProps.style,
-        virtualStyle: style,
-        isDragging,
-      })}
-      className={
-        styles.person +
-        ' bp3-button bp3-outlined' +
-        (disabled ? ' bp3-disabled' : '')
-      }
-    >
-      {item.name}
-    </div>
+    <>
+      <div
+        {...provided.draggableProps}
+        {...provided.dragHandleProps}
+        ref={provided.innerRef}
+        style={getStyle({
+          draggableStyle: provided.draggableProps.style,
+          virtualStyle: style,
+          isDragging,
+        })}
+        className={
+          styles.person +
+          ' bp3-button bp3-outlined' +
+          (disabled ? ' bp3-disabled' : '')
+        }
+      >
+        {item.name}
+      </div>
+      {renderLoopbackReminder && (
+        <span
+          className={Classes.DARK + ' ' + styles.loopbackReminder}
+          style={{
+            left: provided.draggableProps.style.left,
+            transform: provided.draggableProps.style.transform,
+            zIndex: provided.draggableProps.style.zIndex,
+            top: provided.draggableProps.style.top + 35,
+            transition: provided.draggableProps.style.transition,
+          }}
+        >
+          <Icon
+            icon="warning-sign"
+            color="#ffb466"
+            style={{ marginRight: 5 }}
+          />
+          <span style={{ fontWeight: 'bold' }}>{item.name}</span> must set
+          loopback latency!
+        </span>
+      )}
+    </>
   );
 }
 
-function PersonList({ column, isDropDisabled, isDragDisabled = false }) {
+function PersonList({
+  column,
+  isDropDisabled,
+  musicianLoopbackIsUnset,
+  isDragDisabled = false,
+}) {
   return (
     <Droppable
       droppableId={column.id}
-      renderClone={(provided, snapshot, rubric) => (
-        <Person
-          provided={provided}
-          isDragging={snapshot.isDragging}
-          item={column.items[rubric.source.index]}
-          style={{ left: 8 }}
-        />
-      )}
+      renderClone={(provided, snapshot, rubric) => {
+        return (
+          <Person
+            provided={provided}
+            isDragging={snapshot.isDragging}
+            item={column.items[rubric.source.index]}
+            style={{ left: 8 }}
+            renderLoopbackReminder={
+              musicianLoopbackIsUnset && snapshot.draggingOver !== 'audience'
+            }
+          />
+        );
+      }}
       isDropDisabled={isDropDisabled}
     >
       {(provided, snapshot) => (
@@ -129,6 +170,7 @@ export default function() {
     onDragStart,
     onDragEnd,
     dragSourceId,
+    musicianLoopbackIsUnset,
   } = useLists();
 
   const dispatch = useDispatch();
@@ -208,6 +250,7 @@ export default function() {
                   dragSourceId === musiciansColumn.id &&
                   audienceColumn.items.length === 8
                 }
+                musicianLoopbackIsUnset={musicianLoopbackIsUnset}
               />
             </div>
           </Card>
@@ -238,8 +281,10 @@ export default function() {
                 isDropDisabled={
                   (dragSourceId === audienceColumn.id &&
                     musiciansColumn.items.length === 8) ||
-                  musiciansLocked
+                  musiciansLocked ||
+                  musicianLoopbackIsUnset
                 }
+                musicianLoopbackIsUnset={musicianLoopbackIsUnset}
                 isDragDisabled={musiciansLocked}
               />
               <div className={styles.listHighlightsContainer}>

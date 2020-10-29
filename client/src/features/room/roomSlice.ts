@@ -10,9 +10,9 @@ export interface RoomState {
 }
 
 const initialState: RoomState = {
-  id: null || 'c014420d-e0b2-4daf-8acb-67d32dc64e13',
-  name: null|| 'sweet room yo',
-  musicianId: null || '91030f0e-195d-41cf-a304-152a3704660b',
+  id: null || 'c08ff8b5-2dc7-45e4-80ae-8a059c862e1a',
+  name: null|| 'asdfasdf',
+  musicianId: null || '3e9b9911-ee61-4328-a03c-fb4a49c8b60f',
   musicianIdsChain: [],
   secondsBetweenMusicians: 2,
 };

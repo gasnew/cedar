@@ -2,11 +2,11 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../../app/store';
 
 interface MediaBarState {
-  loopbackLatencyMs: number;
+  loopbackLatencyMs: number | null;
 }
 
 const initialState: MediaBarState = {
-  loopbackLatencyMs: 90,
+  loopbackLatencyMs: null,
 };
 
 export const mediaBarSlice = createSlice({

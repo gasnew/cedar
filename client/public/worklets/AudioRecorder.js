@@ -16,17 +16,14 @@ class AudioRecorder extends AudioWorkletProcessor {
     this.recording = false;
     this.recordedSamples = 0;
     this.samplesToCapture = 0;
-    //this.startTimeMs = 0;
 
     this.port.onmessage = event => {
       if (event.data && event.data.action) {
         if (event.data.action === 'start') {
           if (this.recording) return;
-          //this.startTimeMs = Date.now();
           this.recording = true;
           this.recordedSamples = 0;
           this.samplesToCapture = event.data.samplesToCapture;
-          console.log(event.data.samplesToCapture);
         }
       }
     };
@@ -39,12 +36,6 @@ class AudioRecorder extends AudioWorkletProcessor {
     const input = inputs[0];
     // We only support one channel right now
     const channel = input[0];
-
-    //if (this.recordedSamples === 0) {
-      //const samplesToAdd = (Date.now() - this.startTimeMs) * 48;
-      //console.log(samplesToAdd);
-      ////this.recordedSamples += samplesToAdd;
-    //}
 
     for (let i = 0; i < this.frameSize; i++) {
       const index = this.recordedSamples

@@ -5,6 +5,7 @@ import { RootState } from '../../app/store';
 interface Musician {
   id: string;
   name: string;
+  loopbackLatencyMs: number | null;
 }
 interface Musicians {
   [id: string]: Musician;
@@ -25,10 +26,11 @@ export const musiciansSlice = createSlice({
       state.musicians = { ...action.payload, ...state.musicians };
     },
     updateMusicians: (state, action: PayloadAction<Musicians>) => {
-      _.each(
-        action.payload,
-        musician => (state.musicians[musician.id].name = musician.name)
-      );
+      _.each(action.payload, musician => {
+        state.musicians[musician.id].name = musician.name;
+        state.musicians[musician.id].loopbackLatencyMs =
+          musician.loopbackLatencyMs;
+      });
     },
     setMusicianName: (
       state,

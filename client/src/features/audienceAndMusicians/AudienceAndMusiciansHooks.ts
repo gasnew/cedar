@@ -3,6 +3,7 @@ import { useState } from 'react';
 import _ from 'lodash';
 import { useDispatch, useSelector } from 'react-redux';
 import { usePatch } from '../feathers/FeathersHooks';
+import { selectLoopbackLatencyMs } from '../mediaBar/mediaBarSlice';
 import {
   addMusicians,
   selectMusicians,
@@ -64,10 +65,13 @@ function withUpdatedMusicianName(column, musicians, musicianId) {
 export function useLists() {
   const [listsState, setListsState] = useState<ListState>(DEFAULT_LIST_STATE);
   const [dragSourceId, setDragSourceId] = useState<string | null>(null);
+  const [draggableId, setDraggableId] = useState<string | null>(null);
 
   const dispatch = useDispatch();
   const { musicianId, musicianIdsChain, id: roomId } = useSelector(selectRoom);
   const musicians = useSelector(selectMusicians);
+  // Used just to check if we haven't set our loopback latency yet
+  const loopbackLatencyMs = useSelector(selectLoopbackLatencyMs);
 
   const [patchRoom] = usePatch('rooms');
 
@@ -143,8 +147,10 @@ export function useLists() {
         _.some(
           remoteMusicians,
           remoteMusician =>
-            musicians[remoteMusician.id] &&
-            remoteMusician.name !== musicians[remoteMusician.id].name
+            (musicians[remoteMusician.id] &&
+              remoteMusician.name !== musicians[remoteMusician.id].name) ||
+            remoteMusician.loopbackLatencyMs !==
+              musicians[remoteMusician.id].loopbackLatencyMs
         )
       ) {
         dispatch(
@@ -156,6 +162,7 @@ export function useLists() {
 
   function onDragStart(start) {
     setDragSourceId(start.source.droppableId);
+    setDraggableId(start.draggableId);
   }
 
   function onDragEnd(result) {
@@ -232,5 +239,10 @@ export function useLists() {
     onDragStart,
     onDragEnd,
     dragSourceId,
+    musicianLoopbackIsUnset:
+      !!draggableId &&
+      (draggableId === musicianId
+        ? !!!loopbackLatencyMs
+        : !!!musicians[draggableId].loopbackLatencyMs),
   };
 }
