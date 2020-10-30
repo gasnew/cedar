@@ -121,19 +121,19 @@ function PersonList({
   return (
     <Droppable
       droppableId={column.id}
-      renderClone={(provided, snapshot, rubric) => {
-        return (
-          <Person
-            provided={provided}
-            isDragging={snapshot.isDragging}
-            item={column.items[rubric.source.index]}
-            style={{ left: 8 }}
-            renderLoopbackReminder={
-              musicianLoopbackIsUnset && snapshot.draggingOver !== 'audience'
-            }
-          />
-        );
-      }}
+      renderClone={(provided, snapshot, rubric) => (
+        <Person
+          provided={provided}
+          isDragging={snapshot.isDragging}
+          item={column.items[rubric.source.index]}
+          style={{ left: 8 }}
+          renderLoopbackReminder={
+            musicianLoopbackIsUnset &&
+            snapshot.draggingOver !== 'audience' &&
+            snapshot.isDropAnimating === false
+          }
+        />
+      )}
       isDropDisabled={isDropDisabled}
     >
       {(provided, snapshot) => (

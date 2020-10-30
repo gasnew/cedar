@@ -54,7 +54,7 @@ x (bonus) Visualize the audio received by the client!
 + Include a volume bar in the calibration card
 + Default loopback latency to nothing, and require setting it before being
   added to the chain
-- Mix multiple input channels into one
++ Mix multiple input channels into one
 
 Quality-of-life improvements
 - Button to "fix audio problems" (short-term solution to resolving audio
