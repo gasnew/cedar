@@ -9,6 +9,7 @@ import {
   selectRecordingState,
   selectRecordingDelaySeconds,
 } from '../recording/recordingSlice';
+import { selectAmInChain } from '../room/roomSlice';
 
 interface Props {
   deviceId: string | null;
@@ -63,7 +64,9 @@ function useChunkPoster(
 
       // This onmessage function receives opus-encoded packets or opus/webopus
       // errors
-      opusWorker.onmessage = async ({ data: { error, packet, sampleRate } }) => {
+      opusWorker.onmessage = async ({
+        data: { error, packet, sampleRate },
+      }) => {
         if (error) {
           console.error('webopus worker error: ', error);
           return;
@@ -186,11 +189,15 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
   const recordingState = useSelector(selectRecordingState);
   const delaySeconds = useSelector(selectRecordingDelaySeconds);
   const loopbackLatencyMs = useSelector(selectLoopbackLatencyMs);
+  const amInChain = useSelector(selectAmInChain);
 
   // Hook to start the worklet when recordingState says so. Starting the audio
   // worklet is idempotent, so it's OK ifsend the message multiple times
   useEffect(
     () => {
+      // Don't send audio to server if not in chain
+      if (!amInChain) return;
+
       if (recordingState === 'recording') {
         postWorkletMessage({
           action: 'start',
@@ -201,7 +208,13 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
         postWorkletMessage({ action: 'stop' });
       }
     },
-    [recordingState, postWorkletMessage, delaySeconds, loopbackLatencyMs]
+    [
+      amInChain,
+      recordingState,
+      postWorkletMessage,
+      delaySeconds,
+      loopbackLatencyMs,
+    ]
   );
 
   useEffect(
@@ -257,10 +270,13 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
     [stream]
   );
 
-  const fetchData = useCallback(() => {
-    if (analyzer) analyzer.getByteTimeDomainData(dataArray);
-    return dataArray;
-  }, [analyzer, dataArray]);
+  const fetchData = useCallback(
+    () => {
+      if (analyzer) analyzer.getByteTimeDomainData(dataArray);
+      return dataArray;
+    },
+    [analyzer, dataArray]
+  );
   const setGainDB = gainDB => {
     if (gainNode) gainNode.gain.value = Math.pow(10, gainDB / 20);
   };

@@ -55,6 +55,7 @@ x (bonus) Visualize the audio received by the client!
 + Default loopback latency to nothing, and require setting it before being
   added to the chain
 + Mix multiple input channels into one
++ Don't play room audio when on Standby
 
 Quality-of-life improvements
 - Button to "fix audio problems" (short-term solution to resolving audio

@@ -9,6 +9,7 @@ import {
   selectRecordingState,
   selectRecordingDelaySeconds,
 } from '../recording/recordingSlice';
+import { selectAmInChain } from '../room/roomSlice';
 import { useInterval } from '../../app/util';
 import { Track as ServerTrack } from '../../../../api/src/room';
 
@@ -20,6 +21,7 @@ function useFetchAudioData(postWorkletMessage: (any) => void) {
   const recordingState = useSelector(selectRecordingState);
   const delaySeconds = useSelector(selectRecordingDelaySeconds);
   const precedingTracks = useSelector(selectPrecedingTracks);
+  const amInChain = useSelector(selectAmInChain);
   const [findTracks] = useLazyFind('tracks');
 
   // NOTE(gnewman): Since webopus requires that we send data with the initial
@@ -37,6 +39,9 @@ function useFetchAudioData(postWorkletMessage: (any) => void) {
   // recording events.
   useEffect(
     () => {
+      // Don't play room audio if not in chain
+      if (!amInChain) return;
+
       if (recordingState === 'recording' && !fetching) {
         postWorkletMessage({
           action: 'initialize',
@@ -62,6 +67,7 @@ function useFetchAudioData(postWorkletMessage: (any) => void) {
       }
     },
     [
+      amInChain,
       recordingState,
       postWorkletMessage,
       delaySeconds,
