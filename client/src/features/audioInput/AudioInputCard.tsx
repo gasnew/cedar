@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Card, H4, Button, MenuItem, Slider } from '@blueprintjs/core';
+import { Card, H4, Button, MenuItem, Slider, Switch } from '@blueprintjs/core';
 import { ItemRenderer, Select } from '@blueprintjs/select';
 
 import AudioInputSelector from './AudioInputSelector';
@@ -16,9 +16,14 @@ export default function() {
   const selectedDevice = useSelector(selectInputDevice);
 
   // Audio data
-  const { canChangeStream, someData, fetchData, setGainDB } = useStreamData(
-    useStream(selectedDevice ? selectedDevice.deviceId : null)
-  );
+  const [listeningToAudioInput, setListeningToAudioInput] = useState(false);
+  const {
+    canChangeStream,
+    someData,
+    fetchData,
+    setGainDB,
+    setDirectToDestinationGainNodeGain,
+  } = useStreamData(useStream(selectedDevice ? selectedDevice.deviceId : null));
 
   // Slider state (default to 0.01 to get around UI bug)
   const [sliderGainDB, setSliderGainDB] = useState(0.01);
@@ -27,10 +32,22 @@ export default function() {
   const recordingState = useSelector(selectRecordingState);
 
   const selectionDisabled = !canChangeStream || recordingState !== 'stopped';
+  const handleToggleListening = () => {
+    setDirectToDestinationGainNodeGain(listeningToAudioInput === true ? 0 : 1);
+    setListeningToAudioInput(!listeningToAudioInput);
+  };
 
   return (
     <Card style={{ width: 300 }}>
-      <H4>Audio input</H4>
+      <div style={{ display: 'flex', flexDirection: 'row' }}>
+        <H4>Audio input</H4>
+        <Switch
+          style={{ marginLeft: 'auto' }}
+          checked={listeningToAudioInput}
+          label="Listen"
+          onChange={handleToggleListening}
+        />
+      </div>
       <div style={{ marginBottom: 10 }}>
         <AudioInputSelector
           disabled={selectionDisabled}

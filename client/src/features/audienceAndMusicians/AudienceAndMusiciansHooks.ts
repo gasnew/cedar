@@ -242,7 +242,7 @@ export function useLists() {
     musicianLoopbackIsUnset:
       !!draggableId &&
       (draggableId === musicianId
-        ? !!!loopbackLatencyMs
-        : !!!musicians[draggableId].loopbackLatencyMs),
+        ? loopbackLatencyMs === null
+        : musicians[draggableId].loopbackLatencyMs === null),
   };
 }
