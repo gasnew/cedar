@@ -23,7 +23,9 @@ class AudioInputBufferer extends AudioWorkletProcessor {
     this.framesInBuffer = 0;
     // If timeDeltaMs exceeds this value, we take special action to "catch up"
     // our output buffer to real time
-    this.timeThresholdMs = this.frameSize / sampleRate * 1000;
+    this.timeThresholdMs = (this.frameSize / sampleRate) * 1000;
+
+    this.mixedChannels = new Float32Array(this.frameSize);
 
     // State management
     this.playing = false;
@@ -73,8 +75,19 @@ class AudioInputBufferer extends AudioWorkletProcessor {
     // Delay this frame, or buffer input
     if (this.framesDelayed < this.delayFrames) this.framesDelayed += 1;
     else {
-      // We only support one channel right now
-      const channel = input[0];
+      // NOTE(gnewman): Perform a rudimentary mixing of channels. Down the
+      // road, I'd prefer for musicians to be able to independently mix their
+      // input channels. We'd implement this using a ChannelSplitterNode,
+      // GainNodes, then probably a ChannelMergerNode into AudioInputBufferer.
+      // Additionally, instead of mixing the channels together here, we could
+      // play around with keeping these channels separate, as Opus supports
+      // many channels in a single data packet.
+      for (let i = 0; i < this.frameSize; i++) {
+        this.mixedChannels[i] = 0.0;
+        for (let j = 0; j < input.length; j++) {
+          this.mixedChannels[i] += input[j][i];
+        }
+      }
 
       // Spread incoming data over two frames if we are behind. This can happen
       // when the OS forgets/neglects to ask the input device for an audio
@@ -89,7 +102,8 @@ class AudioInputBufferer extends AudioWorkletProcessor {
       if (this.timeDeltaMs > this.timeThresholdMs) {
         for (let half = 0; half < 2; half++) {
           for (let i = 0; i < this.frameSize; i++) {
-            const newSample = (channel[i] + channel[i]) / 2;
+            const newSample =
+              (this.mixedChannels[i] + this.mixedChannels[i]) / 2;
             this.chunkBuffer[
               this.framesInBuffer * this.frameSize + i
             ] = newSample;
@@ -103,8 +117,9 @@ class AudioInputBufferer extends AudioWorkletProcessor {
         this.timeDeltaMs -= this.timeThresholdMs;
       } else {
         for (let i = 0; i < this.frameSize; i++) {
-          this.chunkBuffer[this.framesInBuffer * this.frameSize + i] =
-            channel[i];
+          this.chunkBuffer[
+            this.framesInBuffer * this.frameSize + i
+          ] = this.mixedChannels[i];
         }
         this.framesInBuffer += 1;
         if (this.framesInBuffer === this.framesPerChunk) {

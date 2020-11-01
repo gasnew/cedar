@@ -42,29 +42,39 @@ Modifying the chain
 + Optimize volume bar. Rendering with react-konva was costly
 + Don't let musicians be multiline
 
+Loopback delay calculation
++ Play a ping of a certain frequency (use a "chirp" signal?)
++ Use a bandpass filter to find the peak
++ Measure the delay
+x (bonus) Visualize the audio received by the client!
++ This value should be manually editable as well
++ Loopback latency calibration closes if recording starts, and button is
+  disabled during recording
++ Default the calibration input to the canonical input
++ Include a volume bar in the calibration card
++ Default loopback latency to nothing, and require setting it before being
+  added to the chain
++ Mix multiple input channels into one
+
 Quality-of-life improvements
+- Button to "fix audio problems" (short-term solution to resolving audio
+  cutting in and out)
+- Can live-connect/disconnect audio input devices
 - Animated brightness to show audio progression through chain
-+ Rename "Audience" to "Standby"
 - Make name obviously editable
-- Do not listen to audio when on standby (will add mixer role later)
-- "Listen to mic" button
 - Select your instrument (need to find instrument pack)
 - Remove musicians when they leave the room
 - The host is the one who creates the room?
 - Standby scrollable?
++ "Listen to mic" button
++ Rename "Audience" to "Standby"
++ Don't play room audio when on Standby
 
 Client-side mixing
 - Can only see musicians behind you
 - Tooltip about the fact that this only mixes for you (maybe just call it
   "Personal Mixer"?)
 - Master output and slider
-
-Loopback delay calculation
-- Play a ping of a certain frequency (use a "chirp" signal?)
-- Use a bandpass filter to find the peak
-- Measure the delay
-- (bonus) Visualize the audio received by the client!
-- This value should be manually editable as well
 
 Download recordings
 - Mixer role?

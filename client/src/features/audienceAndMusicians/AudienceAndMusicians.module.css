@@ -60,3 +60,12 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.loopbackReminder {
+  position: relative;
+  padding: 5px;
+  border-radius: 3px;
+  display: inline-block;
+  white-space: nowrap;
+  background-color: #645a51;
+}

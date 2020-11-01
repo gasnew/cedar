@@ -22,6 +22,7 @@ export interface RoomMeta {
 export interface Musician {
   id: string;
   name: string;
+  loopbackLatencyMs: number | null;
 }
 export type Musicians = Collection<Musician>;
 

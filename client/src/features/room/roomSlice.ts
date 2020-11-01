@@ -10,9 +10,9 @@ export interface RoomState {
 }
 
 const initialState: RoomState = {
-  id: null, // || '0ce84d84-6a3d-48c6-bce4-c5e6ee595c4e',
-  name: null, //|| 'asdf',
-  musicianId: null, // || 'b1d8cfb6-babc-4523-8dc8-3a456fd7f8de',
+  id: null, // || 'c08ff8b5-2dc7-45e4-80ae-8a059c862e1a',
+  name: null, // || 'asdfasdf',
+  musicianId: null, // || '3e9b9911-ee61-4328-a03c-fb4a49c8b60f',
   musicianIdsChain: [],
   secondsBetweenMusicians: 2,
 };
@@ -71,5 +71,7 @@ export const selectHostId = (state: RootState) =>
 export const selectAmHost = (state: RootState) =>
   state.room.musicianIdsChain.length > 0 &&
   state.room.musicianId === state.room.musicianIdsChain[0];
+export const selectAmInChain = (state: RootState) =>
+  state.room.musicianIdsChain.indexOf(state.room.musicianId || '') !== -1;
 
 export default roomSlice.reducer;

@@ -9,6 +9,7 @@ import {
   selectRecordingState,
   selectRecordingDelaySeconds,
 } from '../recording/recordingSlice';
+import { selectAmInChain } from '../room/roomSlice';
 
 interface Props {
   deviceId: string | null;
@@ -63,7 +64,9 @@ function useChunkPoster(
 
       // This onmessage function receives opus-encoded packets or opus/webopus
       // errors
-      opusWorker.onmessage = async ({ data: { error, packet, sampleRate } }) => {
+      opusWorker.onmessage = async ({
+        data: { error, packet, sampleRate },
+      }) => {
         if (error) {
           console.error('webopus worker error: ', error);
           return;
@@ -169,11 +172,16 @@ interface DataResponse {
   someData: boolean;
   fetchData: () => Uint8Array;
   setGainDB: (number) => void;
+  setDirectToDestinationGainNodeGain: (number) => void;
 }
 
 export function useStreamData(stream: MediaStream | null): DataResponse {
   const [analyzer, setAnalyzer] = useState<AnalyserNode | null>(null);
   const [gainNode, setGainNode] = useState<GainNode | null>(null);
+  const [
+    directToDestinationGainNode,
+    setDirectToDestinationGainNode,
+  ] = useState<GainNode | null>(null);
   const [dataArray, setDataArray] = useState<Uint8Array>(new Uint8Array());
   const [postWorkletMessage, setPostWorkletMessage] = useState<(any) => void>(
     _ => _ => null
@@ -186,22 +194,32 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
   const recordingState = useSelector(selectRecordingState);
   const delaySeconds = useSelector(selectRecordingDelaySeconds);
   const loopbackLatencyMs = useSelector(selectLoopbackLatencyMs);
+  const amInChain = useSelector(selectAmInChain);
 
   // Hook to start the worklet when recordingState says so. Starting the audio
   // worklet is idempotent, so it's OK ifsend the message multiple times
   useEffect(
     () => {
+      // Don't send audio to server if not in chain
+      if (!amInChain) return;
+
       if (recordingState === 'recording') {
         postWorkletMessage({
           action: 'start',
           // more negative -> delay mic more
-          delaySeconds: delaySeconds + loopbackLatencyMs / 1000,
+          delaySeconds: delaySeconds + (loopbackLatencyMs || 0) / 1000,
         });
       } else if (recordingState === 'stopped') {
         postWorkletMessage({ action: 'stop' });
       }
     },
-    [recordingState, postWorkletMessage, delaySeconds, loopbackLatencyMs]
+    [
+      amInChain,
+      recordingState,
+      postWorkletMessage,
+      delaySeconds,
+      loopbackLatencyMs,
+    ]
   );
 
   useEffect(
@@ -216,7 +234,8 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
           const analyzer = audioContext.createAnalyser();
           const mediaSource = audioContext.createMediaStreamSource(stream);
 
-          const gainNode = audioContext.createGain();
+          const inputGainNode = audioContext.createGain();
+          const directToDestinationGainNode = audioContext.createGain();
           const audioInputBufferNode = new AudioWorkletNode(
             audioContext,
             'AudioInputBufferer'
@@ -225,19 +244,25 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
             (audioInputBufferNode.port.onmessage = callback)
           );
 
-          mediaSource.connect(gainNode);
-          gainNode.connect(analyzer);
-          gainNode.connect(audioInputBufferNode);
+          mediaSource.connect(inputGainNode);
+          inputGainNode.connect(analyzer);
+          inputGainNode.connect(audioInputBufferNode);
+          inputGainNode.connect(directToDestinationGainNode);
+          // Just piped to destination here so the audio engine treats this
+          // branch as active. No audio is rendered to the speakers.
           audioInputBufferNode.connect(audioContext.destination);
+          directToDestinationGainNode.connect(audioContext.destination);
 
           // Has to be a power of 2. At the default sample rate of 48000, this
           // size should be enough to let us fetch all samples assuming we are
           // fetching every 1/60th of a second (48000 / 60 = 800 samples).
           analyzer.fftSize = 1024;
-          gainNode.gain.value = 1;
+          inputGainNode.gain.value = 1;
+          directToDestinationGainNode.gain.value = 0;
 
           setAnalyzer(analyzer);
-          setGainNode(gainNode);
+          setGainNode(inputGainNode);
+          setDirectToDestinationGainNode(directToDestinationGainNode);
           setDataArray(new Uint8Array(analyzer.fftSize));
           setPostWorkletMessage(() => message =>
             audioInputBufferNode.port.postMessage(message)
@@ -257,13 +282,26 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
     [stream]
   );
 
-  const fetchData = useCallback(() => {
-    if (analyzer) analyzer.getByteTimeDomainData(dataArray);
-    return dataArray;
-  }, [analyzer, dataArray]);
+  const fetchData = useCallback(
+    () => {
+      if (analyzer) analyzer.getByteTimeDomainData(dataArray);
+      return dataArray;
+    },
+    [analyzer, dataArray]
+  );
   const setGainDB = gainDB => {
     if (gainNode) gainNode.gain.value = Math.pow(10, gainDB / 20);
   };
+  const setDirectToDestinationGainNodeGain = gain => {
+    if (directToDestinationGainNode)
+      directToDestinationGainNode.gain.value = gain;
+  };
 
-  return { canChangeStream, someData: !!analyzer, fetchData, setGainDB };
+  return {
+    canChangeStream,
+    someData: !!analyzer,
+    fetchData,
+    setGainDB,
+    setDirectToDestinationGainNodeGain,
+  };
 }
