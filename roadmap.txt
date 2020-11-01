@@ -67,7 +67,6 @@ Quality-of-life improvements
 - The host is the one who creates the room?
 - Standby scrollable?
 + "Listen to mic" button
-+ Do not listen to audio when on standby (will add mixer role later)
 + Rename "Audience" to "Standby"
 + Don't play room audio when on Standby
 
