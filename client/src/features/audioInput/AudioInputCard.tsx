@@ -1,11 +1,10 @@
 import _ from 'lodash';
-import React, { useEffect, useState } from 'react';
+import React, {  useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Card, H4, Button, MenuItem, Slider, Switch } from '@blueprintjs/core';
-import { ItemRenderer, Select } from '@blueprintjs/select';
+import { Card, H4,  Slider, Switch } from '@blueprintjs/core';
 
 import AudioInputSelector from './AudioInputSelector';
-import { selectInputDevice, setInputDevice, IInputDevice } from './audioSlice';
+import { selectInputDevice, setInputDevice } from './audioSlice';
 import { useStream, useStreamData } from './AudioStreamHooks';
 import { selectRecordingState } from '../recording/recordingSlice';
 import VolumeBar from './VolumeBar';

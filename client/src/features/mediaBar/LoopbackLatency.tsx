@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Button, NumericInput } from '@blueprintjs/core';
+import {  NumericInput } from '@blueprintjs/core';
 
 import { usePatch } from '../feathers/FeathersHooks';
 import LoopbackCalibrationButton from './LoopbackCalibrationButton';

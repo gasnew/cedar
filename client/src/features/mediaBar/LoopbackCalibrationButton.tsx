@@ -8,10 +8,7 @@ import {
   Classes,
   Dialog,
   Divider,
-  FormGroup,
   H3,
-  InputGroup,
-  ControlGroup,
   OL,
   Tag,
 } from '@blueprintjs/core';
@@ -21,7 +18,7 @@ import { selectInputDevice, IInputDevice } from '../audioInput/audioSlice';
 import AudioInputSelector from '../audioInput/AudioInputSelector';
 import VolumeBar from '../audioInput/VolumeBar';
 import { usePatch } from '../feathers/FeathersHooks';
-import { selectLoopbackLatencyMs, setLoopbackLatencyMs } from './mediaBarSlice';
+import { setLoopbackLatencyMs } from './mediaBarSlice';
 import { selectRecordingState } from '../recording/recordingSlice';
 import { selectRoom } from '../room/roomSlice';
 
@@ -73,9 +70,7 @@ function createPulsesSource(audioContext) {
 }
 
 function startRecordingData(audioRecorderNode) {
-  const delay = delayMs => new Promise(resolve => setTimeout(resolve, delayMs));
-
-  return new Promise<Float32Array>(async (resolve, reject) => {
+  return new Promise<Float32Array>((resolve, reject) => {
     audioRecorderNode.port.onmessage = function(event) {
       resolve(event.data);
     };
@@ -173,7 +168,7 @@ export default function() {
 
   // Audio data
   const stream = useStream(selectedDevice ? selectedDevice.deviceId : null);
-  const { canChangeStream, someData, fetchData, setGainDB } = useStreamData(
+  const { someData, fetchData } = useStreamData(
     stream
   );
 
