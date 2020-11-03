@@ -71,6 +71,8 @@ class AudioInputBufferer extends AudioWorkletProcessor {
     // We assume we only have one input connection
     const input = inputs[0];
     const output = outputs[0];
+    if (input[0].length !== 128) console.log(`YOOOO: ${input[0].length}`);
+    if (output[0].length !== 128) console.log(`FOOOO: ${output[0].length}`);
 
     // Delay this frame, or buffer input
     if (this.framesDelayed < this.delayFrames) this.framesDelayed += 1;

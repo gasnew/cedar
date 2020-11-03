@@ -61,6 +61,7 @@ function useChunkPoster(
       cursor.current = null;
       dataBuffer.current = [];
       requestOut.current = false;
+      console.log('new track!!');
 
       // This onmessage function receives opus-encoded packets or opus/webopus
       // errors
@@ -72,10 +73,16 @@ function useChunkPoster(
           return;
         }
         // Sometimes we receive undefined packets at the end of a stream
-        if (!packet) return;
+        if (!packet) {
+          console.log('naah packet');
+          return;
+        }
         // Sometimes the worklet takes a moment to stop, even after we've
         // stopped recording
-        if (!trackId) return;
+        if (!trackId) {
+          console.log('naah track ID');
+          return;
+        }
 
         const data = Base64.fromUint8Array(packet);
         dataBuffer.current = dataBuffer.current.concat([data]);
@@ -119,6 +126,7 @@ function useChunkPoster(
               );
               dataBuffer.current = [];
             }
+            console.error('hrmmm');
           }
 
           // This needs to be set to false after everything else

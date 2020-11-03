@@ -2,13 +2,14 @@ import _ from 'lodash';
 import React, { useState } from 'react';
 import { Card, H4, Slider } from '@blueprintjs/core';
 
-import { useRoomAudio } from './MasterOutputHooks';
 import VolumeBar from '../audioInput/VolumeBar';
+import { TrackControls } from './MasterOutputHooks';
 
-export default function() {
-  // Audio data
-  const { someData, fetchData, setGainDB } = useRoomAudio();
+interface Props {
+  controls: TrackControls;
+}
 
+export default function({ controls }: Props) {
   // Slider state (default to 0.01 to get around UI bug)
   const [sliderGainDB, setSliderGainDB] = useState(0.01);
 
@@ -19,8 +20,8 @@ export default function() {
         <VolumeBar
           height={20}
           width={250}
-          fetchData={fetchData}
-          disabled={!someData}
+          fetchData={controls.fetchData}
+          disabled={false}
         />
       </div>
       <Slider
@@ -31,7 +32,7 @@ export default function() {
         onChange={value => {
           const newValue = Math.abs(value) < 0.5 ? 0.01 : value;
           setSliderGainDB(newValue);
-          setGainDB(newValue);
+          controls.setGainDB(newValue);
         }}
         value={sliderGainDB}
         labelRenderer={value =>

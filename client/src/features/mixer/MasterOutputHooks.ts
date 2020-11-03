@@ -184,71 +184,112 @@ function useFetchAudioData(postWorkletMessage: (any) => void) {
   }, 500);
 }
 
-interface DataResponse {
-  someData: boolean;
+export interface TrackControls {
   fetchData: () => Uint8Array;
   setGainDB: (number) => void;
 }
 
-export function useRoomAudio(): DataResponse {
-  const [analyzer, setAnalyzer] = useState<AnalyserNode | null>(null);
-  const [gainNode, setGainNode] = useState<GainNode | null>(null);
-  const dataArray = useRef<Uint8Array>(new Uint8Array());
+function createControls(
+  gainNode: GainNode,
+  analyzer: AnalyserNode
+): TrackControls {
+  const dataArray = new Uint8Array(analyzer.fftSize);
+
+  return {
+    fetchData: () => {
+      analyzer.getByteTimeDomainData(dataArray);
+      return dataArray;
+    },
+    setGainDB: gainDB => {
+      if (gainNode) gainNode.gain.value = Math.pow(10, gainDB / 20);
+    },
+  };
+}
+
+interface DataResponse {
+  masterControls: TrackControls | null;
+  trackControls: TrackControls[];
+}
+
+export function useRoomAudio(trackCount: number): DataResponse {
+  const [masterControls, setMasterControls] = useState<TrackControls | null>(
+    null
+  );
+  const [trackControls, setTrackControls] = useState<TrackControls[]>([]);
   const [postWorkletMessage, setPostWorkletMessage] = useState<(any) => void>(
     () => _ => null
   );
   useFetchAudioData(postWorkletMessage);
 
-  useEffect(() => {
-    const audioContext = new window.AudioContext({
-      sampleRate: 48000,
-      //latencyHint: 'playback'
-    });
-    const launchAudioNodes = async () => {
-      await audioContext.audioWorklet.addModule('RoomAudioPlayer.js');
-      const gainNode = audioContext.createGain();
-      const analyzer = audioContext.createAnalyser();
-      const roomAudioNode = new AudioWorkletNode(
-        audioContext,
-        'RoomAudioPlayer'
-      );
-
-      roomAudioNode.connect(gainNode);
-      gainNode.connect(analyzer);
-      gainNode.connect(audioContext.destination);
-
-      // Has to be a power of 2. At the default sample rate of 48000, this
-      // size should be enough to let us fetch all samples assuming we are
-      // fetching every 1/60th of a second (48000 / 60 = 800 samples).
-      analyzer.fftSize = 1024;
-      gainNode.gain.value = 1;
-
-      setAnalyzer(analyzer);
-      setGainNode(gainNode);
-      dataArray.current = new Uint8Array(analyzer.fftSize);
-      setPostWorkletMessage(() => message =>
-        roomAudioNode.port.postMessage(message)
-      );
-    };
-    launchAudioNodes();
-
-    return () => {
-      audioContext.close();
-    };
-    // NOTE(gnewman): We do this so we recreate the AudioContext, just like in
-    // AudioStreamHooks
-  }, []);
-
-  const fetchData = useCallback(
+  useEffect(
     () => {
-      if (analyzer) analyzer.getByteTimeDomainData(dataArray.current);
-      return dataArray.current;
-    },
-    [analyzer, dataArray]
-  );
-  const setGainDB = gainDB => {
-    if (gainNode) gainNode.gain.value = Math.pow(10, gainDB / 20);
-  };
+      const audioContext = new window.AudioContext({ sampleRate: 48000 });
+      const launchAudioNodes = async () => {
+        console.log('Oh my! New audio context!');
+        await audioContext.audioWorklet.addModule('RoomAudioPlayer.js');
+        const masterGainNode = audioContext.createGain();
+        const masterAnalyzer = audioContext.createAnalyser();
+        const roomAudioNode = new AudioWorkletNode(
+          audioContext,
+          'RoomAudioPlayer',
+          {
+            // 1 output minimum so we can at least analyze zeroes coming
+            // through
+            numberOfOutputs: trackCount || 1,
+          }
+        );
 
-  return { someData: !!analyzer, fetchData, setGainDB };
+        if (trackCount !== 0) {
+          const trackMergerNode = audioContext.createChannelMerger(trackCount);
+
+          setTrackControls(
+            _.map(_.range(trackCount), index => {
+              const trackGainNode = audioContext.createGain();
+              const trackAnalyzer = audioContext.createAnalyser();
+
+              roomAudioNode.connect(
+                trackGainNode,
+                index,
+                0
+              );
+              trackGainNode.connect(trackAnalyzer);
+              trackGainNode.connect(
+                masterGainNode,
+                0,
+                0
+              );
+
+              return createControls(trackGainNode, trackAnalyzer);
+            })
+          );
+        } else {
+          roomAudioNode.connect(masterGainNode);
+          setTrackControls([]);
+        }
+        masterGainNode.connect(masterAnalyzer);
+        masterGainNode.connect(audioContext.destination);
+
+        // Has to be a power of 2. At the default sample rate of 48000, this
+        // size should be enough to let us fetch all samples assuming we are
+        // fetching every 1/60th of a second (48000 / 60 = 800 samples).
+        masterAnalyzer.fftSize = 1024;
+        masterGainNode.gain.value = 1;
+
+        setMasterControls(createControls(masterGainNode, masterAnalyzer));
+        setPostWorkletMessage(() => message =>
+          roomAudioNode.port.postMessage(message)
+        );
+      };
+      launchAudioNodes();
+
+      return () => {
+        audioContext.close();
+      };
+      // NOTE(gnewman): We do this so we recreate the AudioContext, just like in
+      // AudioStreamHooks
+    },
+    [trackCount]
+  );
+
+  return { masterControls, trackControls };
 }

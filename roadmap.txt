@@ -56,6 +56,15 @@ x (bonus) Visualize the audio received by the client!
   added to the chain
 + Mix multiple input channels into one
 
+Fix bugs
+- Input selected (and seen in volume bar) may be different than the one sending
+  audio through the chain...?
+- Dynamically detect audio quantum size...?
+- Sometimes output is crunchy
+- Sometimes output is choppy
+- Sometimes screen turns white
+- Sometimes playback and/or input is delayed too much
+
 Quality-of-life improvements
 - Button to "fix audio problems" (short-term solution to resolving audio
   cutting in and out)
@@ -75,6 +84,18 @@ Client-side mixing
 - Tooltip about the fact that this only mixes for you (maybe just call it
   "Personal Mixer"?)
 - Master output and slider
+- "Alpha" indicator
+- Update README
+- Cut down on needless redux actions (from onUpdate calls?)
+- Try sending sine wave through Cedar, and inspect resultant waveform
+  - I suspect this is due to how we recover from Web Audio API overbuffering
+    (queue size > 1) or somehow skipping frames in output (less likely)
+  - It is in part the above I think. One thing to probably rule out is opus
+    encoding--it does appear that we're encoding/decoding all the data, as
+    evidenced by the fact that tracks stay in-sync long-term (our syncing logic
+    makes sure we're churning through samples 1:1, but if data were lost,
+    tracks would get out of sync)
+  - This issue still occurs, even if I disable our syncing logic
 
 Download recordings
 - Mixer role?

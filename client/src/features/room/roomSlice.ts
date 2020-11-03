@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../../app/store';
 
@@ -9,10 +10,11 @@ export interface RoomState {
   secondsBetweenMusicians: number;
 }
 
+
 const initialState: RoomState = {
-  id: null, // || 'c08ff8b5-2dc7-45e4-80ae-8a059c862e1a',
-  name: null, // || 'asdfasdf',
-  musicianId: null, // || '3e9b9911-ee61-4328-a03c-fb4a49c8b60f',
+  id: null || 'a3de76a2-b5ac-4621-a80d-3b54a346b4b0',
+  name: null || 'asdf',
+  musicianId: null || '21ceca69-da4b-4674-99c2-41308906f59b',
   musicianIdsChain: [],
   secondsBetweenMusicians: 2,
 };
@@ -62,6 +64,14 @@ export const {
 export const selectRoom = (state: RootState) => state.room;
 export const selectMusicianIdsChain = (state: RootState) =>
   state.room.musicianIdsChain;
+export const selectPrecedingMusicianIds = (state: RootState) => {
+  const musicianId = state.room.musicianId;
+  if (!musicianId) return [];
+  return _.takeWhile(
+    state.room.musicianIdsChain,
+    id => id !== musicianId
+  );
+}
 export const selectSecondsBetweenMusicians = (state: RootState) =>
   state.room.secondsBetweenMusicians;
 export const selectHostId = (state: RootState) =>

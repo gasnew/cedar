@@ -147,6 +147,7 @@ async function detectLoopbackLatency(
   // Start playing and recording at the same time
   pulsesSource.start();
   const recordedData = await startRecordingData(audioRecorderNode);
+  audioContext.close();
 
   return calculateLoopbackLatency(recordedData);
 }

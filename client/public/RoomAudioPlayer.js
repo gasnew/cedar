@@ -63,28 +63,26 @@ class RoomAudioPlayer extends AudioWorkletProcessor {
   }
 
   process(inputs, outputs, parameters) {
+    if (this.pcmBuffers.length === 0) {
+      for (let i = 0; i < this.frameSize; i++) outputs[0][0][i] = 0.0;
+      return true;
+    }
+
     const currentTime = Date.now();
     //                (elapsed time ms)               - (ideal elapsed time ms)
     this.timeDeltaMs += currentTime - this.prevTimeMs - 128 / 48;
     this.prevTimeMs = currentTime;
 
-    // We assume we only have one output connection
-    const output = outputs[0];
-
-    // We only support one channel right now
-    const channel = output[0];
-
-    if (this.pcmBuffers.length === 0) {
-      for (let i = 0; i < this.frameSize; i++) channel[i] = 0.0;
-      return true;
-    }
+    //if (inputs[0][0].length !== 128)
+      //console.log(`YOOOO: ${input[0].length}`);
+    if (outputs[0][0].length !== 128)
+      console.log(`FOOOO: ${outputs[0][0].length}`);
 
     const bufferCount = this.pcmBuffers.length;
     for (let frameIndex = 0; frameIndex < this.frameSize; frameIndex++) {
       const readIndex = (this.bufferReadIndex + frameIndex) % this.bufferLength;
-      channel[frameIndex] = 0.0;
       for (let pcmIndex = 0; pcmIndex < bufferCount; pcmIndex++) {
-        channel[frameIndex] += this.pcmBuffers[pcmIndex][readIndex];
+        outputs[pcmIndex][0][frameIndex] = this.pcmBuffers[pcmIndex][readIndex];
         // We need to zero this out in case we've gone through the buffer once,
         // and we haven't received data for this part of the track yet. This is
         // likely to happen if another musician loses connection or has a spotty
