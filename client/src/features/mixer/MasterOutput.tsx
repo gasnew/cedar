@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, H4, Slider } from '@blueprintjs/core';
 
 import VolumeBar from '../audioInput/VolumeBar';
-import { TrackControls } from './MasterOutputHooks';
+import { TrackControls } from './MixerHooks';
 
 interface Props {
   controls: TrackControls;

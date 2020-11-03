@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 
 import AudioBarAndControls from './AudioBarAndControls';
 import MasterOutput from './MasterOutput';
-import { useRoomAudio } from './MasterOutputHooks';
+import { useRoomAudio } from './MixerHooks';
 import { selectMusicians } from '../musicians/musiciansSlice';
 import { selectPrecedingMusicianIds } from '../room/roomSlice';
 
