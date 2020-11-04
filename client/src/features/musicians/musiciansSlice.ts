@@ -2,7 +2,7 @@ import _ from 'lodash';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../../app/store';
 
-interface Musician {
+export interface Musician {
   id: string;
   name: string;
   loopbackLatencyMs: number | null;

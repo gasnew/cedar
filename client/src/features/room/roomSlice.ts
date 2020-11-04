@@ -10,7 +10,6 @@ export interface RoomState {
   secondsBetweenMusicians: number;
 }
 
-
 const initialState: RoomState = {
   id: null || 'a3de76a2-b5ac-4621-a80d-3b54a346b4b0',
   name: null || 'asdf',
@@ -66,12 +65,10 @@ export const selectMusicianIdsChain = (state: RootState) =>
   state.room.musicianIdsChain;
 export const selectPrecedingMusicianIds = (state: RootState) => {
   const musicianId = state.room.musicianId;
-  if (!musicianId) return [];
-  return _.takeWhile(
-    state.room.musicianIdsChain,
-    id => id !== musicianId
-  );
-}
+  if (!musicianId || !_.includes(state.room.musicianIdsChain, musicianId))
+    return [];
+  return _.takeWhile(state.room.musicianIdsChain, id => id !== musicianId);
+};
 export const selectSecondsBetweenMusicians = (state: RootState) =>
   state.room.secondsBetweenMusicians;
 export const selectHostId = (state: RootState) =>

@@ -14,15 +14,8 @@ export default function({ controls }: Props) {
   const [sliderGainDB, setSliderGainDB] = useState(0.01);
 
   return (
-    <Card style={{ width: 300 }}>
-      <H4>Master output</H4>
+    <>
       <div style={{ marginBottom: 10 }}>
-        <VolumeBar
-          height={20}
-          width={250}
-          fetchData={controls.fetchData}
-          disabled={false}
-        />
       </div>
       <Slider
         min={-40}
@@ -36,9 +29,9 @@ export default function({ controls }: Props) {
         }}
         value={sliderGainDB}
         labelRenderer={value =>
-          `${_.round(value, 1) >= 0 ? '+' : ''}${_.round(value, 1)} dB`
+          `${_.round(value, 1) >= 0 ? '+' : ''}${_.round(value, 1)}\u00A0dB`
         }
       />
-    </Card>
+    </>
   );
 }

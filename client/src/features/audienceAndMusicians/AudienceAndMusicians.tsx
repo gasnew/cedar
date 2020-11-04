@@ -231,6 +231,7 @@ export default function() {
             style={{
               width: 180 - 12,
               backgroundColor: Colors.DARK_GRAY5,
+              marginRight: 8,
             }}
           >
             <H5

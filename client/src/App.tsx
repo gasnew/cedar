@@ -25,11 +25,15 @@ function App() {
         <MediaBar />
       </div>
       <div style={{ display: 'flex', flexDirection: 'row', margin: 8 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', marginRight: 8 }}>
+        <div style={{ marginRight: 8 }}>
           <AudioInputCard />
+          <div style={{ marginTop: 8 }}>
+            <AudienceAndMusicians />
+          </div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
           <Mixer />
         </div>
-        <AudienceAndMusicians />
       </div>
       <RoomDialog />
     </div>
