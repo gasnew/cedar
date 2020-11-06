@@ -18,11 +18,9 @@ export default function({ musician, controls, index }: Props) {
     <Card
       style={{
         backgroundColor: index % 2 ? Colors.DARK_GRAY5 : Colors.DARK_GRAY4,
-        zIndex: -1,
         padding: 5,
         display: 'flex',
         flexDirection: 'row',
-        pointerEvents: 'initial',
         borderRadius: 0,
       }}
     >

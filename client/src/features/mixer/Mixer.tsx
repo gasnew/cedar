@@ -61,6 +61,7 @@ export default function() {
         display: 'flex',
         flexDirection: 'column',
         minWidth: 300,
+        height: '100%',
       }}
     >
       <H4>Mixer</H4>
@@ -72,33 +73,38 @@ export default function() {
         }}
       >
         <div className={styles.listContainer}>
-          {_.map(tracksWithMusicians, ({ trackControls, musician }, index) => (
-            <MusicianTrackControls
-              key={musician.id}
-              controls={trackControls}
-              musician={musician}
-              index={index}
-            />
-          ))}
-        </div>
-        <div
-          style={{
-            backgroundColor: Colors.DARK_GRAY4,
-          }}
-        >
-          <H5
-            style={{
-              padding: 10,
-              margin: 0,
-            }}
-          >
-            Master output
-          </H5>
-          <div style={{ marginLeft: 12, marginRight: 4 }}>
-            {masterControls && <VolumeSlider controls={masterControls} />}
+          <div style={{ zIndex: -1, pointerEvents: 'initial' }}>
+            {_.map(
+              tracksWithMusicians,
+              ({ trackControls, musician }, index) => (
+                <MusicianTrackControls
+                  key={musician.id}
+                  controls={trackControls}
+                  musician={musician}
+                  index={index}
+                />
+              )
+            )}
           </div>
         </div>
       </Card>
+      <div
+        style={{
+          backgroundColor: Colors.DARK_GRAY4,
+        }}
+      >
+        <H5
+          style={{
+            padding: 10,
+            margin: 0,
+          }}
+        >
+          Master output
+        </H5>
+        <div style={{ marginLeft: 12, marginRight: 4 }}>
+          {masterControls && <VolumeSlider controls={masterControls} />}
+        </div>
+      </div>
     </Card>
   );
 }

@@ -56,6 +56,15 @@ x (bonus) Visualize the audio received by the client!
   added to the chain
 + Mix multiple input channels into one
 
+Client-side mixing
++ Can only see musicians behind you
+- Tooltip about the fact that this only mixes for you (maybe just call it
+  "Personal Mixer"?)
++ Master output and slider
+- "Alpha" indicator
+- Update README
+- Cut down on needless redux actions (from onUpdate calls?)
+
 Fix bugs
 - Input selected (and seen in volume bar) may be different than the one sending
   audio through the chain...?
@@ -78,24 +87,6 @@ Quality-of-life improvements
 + "Listen to mic" button
 + Rename "Audience" to "Standby"
 + Don't play room audio when on Standby
-
-Client-side mixing
-- Can only see musicians behind you
-- Tooltip about the fact that this only mixes for you (maybe just call it
-  "Personal Mixer"?)
-- Master output and slider
-- "Alpha" indicator
-- Update README
-- Cut down on needless redux actions (from onUpdate calls?)
-- Try sending sine wave through Cedar, and inspect resultant waveform
-  - I suspect this is due to how we recover from Web Audio API overbuffering
-    (queue size > 1) or somehow skipping frames in output (less likely)
-  - It is in part the above I think. One thing to probably rule out is opus
-    encoding--it does appear that we're encoding/decoding all the data, as
-    evidenced by the fact that tracks stay in-sync long-term (our syncing logic
-    makes sure we're churning through samples 1:1, but if data were lost,
-    tracks would get out of sync)
-  - This issue still occurs, even if I disable our syncing logic
 
 Download recordings
 - Mixer role?
@@ -235,6 +226,15 @@ OK, so stuff about audio glitches
   the speaker end of things. We can *maybe* help with this by using a
   SharedArrayBuffer to cut down on message-posting costs. Other than that, I'm
   not sure what's best here.
+= Send sine wave through Cedar, and inspect resultant waveform
+  - I suspect this is due to how we recover from Web Audio API overbuffering
+    (queue size > 1) or somehow skipping frames in output (less likely)
+  - It is in part the above I think. One thing to probably rule out is opus
+    encoding--it does appear that we're encoding/decoding all the data, as
+    evidenced by the fact that tracks stay in-sync long-term (our syncing logic
+    makes sure we're churning through samples 1:1, but if data were lost,
+    tracks would get out of sync)
+  - This issue still occurs, even if I disable our syncing logic
 
 Outgoing worklet:
 - should update the patch endpoint to, if it receives data with the wrong

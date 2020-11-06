@@ -31,7 +31,7 @@ function App() {
             <AudienceAndMusicians />
           </div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: 588 }}>
           <Mixer />
         </div>
       </div>
