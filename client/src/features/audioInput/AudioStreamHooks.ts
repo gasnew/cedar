@@ -205,7 +205,7 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
   const amInChain = useSelector(selectAmInChain);
 
   // Hook to start the worklet when recordingState says so. Starting the audio
-  // worklet is idempotent, so it's OK ifsend the message multiple times
+  // worklet is idempotent, so it's OK if we send the message multiple times
   useEffect(
     () => {
       // Don't send audio to server if not in chain

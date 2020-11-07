@@ -38,13 +38,7 @@ export default function({ musician, controls, index }: Props) {
       </span>
       <div style={{ flexGrow: 1 }}>
         <div style={{ fontWeight: 'bold', marginTop: 4 }}>{musician.name}</div>
-        <VolumeSlider
-          controls={{
-            ...controls,
-            fetchData: () =>
-              new Uint8Array([Math.floor(128 * Math.random()) + 128]),
-          }}
-        />
+        <VolumeSlider controls={controls} />
       </div>
     </Card>
   );

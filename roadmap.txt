@@ -63,7 +63,9 @@ Client-side mixing
 + Master output and slider
 - "Alpha" indicator
 - Update README
-- Cut down on needless redux actions (from onUpdate calls?)
++ Cut down on needless redux actions (from onUpdate calls?)
+- Support musicians disconnecting
+- Try to allow seconds between musicians to be smaller
 
 Fix bugs
 - Input selected (and seen in volume bar) may be different than the one sending

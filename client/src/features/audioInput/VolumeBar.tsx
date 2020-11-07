@@ -27,24 +27,17 @@ function Canvas({ draw, style }) {
     [draw]
   );
 
-  return (
-    <canvas
-      height={1}
-      width={1}
-      ref={canvasRef}
-      style={{ borderRadius: style.borderRadius }}
-    />
-  );
+  return <canvas height={1} width={1} ref={canvasRef} style={style} />;
 }
 
 interface Props {
   fetchData: () => Uint8Array;
   disabled: boolean;
-  height: number;
-  width: number;
+  height?: number;
+  width?: number;
 }
 
-export default function({ height, width, fetchData, disabled }: Props) {
+export default function({ fetchData, disabled, height, width }: Props) {
   const barWidth = useRef(0);
   const dampedBarWidth = useRef(0);
   const clipOpacity = useRef(0);
@@ -61,8 +54,8 @@ export default function({ height, width, fetchData, disabled }: Props) {
 
       // Resize the canvas to the parent container
       const parentRect = ctx.canvas.parentNode.getBoundingClientRect();
-      ctx.canvas.height = parentRect.height;
-      ctx.canvas.width = parentRect.width;
+      ctx.canvas.height = height || parentRect.height;
+      ctx.canvas.width = width || parentRect.width;
 
       barWidth.current = newBarWidth;
       dampedBarWidth.current =
@@ -92,5 +85,5 @@ export default function({ height, width, fetchData, disabled }: Props) {
     [disabled, fetchData]
   );
 
-  return <Canvas draw={draw} style={{ height, width, borderRadius: 3 }} />;
+  return <Canvas draw={draw} style={{ borderRadius: 3 }} />;
 }

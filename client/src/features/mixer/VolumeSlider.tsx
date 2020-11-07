@@ -27,8 +27,6 @@ export default function({ controls }: Props) {
           }}
         >
           <VolumeBar
-            height={6}
-            width={325}
             fetchData={controls.fetchData}
             disabled={false}
           />

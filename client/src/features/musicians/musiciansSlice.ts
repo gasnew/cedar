@@ -42,11 +42,22 @@ export const musiciansSlice = createSlice({
       if (!state.musicians[musicianId]) return;
       state.musicians[musicianId].name = name;
     },
+    setMusicianLoopbackLatencyMs: (
+      state,
+      action: PayloadAction<{ musicianId: string; loopbackLatencyMs: number }>
+    ) => {
+      const {
+        payload: { musicianId, loopbackLatencyMs },
+      } = action;
+      if (!state.musicians[musicianId]) return;
+      state.musicians[musicianId].loopbackLatencyMs = loopbackLatencyMs;
+    },
   },
 });
 
 export const {
   addMusicians,
+  setMusicianLoopbackLatencyMs,
   setMusicianName,
   updateMusicians,
 } = musiciansSlice.actions;
