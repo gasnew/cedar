@@ -54,23 +54,35 @@ function RoomNameplate({
   const recordingState = useSelector(selectRecordingState);
   const amHost = useSelector(selectAmHost);
 
-  useGet('rooms', id, {
-    pollingInterval: 1000,
-    // Keep recordingId up-to-date (indicates whether the server expects us to
-    // be recording)
-    onUpdate: ({ recordingId, musicianIdsChain, secondsBetweenMusicians }) => {
-      if (!amHost) {
-        if (recordingId && recordingState === 'stopped')
-          dispatch(startRecording(app, id, recordingId));
-        if (!recordingId && recordingState === 'recording')
-          dispatch(stopRecording());
-        if (!amHost && secondsBetweenMusicians !== room.secondsBetweenMusicians)
-          dispatch(setSecondsBetweenMusicians({ secondsBetweenMusicians }));
-      }
-      if (!_.isEqual(musicianIdsChain, room.musicianIdsChain))
-        dispatch(updateChain({ musicianIdsChain }));
+  useGet(
+    'rooms',
+    id,
+    {
+      pollingInterval: 300,
+      // Keep recordingId up-to-date (indicates whether the server expects us to
+      // be recording)
+      onUpdate: ({
+        recordingId,
+        musicianIdsChain,
+        secondsBetweenMusicians,
+      }) => {
+        if (!amHost) {
+          if (recordingId && recordingState === 'stopped')
+            dispatch(startRecording(app, id, recordingId));
+          if (!recordingId && recordingState === 'recording')
+            dispatch(stopRecording());
+          if (
+            !amHost &&
+            secondsBetweenMusicians !== room.secondsBetweenMusicians
+          )
+            dispatch(setSecondsBetweenMusicians({ secondsBetweenMusicians }));
+        }
+        if (!_.isEqual(musicianIdsChain, room.musicianIdsChain))
+          dispatch(updateChain({ musicianIdsChain }));
+      },
     },
-  });
+    true
+  );
 
   return (
     <Popover

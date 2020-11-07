@@ -61,7 +61,6 @@ function useChunkPoster(
       cursor.current = null;
       dataBuffer.current = [];
       requestOut.current = false;
-      console.log('new track!!');
 
       // This onmessage function receives opus-encoded packets or opus/webopus
       // errors
@@ -73,16 +72,10 @@ function useChunkPoster(
           return;
         }
         // Sometimes we receive undefined packets at the end of a stream
-        if (!packet) {
-          console.log('naah packet');
-          return;
-        }
+        if (!packet) return;
         // Sometimes the worklet takes a moment to stop, even after we've
         // stopped recording
-        if (!trackId) {
-          console.log('naah track ID');
-          return;
-        }
+        if (!trackId) return;
 
         const data = Base64.fromUint8Array(packet);
         dataBuffer.current = dataBuffer.current.concat([data]);
@@ -91,7 +84,7 @@ function useChunkPoster(
         // one request to be out at a time to guarantee we always send complete
         // data in order, so we use requestOut to flag whether a request is in
         // progress
-        if (!requestOut.current && dataBuffer.current.length > 15) {
+        if (!requestOut.current && dataBuffer.current.length > 3) {
           // This needs to be set to true before anything else
           requestOut.current = true;
 
@@ -126,7 +119,10 @@ function useChunkPoster(
               );
               dataBuffer.current = [];
             }
-            console.error('hrmmm');
+            console.error(
+              `We just failed to send a large chunk of data. This is really
+              bad!!`
+            );
           }
 
           // This needs to be set to false after everything else

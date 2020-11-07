@@ -181,7 +181,7 @@ function useFetchAudioData(postWorkletMessage: (any) => void) {
       );
       requestOut.current = false;
     });
-  }, 500);
+  }, 200);
 }
 
 export interface TrackControls {

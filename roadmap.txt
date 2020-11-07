@@ -65,7 +65,7 @@ Client-side mixing
 - Update README
 + Cut down on needless redux actions (from onUpdate calls?)
 - Support musicians disconnecting
-- Try to allow seconds between musicians to be smaller
++ Seconds between musicians has a minimum of ~0.4
 
 Fix bugs
 - Input selected (and seen in volume bar) may be different than the one sending
