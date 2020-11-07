@@ -1,4 +1,12 @@
-import { Card, Colors, H4, H5, Slider } from '@blueprintjs/core';
+import {
+  Card,
+  Classes,
+  Colors,
+  H4,
+  H5,
+  Slider,
+  Tooltip,
+} from '@blueprintjs/core';
 import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -11,6 +19,13 @@ import { TrackControls, useRoomAudio } from './MixerHooks';
 import { Musician, selectMusicians } from '../musicians/musiciansSlice';
 import { selectPrecedingMusicianIds } from '../room/roomSlice';
 import VolumeSlider from './VolumeSlider';
+
+const MIXER_TOOLTIP = (
+  <p style={{ margin: 0, maxWidth: 250 }}>
+    Don't worry, this mixer is just for you! Changing people's volume will not
+    affect what anybody else hears.
+  </p>
+);
 
 interface TrackWithMusician {
   trackControls: TrackControls;
@@ -64,7 +79,11 @@ export default function() {
         height: '100%',
       }}
     >
-      <H4>Mixer</H4>
+      <H4>
+        <Tooltip className={Classes.TOOLTIP_INDICATOR} content={MIXER_TOOLTIP}>
+          Personal Mixer
+        </Tooltip>
+      </H4>
       <Card
         elevation={2}
         className={styles.listCard}

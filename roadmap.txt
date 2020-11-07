@@ -58,7 +58,7 @@ x (bonus) Visualize the audio received by the client!
 
 Client-side mixing
 + Can only see musicians behind you
-- Tooltip about the fact that this only mixes for you (maybe just call it
++ Tooltip about the fact that this only mixes for you (maybe just call it
   "Personal Mixer"?)
 + Master output and slider
 - "Alpha" indicator

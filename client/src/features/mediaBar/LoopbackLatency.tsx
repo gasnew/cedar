@@ -1,12 +1,21 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { NumericInput } from '@blueprintjs/core';
+import { Classes, NumericInput, Tooltip } from '@blueprintjs/core';
 
 import { usePatch } from '../feathers/FeathersHooks';
 import LoopbackCalibrationButton from './LoopbackCalibrationButton';
 import { selectLoopbackLatencyMs, setLoopbackLatencyMs } from './mediaBarSlice';
 import { setMusicianLoopbackLatencyMs } from '../musicians/musiciansSlice';
 import { selectRoom } from '../room/roomSlice';
+
+const LOOPBACK_LATENCY_TOOLTIP = (
+  <p style={{ margin: 0, maxWidth: 250 }}>
+    Loopback latency is the amount of time it takes for audio to travel out of
+    your computer through the speakers then back in through the microphone.
+    Click the <strong>Calibrate</strong> button for more information on how to
+    determine this value.
+  </p>
+);
 
 export default function({ disabled }: { disabled: boolean }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -28,7 +37,15 @@ export default function({ disabled }: { disabled: boolean }) {
   };
   return (
     <div style={{ display: 'flex', flexDirection: 'row' }}>
-      <span style={{ marginTop: 6 }}>Loopback latency:&nbsp;</span>
+      <span style={{ marginTop: 6 }}>
+        <Tooltip
+          className={Classes.TOOLTIP_INDICATOR}
+          content={LOOPBACK_LATENCY_TOOLTIP}
+        >
+          Loopback latency
+        </Tooltip>
+        :&nbsp;
+      </span>
       <NumericInput
         buttonPosition="none"
         selectAllOnFocus

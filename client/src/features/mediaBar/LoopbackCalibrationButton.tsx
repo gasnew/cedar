@@ -316,13 +316,13 @@ export default function() {
             </span>{' '}
             It is important for Cedar to know this latency value so it can
             correct for it before sending audio on to the next musician in the
-            chain. Loopback latency is typically less than 200 ms.
+            chain. Loopback latency is typically less than 300 ms.
           </p>
           <Callout style={{ marginBottom: 10 }}>
             <span style={{ fontWeight: 'bold' }}>NOTE:</span> Loopback latency
-            will vary from system to system, including the PC or Mac used and
-            the headphones and input devices used. So it ideal to calibrate
-            using the same equipment you will use when performing through Cedar.
+            will vary depending on the equipment you use--PC or Mac, headphones,
+            and input devices. So it is ideal to calibrate using the same
+            equipment you will use when performing through Cedar.
           </Callout>
           <H3>Instructions</H3>
           <OL>
