@@ -81,7 +81,7 @@ export default function() {
     >
       <H4>
         <Tooltip className={Classes.TOOLTIP_INDICATOR} content={MIXER_TOOLTIP}>
-          Personal Mixer
+          Personal mixer
         </Tooltip>
       </H4>
       <Card

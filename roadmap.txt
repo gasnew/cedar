@@ -66,6 +66,7 @@ Client-side mixing
 + Cut down on needless redux actions (from onUpdate calls?)
 - Support musicians disconnecting
 + Seconds between musicians has a minimum of ~0.4
+- Fix dB-setting/resetting
 
 Fix bugs
 - Input selected (and seen in volume bar) may be different than the one sending

@@ -71,10 +71,7 @@ function RoomNameplate({
             dispatch(startRecording(app, id, recordingId));
           if (!recordingId && recordingState === 'recording')
             dispatch(stopRecording());
-          if (
-            !amHost &&
-            secondsBetweenMusicians !== room.secondsBetweenMusicians
-          )
+          if (secondsBetweenMusicians !== room.secondsBetweenMusicians)
             dispatch(setSecondsBetweenMusicians({ secondsBetweenMusicians }));
         }
         if (!_.isEqual(musicianIdsChain, room.musicianIdsChain))
