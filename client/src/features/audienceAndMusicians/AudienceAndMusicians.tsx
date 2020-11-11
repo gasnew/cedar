@@ -15,7 +15,7 @@ import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { useDispatch, useSelector } from 'react-redux';
 
 import styles from './AudienceAndMusicians.module.css';
-import { useLists } from './AudienceAndMusiciansHooks';
+import { AudienceColumn, useLists } from './AudienceAndMusiciansHooks';
 import { usePatch } from '../feathers/FeathersHooks';
 import { selectRecordingState } from '../recording/recordingSlice';
 import {
@@ -189,6 +189,10 @@ export default function() {
   const [patchRoom] = usePatch('rooms');
 
   const musiciansLocked = recordingState !== 'stopped';
+  const audienceColumnActiveOnly: AudienceColumn = {
+    id: 'audience',
+    items: _.filter(audienceColumn.items, 'active'),
+  };
 
   return (
     <Card>
@@ -268,10 +272,10 @@ export default function() {
             </H5>
             <div className={styles.listContainer} style={{ paddingLeft: 4 }}>
               <PersonList
-                column={audienceColumn}
+                column={audienceColumnActiveOnly}
                 isDropDisabled={
                   dragSourceId === musiciansColumn.id &&
-                  audienceColumn.items.length === 8
+                  audienceColumnActiveOnly.items.length === 8
                 }
                 musicianLoopbackIsUnset={musicianLoopbackIsUnset}
               />
@@ -302,7 +306,7 @@ export default function() {
               <PersonList
                 column={musiciansColumn}
                 isDropDisabled={
-                  (dragSourceId === audienceColumn.id &&
+                  (dragSourceId === audienceColumnActiveOnly.id &&
                     musiciansColumn.items.length === 8) ||
                   musiciansLocked ||
                   musicianLoopbackIsUnset

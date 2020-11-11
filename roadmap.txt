@@ -64,7 +64,7 @@ Client-side mixing
 - "Alpha" indicator
 - Update README
 + Cut down on needless redux actions (from onUpdate calls?)
-- Support musicians disconnecting
++ Support musicians disconnecting
 + Seconds between musicians has a minimum of ~0.4
 - Fix dB-setting/resetting
 
@@ -136,7 +136,7 @@ Other bugs/features before wider release
 - Microphone permission detection broken in Electron
 - Auto-updates https://www.electron.build/auto-update
 - Auth
-- enter and exit room ("active" and "inactive" users... Inactive users in the
++ enter and exit room ("active" and "inactive" users... Inactive users in the
   chain are removed from the chain when recording stops)
 - Use react-beautiful-dnd sensors to make other people's list changes look less
   janky?

@@ -39,6 +39,7 @@ export default function(redisClient: IORedisClient): MusicianInterface {
       const newMusician: Musician = {
         id: uuidv4(),
         name,
+        active: true,
         loopbackLatencyMs: null,
       };
       await redisClient.hset(

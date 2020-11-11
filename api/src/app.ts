@@ -36,10 +36,10 @@ export default function(redisClient: Redis) {
   app.configure(express.rest());
   app.configure(socketio());
 
-  // Configure other middleware (see `middleware/index.js`)
-  app.configure(middleware);
   // Set up our services (see `services/index.js`)
   app.configure(services);
+  // Configure other middleware (see `middleware/index.js`)
+  app.configure(middleware);
   // Set up event channels (see channels.js)
   // TODO(gnewman): Start using channels for the client to subscribe to events
   // like when recording starts

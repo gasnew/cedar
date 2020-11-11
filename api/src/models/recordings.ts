@@ -83,12 +83,25 @@ export default function(redisClient: IORedisClient): RecordingInterface {
         state: state,
       };
 
-      if (state === 'stopped')
+      // When stopping a recording, do some room-level updates.
+      if (state === 'stopped') {
+        // Remove inactive musicians from the chain
+        const musicians = await getMusicians(roomId);
+        const musicianIdsChain = _.filter(
+          room.musicianIdsChain,
+          id => musicians[id].active
+        );
+
         await redisClient.hset(
           rKey({ roomId }),
           'meta',
-          JSON.stringify({ ...room, recordingId: null })
+          JSON.stringify({
+            ...room,
+            musicianIdsChain,
+            recordingId: null,
+          })
         );
+      }
       await redisClient.hset(
         rKey({ roomId: roomId, collection: 'recordings' }),
         recordingId,

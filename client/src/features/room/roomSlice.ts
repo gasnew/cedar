@@ -61,6 +61,8 @@ export const {
 // of in the slice file. For example: `useSelector((state: RootState) =>
 // state.room)`
 export const selectRoom = (state: RootState) => state.room;
+export const selectRoomId = (state: RootState) => state.room.id;
+export const selectMusicianId = (state: RootState) => state.room.musicianId;
 export const selectMusicianIdsChain = (state: RootState) =>
   state.room.musicianIdsChain;
 export const selectPrecedingMusicianIds = (state: RootState) => {

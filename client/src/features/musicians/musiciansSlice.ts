@@ -6,6 +6,7 @@ export interface Musician {
   id: string;
   name: string;
   loopbackLatencyMs: number | null;
+  active: boolean;
 }
 interface Musicians {
   [id: string]: Musician;
@@ -30,6 +31,8 @@ export const musiciansSlice = createSlice({
         state.musicians[musician.id].name = musician.name;
         state.musicians[musician.id].loopbackLatencyMs =
           musician.loopbackLatencyMs;
+        state.musicians[musician.id].active =
+          musician.active;
       });
     },
     setMusicianName: (

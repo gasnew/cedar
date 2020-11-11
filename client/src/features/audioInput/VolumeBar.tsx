@@ -82,7 +82,7 @@ export default function({ fetchData, disabled, height, width }: Props) {
       ctx.fillRect(ctx.canvas.width - 5, 0, 5, ctx.canvas.height);
       ctx.globalAlpha = 1;
     },
-    [disabled, fetchData]
+    [disabled, fetchData, height, width]
   );
 
   return <Canvas draw={draw} style={{ borderRadius: 3 }} />;

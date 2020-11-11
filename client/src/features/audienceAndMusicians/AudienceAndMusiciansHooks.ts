@@ -17,15 +17,17 @@ interface IPerson {
   name: string;
 }
 
+export interface AudienceColumn {
+  id: 'audience';
+  items: IPerson[];
+}
+interface MusiciansColumn {
+  id: 'musicians';
+  items: IPerson[];
+}
 interface ListState {
-  audience: {
-    id: 'audience';
-    items: IPerson[];
-  };
-  musicians: {
-    id: 'musicians';
-    items: IPerson[];
-  };
+  audience: AudienceColumn;
+  musicians: MusiciansColumn;
 }
 
 const DEFAULT_LIST_STATE: ListState = {
@@ -153,7 +155,8 @@ export function useLists() {
               (musicians[remoteMusician.id] &&
                 remoteMusician.name !== musicians[remoteMusician.id].name) ||
               remoteMusician.loopbackLatencyMs !==
-                musicians[remoteMusician.id].loopbackLatencyMs
+                musicians[remoteMusician.id].loopbackLatencyMs ||
+              remoteMusician.active !== musicians[remoteMusician.id].active
           )
         ) {
           dispatch(
