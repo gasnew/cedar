@@ -56,22 +56,45 @@ export default function(app: Application) {
     // Connections don't always have musicians attached, e.g., before
     // creating/joining a room.
     if (musicianId && roomId) {
+      // Deactivate musician
       await app.service('musicians').patch!(
         musicianId,
         { active: false },
         { query: { roomId } }
       );
+
+      // Chain-specific mutations
       const { musicianIdsChain, recordingId } = await app.service('rooms').get!(
         roomId
       );
-      if (!recordingId && _.includes(musicianIdsChain, musicianId))
-        await app.service('rooms').patch!(
-          roomId,
-          {
-            musicianIdsChain: _.without(musicianIdsChain, musicianId),
-          },
-          { query: { roomId } }
-        );
+      if (_.includes(musicianIdsChain, musicianId)) {
+        if (!recordingId) {
+          // Remove the musician from the chain if not recording
+          await app.service('rooms').patch!(
+            roomId,
+            {
+              musicianIdsChain: _.without(musicianIdsChain, musicianId),
+            },
+            { query: { roomId } }
+          );
+        } else if (musicianIdsChain[0] === musicianId) {
+          // Stop the recording, and remove from the chain if root musician
+          await app.service('recordings').patch!(
+            recordingId,
+            {
+              state: 'stopped',
+            },
+            { query: { roomId } }
+          );
+          await app.service('rooms').patch!(
+            roomId,
+            {
+              musicianIdsChain: _.without(musicianIdsChain, musicianId),
+            },
+            { query: { roomId } }
+          );
+        }
+      }
     }
   });
 }

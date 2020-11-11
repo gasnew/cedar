@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, Colors, H4, Slider } from '@blueprintjs/core';
 
 import VolumeBar from '../audioInput/VolumeBar';
@@ -13,6 +13,10 @@ interface Props {
 export default function({ controls }: Props) {
   // Slider state (default to 0.01 to get around UI bug)
   const [sliderGainDB, setSliderGainDB] = useState(0.01);
+
+  useEffect(() => {
+    controls.setGainDB(sliderGainDB)
+  });
 
   return (
     <div style={{ position: 'relative', marginTop: 2 }}>

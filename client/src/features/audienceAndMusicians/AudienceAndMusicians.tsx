@@ -189,10 +189,6 @@ export default function() {
   const [patchRoom] = usePatch('rooms');
 
   const musiciansLocked = recordingState !== 'stopped';
-  const audienceColumnActiveOnly: AudienceColumn = {
-    id: 'audience',
-    items: _.filter(audienceColumn.items, 'active'),
-  };
 
   return (
     <Card>
@@ -272,10 +268,10 @@ export default function() {
             </H5>
             <div className={styles.listContainer} style={{ paddingLeft: 4 }}>
               <PersonList
-                column={audienceColumnActiveOnly}
+                column={audienceColumn}
                 isDropDisabled={
                   dragSourceId === musiciansColumn.id &&
-                  audienceColumnActiveOnly.items.length === 8
+                  audienceColumn.items.length === 8
                 }
                 musicianLoopbackIsUnset={musicianLoopbackIsUnset}
               />
@@ -306,7 +302,7 @@ export default function() {
               <PersonList
                 column={musiciansColumn}
                 isDropDisabled={
-                  (dragSourceId === audienceColumnActiveOnly.id &&
+                  (dragSourceId === audienceColumn.id &&
                     musiciansColumn.items.length === 8) ||
                   musiciansLocked ||
                   musicianLoopbackIsUnset

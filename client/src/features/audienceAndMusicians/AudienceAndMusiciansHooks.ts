@@ -110,7 +110,9 @@ export function useLists() {
         );
         const audienceInOrder = _.reject(
           [
+            // Already present audience members
             ..._.map(alreadyPresentAudienceIds, id => remoteMusiciansById[id]),
+            // New remote musicians (neither known audience nor musician)
             ..._.filter(
               remoteMusicians,
               ({ id }) =>
@@ -118,12 +120,18 @@ export function useLists() {
                 !_.includes(alreadyPresentAudienceIds, id)
             ),
           ],
-          ({ id }) => _.some(musiciansInOrder, ['id', id])
+          ({ id }) =>
+            // Person is a musician
+            _.some(musiciansInOrder, ['id', id]) ||
+            // Person is inactive (note that people are only removed from the
+            // UI if they are both inactive AND not in the chain. Inactive
+            // musicians are removed from the chain when recording stops.)
+            !remoteMusiciansById[id].active
         );
 
-        // NOTE(gnewman): MUTATIONS BEYOND THIS POINT. We use extra logic to make
-        // super sure we're dispatching actions only when truly necessary since
-        // these mutations have proven to be relatively expensive.
+        // NOTE(gnewman): MUTATIONS BEYOND THIS POINT. We use extra logic to
+        // make super sure we're dispatching actions only when truly necessary
+        // since these mutations have proven to be relatively expensive.
         if (
           !_.isEqual(audienceColumn.items, audienceInOrder) ||
           !_.isEqual(musiciansColumn.items, musiciansInOrder)
