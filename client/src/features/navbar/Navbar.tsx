@@ -4,10 +4,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import {
   Alignment,
   Button,
+  Callout,
   Classes,
   Colors,
   EditableText,
   H4,
+  H5,
   Icon,
   Navbar,
   NavbarDivider,
@@ -20,6 +22,7 @@ import { useInterval } from '../../app/util';
 import { useGet, useLazyGet, usePatch } from '../feathers/FeathersHooks';
 import { FeathersContext } from '../feathers/FeathersProvider';
 import { selectMusicians, setMusicianName } from '../musicians/musiciansSlice';
+import './Navbar.css';
 import {
   RoomState,
   selectAmHost,
@@ -32,6 +35,60 @@ import {
   startRecording,
   stopRecording,
 } from '../recording/recordingSlice';
+
+function Help() {
+  return (
+    <Popover
+      popoverClassName={Classes.POPOVER_CONTENT_SIZING + ' custom-boi'}
+      modifiers={{
+        arrow: { enabled: true },
+        flip: { enabled: true },
+        keepTogether: { enabled: true },
+        preventOverflow: { enabled: true },
+      }}
+    >
+      <Button icon="help" minimal />
+      <div>
+        <H4>Welcome to Cedar!</H4>
+        <Callout
+          title="Development status"
+          icon="updated"
+          intent="success"
+          style={{ marginBottom: 10 }}
+        >
+          Cedar is currently in the "alpha" stage of development, which means it
+          is not yet feature-complete and may contain some bugs. I am working
+          hard to make Cedar the best it can be, but that takes lots of time and
+          lots of testing. Thank you for helping me with this!
+        </Callout>
+        <Callout
+          title="Report a bug"
+          icon="issue"
+          intent="warning"
+          style={{ marginBottom: 10 }}
+        >
+          Bugs happen to the best of us. If you encounter one, I would greatly
+          appreciate it if you would{' '}
+          <a
+            href="https://github.com/gasnew/cedar/issues/new"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            file a bug report
+          </a>. Writing a detailed bug report is one of the best ways you can
+          help contribute to Cedar's development.
+        </Callout>
+        <Callout
+          title="Support this project"
+          icon="bank-account"
+          intent="primary"
+        >
+          lalalalal
+        </Callout>
+      </div>
+    </Popover>
+  );
+}
 
 function RecordingIcon() {
   const [bright, setBright] = useState(true);
@@ -162,8 +219,30 @@ export default function() {
   return (
     <Navbar>
       <NavbarGroup align={Alignment.LEFT}>
-        <NavbarHeading>cedar</NavbarHeading>
+        <NavbarHeading style={{ position: 'relative' }}>
+          <span
+            style={{
+              position: 'relative',
+              top: -3,
+              left: 0,
+            }}
+          >
+            cedar
+          </span>
+          <span
+            style={{
+              position: 'absolute',
+              fontSize: 8,
+              fontStyle: 'italic',
+              top: 13,
+              left: 25,
+            }}
+          >
+            alpha
+          </span>
+        </NavbarHeading>
         <NavbarDivider />
+        <Help />
         {recordingState === 'recording' && <RecordingIcon />}
         {room.id &&
           room.name && (

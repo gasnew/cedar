@@ -11,9 +11,9 @@ export interface RoomState {
 }
 
 const initialState: RoomState = {
-  id: null, // || 'a3de76a2-b5ac-4621-a80d-3b54a346b4b0',
-  name: null, // || 'asdf',
-  musicianId: null, // || '21ceca69-da4b-4674-99c2-41308906f59b',
+  id: null || 'a3de76a2-b5ac-4621-a80d-3b54a346b4b0',
+  name: null || 'asdf',
+  musicianId: null || '21ceca69-da4b-4674-99c2-41308906f59b',
   musicianIdsChain: [],
   secondsBetweenMusicians: 0.8,
 };
@@ -62,6 +62,7 @@ export const {
 // state.room)`
 export const selectRoom = (state: RootState) => state.room;
 export const selectRoomId = (state: RootState) => state.room.id;
+export const selectRoomName = (state: RootState) => state.room.name;
 export const selectMusicianId = (state: RootState) => state.room.musicianId;
 export const selectMusicianIdsChain = (state: RootState) =>
   state.room.musicianIdsChain;

@@ -61,12 +61,17 @@ Client-side mixing
 + Tooltip about the fact that this only mixes for you (maybe just call it
   "Personal Mixer"?)
 + Master output and slider
-- "Alpha" indicator
-- Update README
 + Cut down on needless redux actions (from onUpdate calls?)
 + Support musicians disconnecting
 + Seconds between musicians has a minimum of ~0.4
 + Fix dB-setting/resetting
++ "Alpha" indicator
+- Update README
+
+Final push prior to Patreon
+- Signed distributions
+- Auto-updates https://www.electron.build/auto-update
+- https://cedarapp.org
 
 Fix bugs
 - Input selected (and seen in volume bar) may be different than the one sending
@@ -84,9 +89,9 @@ Quality-of-life improvements
 - Animated brightness to show audio progression through chain
 - Make name obviously editable
 - Select your instrument (need to find instrument pack)
-- Remove musicians when they leave the room
++ Remove musicians when they leave the room
 - The host is the one who creates the room?
-- Standby scrollable?
+x Standby scrollable?
 + "Listen to mic" button
 + Rename "Audience" to "Standby"
 + Don't play room audio when on Standby
@@ -98,7 +103,8 @@ Download recordings
 
 Mixer role
 - Extra slot below the chain
-- Sends their mix directly to the server
+- Sends their mix directly to the server (what happens if nobody takes this
+  role, but we still want to download the mix?)
 - This is what the audience hears
 - Standby musicians don't have to be able to hear if they join late (for now)
 - This is included in the recording download
@@ -124,7 +130,6 @@ Downtimeless updates
 - Accounts with subscriptions?
 
 Other bugs/features before wider release
-- Signed distributions
 - Landing page
 - Sign up/in page
 - Subscription method??
@@ -134,7 +139,6 @@ Other bugs/features before wider release
   - Possibly decrease audio quality after 15 minutes, limit to 4 musicians,
     limit to 2-minute recordings (with toast notification), etc.
 - Microphone permission detection broken in Electron
-- Auto-updates https://www.electron.build/auto-update
 - Auth
 + enter and exit room ("active" and "inactive" users... Inactive users in the
   chain are removed from the chain when recording stops)
