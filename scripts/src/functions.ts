@@ -6,9 +6,6 @@ import axios from 'axios';
 import { Base64 } from 'js-base64';
 import { WaveFile } from 'wavefile';
 
-let API_URL = 'http://cedar-app.com:3030';
-//API_URL = 'http://localhost:3030';
-
 interface Recording {
   id: string;
   roomId: string;
@@ -28,9 +25,12 @@ interface EncodedRecordingData {
   tracks: Array<Track>;
 }
 
-async function fetchRoomRecordings(roomId: string): Promise<Recording[]> {
+async function fetchRoomRecordings(
+  apiUrl: string,
+  roomId: string
+): Promise<Recording[]> {
   console.log(`[x] Fetching room ${roomId} tracks...`);
-  const { data: recordings } = await axios.get(`${API_URL}/recordings`, {
+  const { data: recordings } = await axios.get(`${apiUrl}/recordings`, {
     params: {
       roomId,
     },
@@ -44,6 +44,7 @@ async function fetchRoomRecordings(roomId: string): Promise<Recording[]> {
 }
 
 async function downloadRecordingData(
+  apiUrl: string,
   recording: Recording
 ): Promise<EncodedRecordingData> {
   console.log(`[x] Downloading recording ${recording.id} data...`);
@@ -51,7 +52,7 @@ async function downloadRecordingData(
     _.map(recording.trackIds, trackId => `cursorsByTrack[${trackId}]=`),
     '&'
   );
-  const response = await axios.get(`${API_URL}/tracks?${cursorsByTrack}`, {
+  const response = await axios.get(`${apiUrl}/tracks?${cursorsByTrack}`, {
     params: {
       roomId: recording.roomId,
     },
@@ -72,7 +73,7 @@ async function downloadRecordingData(
 function decodeTrackData(track: Track): Promise<DecodedTrack> {
   return new Promise((resolve, reject) => {
     const decodedData: Array<Float32Array> = [];
-    const opusWorker = new Worker('./webopus.asm.min.js');
+    const opusWorker = new Worker('./src/webopus.asm.min.js');
 
     opusWorker.onmessage = ({ data: { frames, end } }) => {
       decodedData.push(frames);
@@ -149,34 +150,42 @@ function mkDir(dir: string): void {
   }
 }
 
-let roomId = 'c95120e3-f0af-45d0-8d0f-3e782052996e';
-roomId = '7203403d-6a75-40f0-859c-179ff32c0ebe';
-fetchRoomRecordings(roomId)
-  .then(async recordings => {
-    const dir = `./recordings/room-${roomId}`;
-    mkDir(dir);
+interface Props {
+  roomId: string;
+  apiUrl: string;
+  outputFolder: string;
+}
 
-    for (let i = 0; i < recordings.length; i++) {
-      const recording = recordings[i];
-      console.log(`[-] Starting on recording ${i + 1}/${recordings.length}`);
-      const encodedData = await downloadRecordingData(recording);
-      console.log(`[x] Decoding track data...`);
-      const decodedTracks = await Promise.all(
-        _.map(encodedData.tracks, track => decodeTrackData(track))
-      );
+export default function({ roomId, apiUrl, outputFolder }: Props) {
+  fetchRoomRecordings(apiUrl, roomId)
+    .then(async recordings => {
+      const outputPath = `./${outputFolder}`;
+      mkDir(outputPath);
+      const dir = `${outputPath}/room-${roomId}`;
+      mkDir(dir);
 
-      const recordingDir = `${dir}/recording-${recording.id}`;
-      const tracksDir = `${recordingDir}/tracks`;
-      mkDir(recordingDir);
-      mkDir(tracksDir);
-      _.forEach(decodedTracks, track =>
-        writeDataToFile(tracksDir, track.id, track.data)
-      );
+      for (let i = 0; i < recordings.length; i++) {
+        const recording = recordings[i];
+        console.log(`[-] Starting on recording ${i + 1}/${recordings.length}`);
+        const encodedData = await downloadRecordingData(apiUrl, recording);
+        console.log(`[x] Decoding track data...`);
+        const decodedTracks = await Promise.all(
+          _.map(encodedData.tracks, track => decodeTrackData(track))
+        );
 
-      const consolidatedTrackData = sumDecodedData(
-        _.map(decodedTracks, 'data')
-      );
-      writeDataToFile(recordingDir, recording.id, consolidatedTrackData);
-    }
-  })
-  .then(() => console.log('[!] Done!'));
+        const recordingDir = `${dir}/recording-${recording.id}`;
+        const tracksDir = `${recordingDir}/tracks`;
+        mkDir(recordingDir);
+        mkDir(tracksDir);
+        _.forEach(decodedTracks, track =>
+          writeDataToFile(tracksDir, track.id, track.data)
+        );
+
+        const consolidatedTrackData = sumDecodedData(
+          _.map(decodedTracks, 'data')
+        );
+        writeDataToFile(recordingDir, recording.id, consolidatedTrackData);
+      }
+    })
+    .then(() => console.log('[!] Done!'));
+}
