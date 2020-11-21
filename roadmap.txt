@@ -66,6 +66,7 @@ Client-side mixing
 + Seconds between musicians has a minimum of ~0.4
 + Fix dB-setting/resetting
 + "Alpha" indicator
+- Fix link
 - Update README
 
 Final push prior to Patreon
@@ -74,6 +75,15 @@ Final push prior to Patreon
 - https://cedarapp.org
 
 Fix bugs
+- Set up loopback calibration for non-mic instruments
+- Do testing with audio interface?
+- Possibly move to MediaRecorder
+  (https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/createMediaStreamDestination)
+  and AudioContext.decodeAudioData
+  (https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/decodeAudioData)
+  for encoding/decoding rather than webopus?
+  - I'm concerned that webopus is responsible for out-of-order delivery and
+    possibly other audio glitches...
 - Input selected (and seen in volume bar) may be different than the one sending
   audio through the chain...?
 - Dynamically detect audio quantum size...?
@@ -83,6 +93,10 @@ Fix bugs
 - Sometimes playback and/or input is delayed too much
 
 Quality-of-life improvements
+- Fix audio choppyness
+- Fix playback buffering issues (not getting zeroed out)
+- Fix loopback calibration not working for everyone
+- Indication of when WebSocket connection is lost
 - Button to "fix audio problems" (short-term solution to resolving audio
   cutting in and out)
 - Can live-connect/disconnect audio input devices
@@ -108,6 +122,7 @@ Mixer role
 - This is what the audience hears
 - Standby musicians don't have to be able to hear if they join late (for now)
 - This is included in the recording download
+- Can edit clients' loopback latency (little gear popover?)
 
 Audience app
 - Unique link for every room--"click to copy audience invitation link"
@@ -305,3 +320,22 @@ x browse list of rooms + number of members
 - Sound quality was actually really good
 - White screen of death occurred occasionally (should be easier to solve after
   we capture and display errors properly)
+
+11/13/20
+- Need to use both channels with loopback latency calibration
+- Merge listening channels into one
+- Look into pasting
+- Save loopback latency
+- Paul heard bits of guitar during a capella part
+- Check code for clearing room audio ring buffer (clips of Dave on guitar)
+- Synchronize input and output once and for all (slower CPUs maybe have greater loopback latency)
+- Rename "Listen" to something clearer--"Monitor," "Listen to this," "Hear myself," "Test my sound"?
+- Think about monitoring from audio interface--seems to introduce 10 ms of latency for me (probably not the cause of Paul + Jenn's issues)
+- Feature bounty (one big, one small every month)
+- Still want to do Patroen ASAP
+- Separate running open source project from supporting companies (being on-call, custom installation, etc.)
+- Root musician and upcoming Mixer alone can start and stop recordings--all musicians can indicate "something is going wrong," which will cause their nametag to flash red
+- Answer immediate question; then answer philosophical aspect if necessary
+- Mixing channels separately would be toit
+- "Medicine for a weary soul"
+- Calculate seconds between musicians using channels
