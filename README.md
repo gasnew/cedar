@@ -10,7 +10,7 @@ Cedar is Zoom for musicians. Zero latency. No click track. Just play!
 
 * :white_check_mark: Perform and/or rehearse live with musicians anywhere you can
 have an internet connection.
-* :white_large_square: Mix room audio in real time.
+* :white_check_mark: Mix room audio in real time.
 * :white_large_square: Download recordings made in the Cedar room.
 * :white_large_square: Stream multiple tracks for each musician.
 * :white_large_square: Chat via voice and text.

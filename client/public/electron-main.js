@@ -8,7 +8,7 @@
 // Modules to control application life and create native browser window
 // @ts-ignore We need to do require-style imports for this file because
 //            ES6-style imports are not supported by electron.
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, shell } = require('electron');
 const path = require('path');
 const url = require('url');
 
@@ -22,12 +22,19 @@ function createWindow() {
     },
   });
 
+  // Open hyperlinks in the browser rather than Electron window
+  // (https://github.com/electron/electron/issues/1344).
+  mainWindow.webContents.on('new-window', function(event, url){
+    event.preventDefault();
+    shell.openExternal(url);
+  });
+
   // Open the DevTools (we can's use NODE_ENV because public/ and electron so
   // we check for the absence of an env variable we set in dev mode)
   if (process.env.ELECTRON_START_URL)
     mainWindow.webContents.openDevTools();
 
-  // and load the index.html of the app.
+  // Load from the local React App (dev) or from index.html (prod).
   const startUrl =
     process.env.ELECTRON_START_URL ||
     url.format({

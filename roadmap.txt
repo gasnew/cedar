@@ -66,10 +66,14 @@ Client-side mixing
 + Seconds between musicians has a minimum of ~0.4
 + Fix dB-setting/resetting
 + "Alpha" indicator
-- Fix link
-- Update README
++ Fix link
++ Update README
 
 Final push prior to Patreon
+- Start recording + playback at exactly the same time
+- Start recording based on ws, not polling (what if connection lost then
+  regained? We still don't allow musicians to rejoin an active recording, so
+  this isn't a regression from polling)
 - Signed distributions
 - Auto-updates https://www.electron.build/auto-update
 - https://cedarapp.org
@@ -85,7 +89,7 @@ Fix bugs
   - I'm concerned that webopus is responsible for out-of-order delivery and
     possibly other audio glitches...
 - Input selected (and seen in volume bar) may be different than the one sending
-  audio through the chain...?
+  audio through the chain...? Haven't seen this in a while
 - Dynamically detect audio quantum size...?
 - Sometimes output is crunchy
 - Sometimes output is choppy

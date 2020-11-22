@@ -56,10 +56,12 @@ function Help() {
           intent="success"
           style={{ marginBottom: 10 }}
         >
-          Cedar is currently in the "alpha" stage of development, which means it
-          is not yet feature-complete and may contain some bugs. I am working
-          hard to make Cedar the best it can be, but that takes lots of time and
-          lots of testing. Thank you for helping me with this!
+          Cedar is currently in the{' '}
+          <span style={{ fontWeight: 'bold' }}>alpha</span> stage of
+          development, which means it is not yet feature-complete and may
+          contain some bugs. I am working hard to make Cedar the best it can be,
+          but that takes lots of time and lots of testing. Thank you for helping
+          me with this!
         </Callout>
         <Callout
           title="Report a bug"
