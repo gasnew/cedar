@@ -5,6 +5,7 @@ import { Base64 } from 'js-base64';
 import { usePatch } from '../feathers/FeathersHooks';
 import { selectLoopbackLatencyMs } from '../mediaBar/mediaBarSlice';
 import {
+  selectCurrentRecording,
   selectMyTrackId,
   selectRecordingState,
   selectRecordingDelaySeconds,
@@ -196,6 +197,7 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
   >(_ => _ => null);
   useChunkPoster(useSelector(selectMyTrackId), setWorkletCallback);
   const recordingState = useSelector(selectRecordingState);
+  const currentRecording = useSelector(selectCurrentRecording);
   const delaySeconds = useSelector(selectRecordingDelaySeconds);
   const loopbackLatencyMs = useSelector(selectLoopbackLatencyMs);
   const amInChain = useSelector(selectAmInChain);
@@ -207,11 +209,12 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
       // Don't send audio to server if not in chain
       if (!amInChain) return;
 
-      if (recordingState === 'recording') {
+      if (recordingState === 'recording' && currentRecording) {
         postWorkletMessage({
           action: 'start',
           // more negative -> delay mic more
           delaySeconds: delaySeconds + (loopbackLatencyMs || 0) / 1000,
+          recordingStartedAt: currentRecording.startedAt,
         });
       } else if (recordingState === 'stopped') {
         postWorkletMessage({ action: 'stop' });
@@ -221,6 +224,7 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
       amInChain,
       recordingState,
       postWorkletMessage,
+      currentRecording,
       delaySeconds,
       loopbackLatencyMs,
     ]

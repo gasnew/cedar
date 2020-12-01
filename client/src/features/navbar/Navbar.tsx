@@ -117,7 +117,7 @@ function RoomNameplate({
     'rooms',
     id,
     {
-      pollingInterval: 300,
+      pollingInterval: 1000,
       // Keep recordingId up-to-date (indicates whether the server expects us to
       // be recording)
       onUpdate: ({

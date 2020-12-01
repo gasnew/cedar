@@ -41,13 +41,18 @@ class AudioInputBufferer extends AudioWorkletProcessor {
 
         if (action === 'start') {
           if (this.playing) return;
-          this.prevTimeMs = Date.now();
+          const { delaySeconds, recordingStartedAt } = event.data;
+          // NOTE(gnewman): Some time (10s to 100s of ms) will have passed
+          // since the recording's startedAt time was set. We will need this
+          // node to "catch up" to make up for that elapsed time where it
+          // wasn't generating audio data.
+          this.prevTimeMs = recordingStartedAt;
           this.timeDeltaMs = 0;
           this.playing = true;
           this.framesInBuffer = 0;
           // Assume we don't need to delay by less than 128-sample granularity
           this.delayFrames = Math.floor(
-            (sampleRate * event.data.delaySeconds) / this.frameSize
+            (sampleRate * delaySeconds) / this.frameSize
           );
           this.framesDelayed = 0;
         } else if (action === 'stop') {
@@ -101,6 +106,8 @@ class AudioInputBufferer extends AudioWorkletProcessor {
       // was going to be too much work for this initial pass. Still,
       // implementing a smarter way of keeping the mic in time will
       // significantly improve perceived audio quality.
+      // TODO(gnewman): Skip ahead while delaying instead of waiting for
+      // recording?
       if (this.timeDeltaMs > this.timeThresholdMs) {
         for (let half = 0; half < 2; half++) {
           for (let i = 0; i < this.frameSize; i++) {

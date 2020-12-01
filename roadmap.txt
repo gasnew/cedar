@@ -70,10 +70,12 @@ Client-side mixing
 + Update README
 
 Final push prior to Patreon
-- Start recording + playback at exactly the same time
++ Start recording + playback at exactly the same time (probably by adjusting to
+  recordingStartedAt)
 - Start recording based on ws, not polling (what if connection lost then
   regained? We still don't allow musicians to rejoin an active recording, so
-  this isn't a regression from polling)
+  this isn't a regression from polling). Make sure to stop recording with
+  polling.
 - Signed distributions
 - Auto-updates https://www.electron.build/auto-update
 - https://cedarapp.org

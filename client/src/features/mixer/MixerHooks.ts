@@ -5,6 +5,7 @@ import { Base64 } from 'js-base64';
 
 import { useLazyFind } from '../feathers/FeathersHooks';
 import {
+  selectCurrentRecording,
   selectPrecedingTracks,
   selectRecordingState,
   selectRecordingDelaySeconds,
@@ -19,6 +20,7 @@ function useFetchAudioData(postWorkletMessage: (any) => void) {
     [trackId: string]: string | null;
   }>({});
   const recordingState = useSelector(selectRecordingState);
+  const currentRecording = useSelector(selectCurrentRecording);
   const delaySeconds = useSelector(selectRecordingDelaySeconds);
   const precedingTracks = useSelector(selectPrecedingTracks);
   const amInChain = useSelector(selectAmInChain);
@@ -42,12 +44,13 @@ function useFetchAudioData(postWorkletMessage: (any) => void) {
       // Don't play room audio if not in chain
       if (!amInChain) return;
 
-      if (recordingState === 'recording' && !fetching) {
+      if (recordingState === 'recording' && !fetching && currentRecording) {
         postWorkletMessage({
           action: 'initialize',
           // more positive -> delay mic more
           delaySeconds: delaySeconds,
           trackCount: precedingTracks.length,
+          recordingStartedAt: currentRecording.startedAt,
         });
         requestOut.current = false;
         setFetching(true);
@@ -71,6 +74,7 @@ function useFetchAudioData(postWorkletMessage: (any) => void) {
       recordingState,
       postWorkletMessage,
       delaySeconds,
+      currentRecording,
       precedingTracks,
       fetching,
     ]

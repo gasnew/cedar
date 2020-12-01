@@ -23,7 +23,7 @@ class RoomAudioPlayer extends AudioWorkletProcessor {
       if (event.data && event.data.action) {
         if (event.data.action === 'initialize') {
           // Initialize buffers and write indices, and set delay
-          const { delaySeconds, trackCount } = event.data;
+          const { delaySeconds, recordingStartedAt, trackCount } = event.data;
           this.pcmBuffers = new Array(trackCount);
           this.bufferWriteIndices = new Array(trackCount);
           for (let i = 0; i < this.pcmBuffers.length; i++) {
@@ -33,10 +33,14 @@ class RoomAudioPlayer extends AudioWorkletProcessor {
           this.delaySamples = Math.floor(sampleRate * delaySeconds);
           this.bufferReadIndex = this.bufferLength - this.delaySamples;
           this.timeDeltaMs = 0;
-          this.prevTimeMs = Date.now();
+          // NOTE(gnewman): Some time (10s to 100s of ms) will have passed
+          // since the recording's startedAt time was set. We will need this
+          // node to "catch up" to make up for that elapsed time where it
+          // wasn't playing audio data.
+          this.prevTimeMs = recordingStartedAt;
         } else if (event.data.action === 'buffer') {
-          // Append data to buffers, assuming stream data always comes in in
-          // the same order (port uses a FIFO queue)
+          // Append data to buffer, assuming stream data always comes in in the
+          // same order (port uses a FIFO queue)
           const { pcm, pcmIndex } = event.data;
           if (this.pcmBuffers.length === 0 || pcm.length === 0) return;
 
@@ -105,6 +109,13 @@ class RoomAudioPlayer extends AudioWorkletProcessor {
     //   of leeway given how Web Audio API queues up render requests
     // - Use a fancy algorithm to time-compress without losing data
     if (this.timeDeltaMs > this.timeThresholdMs) {
+      // Zero out skipped frame
+      for (let frameIndex = 0; frameIndex < this.frameSize; frameIndex++) {
+        const readIndex = (this.bufferReadIndex + frameIndex) % this.bufferLength;
+        for (let pcmIndex = 0; pcmIndex < bufferCount; pcmIndex++) {
+          this.pcmBuffers[pcmIndex][readIndex] = 0;
+        }
+      }
       this.bufferReadIndex =
         (this.bufferReadIndex + this.frameSize) % this.bufferLength;
 
