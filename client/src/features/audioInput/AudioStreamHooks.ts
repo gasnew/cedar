@@ -259,7 +259,10 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
           // Just piped to destination here so the audio engine treats this
           // branch as active. No audio is rendered to the speakers.
           audioInputBufferNode.connect(audioContext.destination);
-          directToDestinationGainNode.connect(audioContext.destination);
+
+          const inputChannelMergerNode = audioContext.createChannelMerger(1);
+          directToDestinationGainNode.connect(inputChannelMergerNode);
+          inputChannelMergerNode.connect(audioContext.destination);
 
           // Has to be a power of 2. At the default sample rate of 48000, this
           // size should be enough to let us fetch all samples assuming we are

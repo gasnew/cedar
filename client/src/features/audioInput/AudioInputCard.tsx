@@ -40,7 +40,7 @@ export default function() {
         <Switch
           style={{ marginLeft: 'auto' }}
           checked={listeningToAudioInput}
-          label="Listen"
+          label="Monitor input"
           onChange={handleToggleListening}
         />
       </div>

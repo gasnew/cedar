@@ -76,8 +76,8 @@ Penultimate Patreon push
 + Start recording based on ws and/or polling. Stopping is still just polling
 + More forgiving input and output "catch up" thresholds
 + Need to use both channels with loopback latency calibration
-- Merge listening channels into one
-- Rename "Listen" to something clearer--"Monitor," "Listen to this," "Hear myself," "Test my sound"?
++ Merge listening channels into one
++ Rename "Listen" to something clearer--"Monitor," "Listen to this," "Hear myself," "Test my sound"?
 
 Final push prior to Patreon
 - Signed distributions
