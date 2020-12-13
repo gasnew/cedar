@@ -98,28 +98,30 @@ class RoomAudioPlayer extends AudioWorkletProcessor {
       (this.bufferReadIndex + this.frameSize) % this.bufferLength;
 
     // If we are behind on playback because we somehow missed rendering an
-    // audio quantum, skip ahead by one frame. This does not happen as
+    // audio quantum, skip ahead a few frames. This does not happen as
     // frequently as when the OS skips audio input quanta, but it can still
     // happen. Skipping one frame lets us keep what plays out of our speakers
     // up-to-date with real-time. This is crucial so that our outgoing audio
     // data (to the next musician) is synced with what this musician hears in
     // the speakers.
     // TODO (gnewman):
-    // - Make this a little more forgiving. We actually have a couple of frames
-    //   of leeway given how Web Audio API queues up render requests
+    // - Consider a smaller or larger threshold? We have a couple of frames of
+    //   leeway given how Web Audio API queues up render requests
     // - Use a fancy algorithm to time-compress without losing data
-    if (this.timeDeltaMs > this.timeThresholdMs) {
-      // Zero out skipped frame
-      for (let frameIndex = 0; frameIndex < this.frameSize; frameIndex++) {
-        const readIndex = (this.bufferReadIndex + frameIndex) % this.bufferLength;
-        for (let pcmIndex = 0; pcmIndex < bufferCount; pcmIndex++) {
-          this.pcmBuffers[pcmIndex][readIndex] = 0;
+    if (this.timeDeltaMs > this.timeThresholdMs * 3) {
+      while (this.timeDeltaMs > this.timeThresholdMs) {
+        // Zero out skipped frame
+        for (let frameIndex = 0; frameIndex < this.frameSize; frameIndex++) {
+          const readIndex = (this.bufferReadIndex + frameIndex) % this.bufferLength;
+          for (let pcmIndex = 0; pcmIndex < bufferCount; pcmIndex++) {
+            this.pcmBuffers[pcmIndex][readIndex] = 0;
+          }
         }
-      }
-      this.bufferReadIndex =
-        (this.bufferReadIndex + this.frameSize) % this.bufferLength;
+        this.bufferReadIndex =
+          (this.bufferReadIndex + this.frameSize) % this.bufferLength;
 
-      this.timeDeltaMs -= this.timeThresholdMs;
+        this.timeDeltaMs -= this.timeThresholdMs;
+      }
     }
 
     return true;

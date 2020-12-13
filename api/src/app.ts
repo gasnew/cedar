@@ -15,7 +15,7 @@ import middleware from './middleware';
 import services from './services';
 import appHooks from './app.hooks';
 import { Redis, connectToRedis } from './models';
-//import channels from './channels';
+import channels from './channels';
 
 export default function(redisClient: Redis) {
   const app: Application = connectToRedis(express(feathers()), redisClient);
@@ -41,9 +41,7 @@ export default function(redisClient: Redis) {
   // Configure other middleware (see `middleware/index.js`)
   app.configure(middleware);
   // Set up event channels (see channels.js)
-  // TODO(gnewman): Start using channels for the client to subscribe to events
-  // like when recording starts
-  //app.configure(channels);
+  app.configure(channels);
 
   // Configure a middleware for 404s and the error handler
   app.use(express.notFound());

@@ -38,6 +38,7 @@ export default function(redisClient: IORedisClient): MusicianInterface {
 
       const newMusician: Musician = {
         id: uuidv4(),
+        roomId,
         name,
         active: true,
         loopbackLatencyMs: null,

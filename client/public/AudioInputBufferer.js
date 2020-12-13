@@ -26,6 +26,7 @@ class AudioInputBufferer extends AudioWorkletProcessor {
     this.timeThresholdMs = (this.frameSize / sampleRate) * 1000;
 
     this.mixedChannels = new Float32Array(this.frameSize);
+    this.emptyData = new Float32Array(this.frameSize);
 
     // State management
     this.playing = false;
@@ -96,11 +97,11 @@ class AudioInputBufferer extends AudioWorkletProcessor {
         }
       }
 
-      // Spread incoming data over two frames if we are behind. This can happen
-      // when the OS forgets/neglects to ask the input device for an audio
-      // quantum. Playing a single frame twice like this lets us smooth over
-      // audio "glitches" that occur as a result and keep our outgoing audio
-      // stream synced with real time.
+      // Insert a few empty frames if we are behind. This can happen when the
+      // OS forgets/neglects to ask the input device for an audio quantum.
+      // Playing a single frame twice like this lets us smooth over audio
+      // "glitches" that occur as a result and keep our outgoing audio stream
+      // synced with real time.
       // TODO(gnewman): A more ideal solution would time-scale this frame while
       // preserving pitch. There are well-described methods to do this, but it
       // was going to be too much work for this initial pass. Still,
@@ -108,40 +109,31 @@ class AudioInputBufferer extends AudioWorkletProcessor {
       // significantly improve perceived audio quality.
       // TODO(gnewman): Skip ahead while delaying instead of waiting for
       // recording?
-      if (this.timeDeltaMs > this.timeThresholdMs) {
-        for (let half = 0; half < 2; half++) {
-          for (let i = 0; i < this.frameSize; i++) {
-            const newSample =
-              (this.mixedChannels[i] + this.mixedChannels[i]) / 2;
-            this.chunkBuffer[
-              this.framesInBuffer * this.frameSize + i
-            ] = newSample;
-          }
-          this.framesInBuffer += 1;
-          if (this.framesInBuffer === this.framesPerChunk) {
-            this.port.postMessage(this.chunkBuffer);
-            this.framesInBuffer = 0;
-          }
-        }
-        this.timeDeltaMs -= this.timeThresholdMs;
-      } else {
-        for (let i = 0; i < this.frameSize; i++) {
-          this.chunkBuffer[
-            this.framesInBuffer * this.frameSize + i
-          ] = this.mixedChannels[i];
-        }
-        this.framesInBuffer += 1;
-        if (this.framesInBuffer === this.framesPerChunk) {
-          // TODO (gnewman): Instead of copying buffers to send them across
-          // threads, use SharedArrayBuffer between the main thread and
-          // AudioWorklet thread.
-          this.port.postMessage(this.chunkBuffer);
-          this.framesInBuffer = 0;
+      if (this.timeDeltaMs > this.timeThresholdMs * 3) {
+        while (this.timeDeltaMs > this.timeThresholdMs) {
+          this.bufferAndMaybePostData(this.emptyData);
+          this.timeDeltaMs -= this.timeThresholdMs;
         }
       }
+
+      this.bufferAndMaybePostData(this.mixedChannels);
     }
 
     return true;
+  }
+
+  bufferAndMaybePostData(data) {
+    for (let i = 0; i < this.frameSize; i++) {
+      this.chunkBuffer[this.framesInBuffer * this.frameSize + i] = data[i];
+    }
+    this.framesInBuffer += 1;
+    if (this.framesInBuffer === this.framesPerChunk) {
+      // TODO (gnewman): Instead of copying buffers to send them across
+      // threads, use SharedArrayBuffer between the main thread and
+      // AudioWorklet thread.
+      this.port.postMessage(this.chunkBuffer);
+      this.framesInBuffer = 0;
+    }
   }
 }
 

@@ -60,6 +60,13 @@ export const startRecording = (
   roomId: string,
   recordingId: string
 ): AppThunk => async dispatch => {
+  // NOTE(gnewman): We want to capture the current time as early as possible so
+  // that, even if the following network requests take some time, our recording
+  // and playback audio nodes will adjust so that we are recording as close to
+  // secondsBetweenMusicians after the previous musician as possible. This is
+  // important in case the next musician has a faster computer and/or faster
+  // connection than we do.
+  const startedAt = Date.now();
   // This state is for UI elements to indicate something exciting is happening
   dispatch(setRecordingState('initializing'));
 
@@ -86,7 +93,7 @@ export const startRecording = (
   dispatch(
     addRecording({
       id: recording.id,
-      startedAt: Date.now(),
+      startedAt,
       tracks,
     })
   );

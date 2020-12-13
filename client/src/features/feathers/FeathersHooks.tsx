@@ -1,7 +1,7 @@
 import { ServiceMethods } from '@feathersjs/feathers';
 import { FeathersError } from '@feathersjs/errors';
 import _ from 'lodash';
-import { useCallback, useContext, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { FeathersContext } from './FeathersProvider';
@@ -164,7 +164,7 @@ type LazyGetResultTuple<Data> = [
  *
  * @param serviceName  The service name in lowercase (usually corresponds to
  * API URI path), e.g., 'room'
- * @param id  The id for the objedt to get, e.g., 'abc-123'
+ * @param id  The id for the object to get, e.g., 'abc-123'
  */
 export function useLazyGet<T extends keyof ServiceTypes>(
   serviceName: T,
@@ -218,7 +218,7 @@ interface GetOptions<Data> {
  *
  * @param serviceName  The service name in lowercase (usually corresponds to
  * API URI path), e.g., 'room'
- * @param id  The id for the objedt to get, e.g., 'abc-123'
+ * @param id  The id for the object to get, e.g., 'abc-123'
  */
 export function useGet<T extends keyof ServiceTypes>(
   serviceName: T,
@@ -288,7 +288,7 @@ type LazyFindResultTuple<Data> = [
  *
  * @param serviceName  The service name in lowercase (usually corresponds to
  * API URI path), e.g., 'room'
- * @param id  The id for the objedt to get, e.g., 'abc-123'
+ * @param id  The id for the object to get, e.g., 'abc-123'
  */
 export function useLazyFind<T extends keyof ServiceTypes>(
   serviceName: T
@@ -384,3 +384,36 @@ export function useFind<T extends keyof ServiceTypes>(
   return { loading, error, data };
 }
 /* ---- END FIND HOOK ---- */
+
+/* ---- BEGIN SUBSCRIBE HOOK ---- */
+type OnUpdate<Data> = (Data) => any;
+
+/**
+ * A hook for subscribing to Cedar services.
+ *
+ * @param serviceName  The service name in lowercase (usually corresponds to
+ * API URI path), e.g., 'room'
+ */
+export function useSubscription<T extends keyof ServiceTypes>(
+  serviceName: T,
+  event: 'created',
+  onUpdate: OnUpdate<ExtractData<ServiceTypes[T]>>
+): void {
+  const app = useContext(FeathersContext);
+  const room = useSelector(selectRoom);
+
+  // TODO: Figure out how to remove callback
+
+  useEffect(
+    () => {
+      const service = app.service(serviceName);
+      service.on(event, onUpdate);
+
+      return () => {
+        service.removeListener(event, onUpdate);
+      }
+    },
+    [app, serviceName, event, onUpdate]
+  );
+}
+/* ---- END SUBSCRIBE HOOK ---- */

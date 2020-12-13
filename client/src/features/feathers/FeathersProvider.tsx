@@ -66,7 +66,7 @@ export function FeathersProvider({ children }: { children: React.ReactNode }) {
         );
       }
     },
-    [connected, musicianId, roomId]
+    [app, connected, musicianId, roomId]
   );
 
   return (

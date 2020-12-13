@@ -1,5 +1,11 @@
 import _ from 'lodash';
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Alignment,
@@ -19,7 +25,12 @@ import {
 } from '@blueprintjs/core';
 
 import { useInterval } from '../../app/util';
-import { useGet, useLazyGet, usePatch } from '../feathers/FeathersHooks';
+import {
+  useGet,
+  useLazyGet,
+  usePatch,
+  useSubscription,
+} from '../feathers/FeathersHooks';
 import { FeathersContext } from '../feathers/FeathersProvider';
 import { selectMusicians, setMusicianName } from '../musicians/musiciansSlice';
 import './Navbar.css';
@@ -33,7 +44,7 @@ import {
 import {
   selectRecordingState,
   startRecording,
-  stopRecording,
+  stopRecording as reduxStopRecording,
 } from '../recording/recordingSlice';
 
 function Help() {
@@ -113,6 +124,24 @@ function RoomNameplate({
   const recordingState = useSelector(selectRecordingState);
   const amHost = useSelector(selectAmHost);
 
+  // Used to block calling startRecording twice in case of subscription and
+  // polling race condition
+  const isRecordingRef = useRef(false);
+
+  const maybeStartRecording = (recordingId: string) => {
+    if (isRecordingRef.current) return;
+    dispatch(startRecording(app, id, recordingId));
+    isRecordingRef.current = true;
+  };
+  const stopRecording = () => {
+    dispatch(reduxStopRecording());
+    isRecordingRef.current = false;
+  };
+
+  useSubscription('recordings', 'created', recording => {
+    if (recordingState === 'stopped') maybeStartRecording(recording.id);
+  });
+
   useGet(
     'rooms',
     id,
@@ -127,9 +156,8 @@ function RoomNameplate({
       }) => {
         if (!amHost) {
           if (recordingId && recordingState === 'stopped')
-            dispatch(startRecording(app, id, recordingId));
-          if (!recordingId && recordingState === 'recording')
-            dispatch(stopRecording());
+            maybeStartRecording(recordingId);
+          if (!recordingId && recordingState === 'recording') stopRecording();
           if (secondsBetweenMusicians !== room.secondsBetweenMusicians)
             dispatch(setSecondsBetweenMusicians({ secondsBetweenMusicians }));
         }
