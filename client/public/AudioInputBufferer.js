@@ -26,6 +26,7 @@ class AudioInputBufferer extends AudioWorkletProcessor {
     this.timeThresholdMs = (this.frameSize / sampleRate) * 1000;
 
     this.mixedChannels = new Float32Array(this.frameSize);
+    this.emptyData = new Float32Array(this.frameSize);
 
     // State management
     this.playing = false;
@@ -41,13 +42,18 @@ class AudioInputBufferer extends AudioWorkletProcessor {
 
         if (action === 'start') {
           if (this.playing) return;
-          this.prevTimeMs = Date.now();
+          const { delaySeconds, recordingStartedAt } = event.data;
+          // NOTE(gnewman): Some time (10s to 100s of ms) will have passed
+          // since the recording's startedAt time was set. We will need this
+          // node to "catch up" to make up for that elapsed time where it
+          // wasn't generating audio data.
+          this.prevTimeMs = recordingStartedAt;
           this.timeDeltaMs = 0;
           this.playing = true;
           this.framesInBuffer = 0;
           // Assume we don't need to delay by less than 128-sample granularity
           this.delayFrames = Math.floor(
-            (sampleRate * event.data.delaySeconds) / this.frameSize
+            (sampleRate * delaySeconds) / this.frameSize
           );
           this.framesDelayed = 0;
         } else if (action === 'stop') {
@@ -71,6 +77,8 @@ class AudioInputBufferer extends AudioWorkletProcessor {
     // We assume we only have one input connection
     const input = inputs[0];
     const output = outputs[0];
+    if (input[0].length !== 128) console.log(`YOOOO: ${input[0].length}`);
+    if (output[0].length !== 128) console.log(`FOOOO: ${output[0].length}`);
 
     // Delay this frame, or buffer input
     if (this.framesDelayed < this.delayFrames) this.framesDelayed += 1;
@@ -89,50 +97,43 @@ class AudioInputBufferer extends AudioWorkletProcessor {
         }
       }
 
-      // Spread incoming data over two frames if we are behind. This can happen
-      // when the OS forgets/neglects to ask the input device for an audio
-      // quantum. Playing a single frame twice like this lets us smooth over
-      // audio "glitches" that occur as a result and keep our outgoing audio
-      // stream synced with real time.
+      // Insert a few empty frames if we are behind. This can happen when the
+      // OS forgets/neglects to ask the input device for an audio quantum.
+      // Playing a single frame twice like this lets us smooth over audio
+      // "glitches" that occur as a result and keep our outgoing audio stream
+      // synced with real time.
       // TODO(gnewman): A more ideal solution would time-scale this frame while
       // preserving pitch. There are well-described methods to do this, but it
       // was going to be too much work for this initial pass. Still,
       // implementing a smarter way of keeping the mic in time will
       // significantly improve perceived audio quality.
-      if (this.timeDeltaMs > this.timeThresholdMs) {
-        for (let half = 0; half < 2; half++) {
-          for (let i = 0; i < this.frameSize; i++) {
-            const newSample =
-              (this.mixedChannels[i] + this.mixedChannels[i]) / 2;
-            this.chunkBuffer[
-              this.framesInBuffer * this.frameSize + i
-            ] = newSample;
-          }
-          this.framesInBuffer += 1;
-          if (this.framesInBuffer === this.framesPerChunk) {
-            this.port.postMessage(this.chunkBuffer);
-            this.framesInBuffer = 0;
-          }
-        }
-        this.timeDeltaMs -= this.timeThresholdMs;
-      } else {
-        for (let i = 0; i < this.frameSize; i++) {
-          this.chunkBuffer[
-            this.framesInBuffer * this.frameSize + i
-          ] = this.mixedChannels[i];
-        }
-        this.framesInBuffer += 1;
-        if (this.framesInBuffer === this.framesPerChunk) {
-          // TODO (gnewman): Instead of copying buffers to send them across
-          // threads, use SharedArrayBuffer between the main thread and
-          // AudioWorklet thread.
-          this.port.postMessage(this.chunkBuffer);
-          this.framesInBuffer = 0;
+      // TODO(gnewman): Skip ahead while delaying instead of waiting for
+      // recording?
+      if (this.timeDeltaMs > this.timeThresholdMs * 3) {
+        while (this.timeDeltaMs > this.timeThresholdMs) {
+          this.bufferAndMaybePostData(this.emptyData);
+          this.timeDeltaMs -= this.timeThresholdMs;
         }
       }
+
+      this.bufferAndMaybePostData(this.mixedChannels);
     }
 
     return true;
+  }
+
+  bufferAndMaybePostData(data) {
+    for (let i = 0; i < this.frameSize; i++) {
+      this.chunkBuffer[this.framesInBuffer * this.frameSize + i] = data[i];
+    }
+    this.framesInBuffer += 1;
+    if (this.framesInBuffer === this.framesPerChunk) {
+      // TODO (gnewman): Instead of copying buffers to send them across
+      // threads, use SharedArrayBuffer between the main thread and
+      // AudioWorklet thread.
+      this.port.postMessage(this.chunkBuffer);
+      this.framesInBuffer = 0;
+    }
   }
 }
 

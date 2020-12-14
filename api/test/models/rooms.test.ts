@@ -70,7 +70,7 @@ describe('room methods', () => {
         name: 'Roomy McRoomface',
         recordingId: null,
         musicianIdsChain: [],
-        secondsBetweenMusicians: 2,
+        secondsBetweenMusicians: 0.8,
       })
     );
   });
@@ -87,7 +87,7 @@ describe('room methods', () => {
       name: 'Roomy McRoomface',
       recordingId: null,
       musicianIdsChain: ['musician-1'],
-      secondsBetweenMusicians: 2,
+      secondsBetweenMusicians: 0.8,
     };
     mockRedis.hget.mockResolvedValue(JSON.stringify(roomMeta));
 

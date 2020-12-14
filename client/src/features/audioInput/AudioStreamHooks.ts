@@ -5,6 +5,7 @@ import { Base64 } from 'js-base64';
 import { usePatch } from '../feathers/FeathersHooks';
 import { selectLoopbackLatencyMs } from '../mediaBar/mediaBarSlice';
 import {
+  selectCurrentRecording,
   selectMyTrackId,
   selectRecordingState,
   selectRecordingDelaySeconds,
@@ -84,7 +85,7 @@ function useChunkPoster(
         // one request to be out at a time to guarantee we always send complete
         // data in order, so we use requestOut to flag whether a request is in
         // progress
-        if (!requestOut.current && dataBuffer.current.length > 15) {
+        if (!requestOut.current && dataBuffer.current.length > 3) {
           // This needs to be set to true before anything else
           requestOut.current = true;
 
@@ -119,6 +120,10 @@ function useChunkPoster(
               );
               dataBuffer.current = [];
             }
+            console.error(
+              `We just failed to send a large chunk of data. This is really
+              bad!!`
+            );
           }
 
           // This needs to be set to false after everything else
@@ -192,22 +197,24 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
   >(_ => _ => null);
   useChunkPoster(useSelector(selectMyTrackId), setWorkletCallback);
   const recordingState = useSelector(selectRecordingState);
+  const currentRecording = useSelector(selectCurrentRecording);
   const delaySeconds = useSelector(selectRecordingDelaySeconds);
   const loopbackLatencyMs = useSelector(selectLoopbackLatencyMs);
   const amInChain = useSelector(selectAmInChain);
 
   // Hook to start the worklet when recordingState says so. Starting the audio
-  // worklet is idempotent, so it's OK ifsend the message multiple times
+  // worklet is idempotent, so it's OK if we send the message multiple times
   useEffect(
     () => {
       // Don't send audio to server if not in chain
       if (!amInChain) return;
 
-      if (recordingState === 'recording') {
+      if (recordingState === 'recording' && currentRecording) {
         postWorkletMessage({
           action: 'start',
           // more negative -> delay mic more
           delaySeconds: delaySeconds + (loopbackLatencyMs || 0) / 1000,
+          recordingStartedAt: currentRecording.startedAt,
         });
       } else if (recordingState === 'stopped') {
         postWorkletMessage({ action: 'stop' });
@@ -217,6 +224,7 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
       amInChain,
       recordingState,
       postWorkletMessage,
+      currentRecording,
       delaySeconds,
       loopbackLatencyMs,
     ]
@@ -251,7 +259,10 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
           // Just piped to destination here so the audio engine treats this
           // branch as active. No audio is rendered to the speakers.
           audioInputBufferNode.connect(audioContext.destination);
-          directToDestinationGainNode.connect(audioContext.destination);
+
+          const inputChannelMergerNode = audioContext.createChannelMerger(1);
+          directToDestinationGainNode.connect(inputChannelMergerNode);
+          inputChannelMergerNode.connect(audioContext.destination);
 
           // Has to be a power of 2. At the default sample rate of 48000, this
           // size should be enough to let us fetch all samples assuming we are

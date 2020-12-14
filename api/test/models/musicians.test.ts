@@ -56,7 +56,9 @@ describe('musician methods', () => {
       'musician-uuid',
       JSON.stringify({
         id: 'musician-uuid',
+        roomId: 'room-uuid',
         name: 'Bobby Tuba',
+        active: true,
         loopbackLatencyMs: null,
       })
     );

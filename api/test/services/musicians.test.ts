@@ -58,7 +58,9 @@ describe("'musicians' service", () => {
 
       const musician = {
         id: 'musician-id',
+        roomId: 'room-id',
         name: 'My Musician',
+        active: true,
         previousMusicianId: null,
       };
       mockRedis.createMusician.mockResolvedValue(musician);

@@ -1,6 +1,7 @@
 import '@feathersjs/transport-commons';
 import { HookContext } from '@feathersjs/feathers';
 import { Application } from './declarations';
+import { Musician } from './room.d';
 
 export default function(app: Application) {
   if (typeof app.channel !== 'function') {
@@ -44,13 +45,11 @@ export default function(app: Application) {
   app.publish((data: any, hook: HookContext) => {
     // Here you can add event publishers to channels set up in `channels.js`
     // To publish only for a specific event use `app.publish(eventname, () => {})`
-
-    console.log(
-      'Publishing all events to all authenticated users. See `channels.js` and https://docs.feathersjs.com/api/channels.html for more information.'
-    ); // eslint-disable-line
-
+    //console.log(
+    //'Publishing all events to all authenticated users. See `channels.js` and https://docs.feathersjs.com/api/channels.html for more information.'
+    //); // eslint-disable-line
     // e.g. to publish all service events to all authenticated users use
-    return app.channel('authenticated');
+    //return app.channel('authenticated');
   });
 
   // Here you can also add service specific event publishers
@@ -64,4 +63,38 @@ export default function(app: Application) {
   //     app.channel(`emails/${data.recipientEmail}`)
   //   ];
   // });
+
+  // Join this user to their room channel.
+  app.service('musicians').on('created', (musician: Musician, options: any) => {
+    // No channels => no ws connections => cannot add anyone to this room's
+    // channel
+    if (app.channels.length === 0)
+      return;
+
+    const musicianId = musician.id;
+    const roomId = options.params.query.roomId;
+
+    // Find all connections for this user
+    const { connections } = app
+      .channel(app.channels)
+      .filter(connection => connection.musicianId === musicianId);
+
+    // Join the room channel
+    connections.forEach(connection =>
+      app.channel(roomChannelName(roomId)).join(connection)
+    );
+  });
+
+  // TODO(gnewman): Remove a musician's connection from a room channel if they
+  // switch rooms.
+
+  // Publish the recordings/created event to the room's channel.
+  app.service('recordings').publish('created', (_: any, options: any) => {
+    const roomId = options.params.query.roomId;
+    return app.channel(roomChannelName(roomId));
+  });
+}
+
+function roomChannelName(roomId: string): string {
+  return `rooms/${roomId}`;
 }

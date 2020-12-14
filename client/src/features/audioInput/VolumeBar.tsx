@@ -27,29 +27,35 @@ function Canvas({ draw, style }) {
     [draw]
   );
 
-  return <canvas ref={canvasRef} style={style} />;
+  return <canvas height={1} width={1} ref={canvasRef} style={style} />;
 }
 
 interface Props {
   fetchData: () => Uint8Array;
   disabled: boolean;
-  height: number;
-  width: number;
+  height?: number;
+  width?: number;
 }
 
-export default function({ height, width, fetchData, disabled }: Props) {
+export default function({ fetchData, disabled, height, width }: Props) {
   const barWidth = useRef(0);
   const dampedBarWidth = useRef(0);
   const clipOpacity = useRef(0);
 
   const draw = useCallback(
-    (ctx) => {
+    ctx => {
       const offset = 128.0; // The offset of the signal from 0 amplitude
       const amplitudeNormalized =
         ((_.max(fetchData()) || offset) - offset) / 127.0;
       const amplitudeDB = 20 * Math.log10(amplitudeNormalized);
-      const normalizedDB = (40 + (_.max([amplitudeDB, -40]) ?? -40)) / 40;
+      const truncatedAmplitude = amplitudeDB < -40 ? -40 : amplitudeDB;
+      const normalizedDB = (40 + truncatedAmplitude) / 40;
       const newBarWidth = disabled ? 0 : normalizedDB * (ctx.canvas.width || 0);
+
+      // Resize the canvas to the parent container
+      const parentRect = ctx.canvas.parentNode.getBoundingClientRect();
+      ctx.canvas.height = height || parentRect.height;
+      ctx.canvas.width = width || parentRect.width;
 
       barWidth.current = newBarWidth;
       dampedBarWidth.current =
@@ -59,7 +65,7 @@ export default function({ height, width, fetchData, disabled }: Props) {
 
       ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       // background
-      ctx.fillStyle = Colors.DARK_GRAY3;
+      ctx.fillStyle = Colors.DARK_GRAY2;
       ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       // green bar
       ctx.fillStyle = Colors.GREEN3;
@@ -76,8 +82,8 @@ export default function({ height, width, fetchData, disabled }: Props) {
       ctx.fillRect(ctx.canvas.width - 5, 0, 5, ctx.canvas.height);
       ctx.globalAlpha = 1;
     },
-    [disabled, fetchData]
+    [disabled, fetchData, height, width]
   );
 
-  return <Canvas draw={draw} style={{height, width}}/>;
+  return <Canvas draw={draw} style={{ borderRadius: 3 }} />;
 }

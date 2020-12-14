@@ -30,7 +30,7 @@ export default function(redisClient: IORedisClient): RoomInterface {
         name,
         recordingId: null,
         musicianIdsChain: [],
-        secondsBetweenMusicians: 2,
+        secondsBetweenMusicians: 0.8,
       };
       await redisClient.hset(
         rKey({ roomId: newRoom.id }),

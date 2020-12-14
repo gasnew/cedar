@@ -11,6 +11,7 @@ interface Track {
 }
 interface Recording {
   id: string;
+  startedAt: number;
   tracks: Track[];
 }
 export type State = 'stopped' | 'initializing' | 'recording';
@@ -26,7 +27,7 @@ const initialState: RecordingState = {
   recordings: {},
 };
 
-export const roomSlice = createSlice({
+export const recordingSlice = createSlice({
   name: 'room',
   initialState,
   reducers: {
@@ -48,7 +49,7 @@ export const {
   setRecordingState,
   addRecording,
   stopRecording,
-} = roomSlice.actions;
+} = recordingSlice.actions;
 
 // The function below is called a thunk and allows us to perform async logic. It
 // can be dispatched like a regular action: `dispatch(incrementAsync(10))`. This
@@ -59,6 +60,13 @@ export const startRecording = (
   roomId: string,
   recordingId: string
 ): AppThunk => async dispatch => {
+  // NOTE(gnewman): We want to capture the current time as early as possible so
+  // that, even if the following network requests take some time, our recording
+  // and playback audio nodes will adjust so that we are recording as close to
+  // secondsBetweenMusicians after the previous musician as possible. This is
+  // important in case the next musician has a faster computer and/or faster
+  // connection than we do.
+  const startedAt = Date.now();
   // This state is for UI elements to indicate something exciting is happening
   dispatch(setRecordingState('initializing'));
 
@@ -85,6 +93,7 @@ export const startRecording = (
   dispatch(
     addRecording({
       id: recording.id,
+      startedAt,
       tracks,
     })
   );
@@ -96,7 +105,7 @@ export const startRecording = (
 export const selectRecordingState = (state: RootState) => state.recording.state;
 export const selectRecordingId = (state: RootState) =>
   state.recording.currentRecordingId;
-const selectCurrentRecording = (state: RootState) => {
+export const selectCurrentRecording = (state: RootState) => {
   const recordingId = state.recording.currentRecordingId;
   if (!recordingId) return null;
   return state.recording.recordings[recordingId] || null;
@@ -139,4 +148,4 @@ export const selectPrecedingTracks = (state: RootState): Track[] => {
   return precedingTracks as Track[];
 };
 
-export default roomSlice.reducer;
+export default recordingSlice.reducer;

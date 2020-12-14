@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Button,
@@ -13,13 +13,14 @@ import {
   Tag,
 } from '@blueprintjs/core';
 
-import { useStream, useStreamData } from '../audioInput/AudioStreamHooks';
+import { useStream } from '../audioInput/AudioStreamHooks';
 import { selectInputDevice, IInputDevice } from '../audioInput/audioSlice';
 import AudioInputSelector from '../audioInput/AudioInputSelector';
 import VolumeBar from '../audioInput/VolumeBar';
 import { usePatch } from '../feathers/FeathersHooks';
 import { setLoopbackLatencyMs } from './mediaBarSlice';
 import { selectRecordingState } from '../recording/recordingSlice';
+import { setMusicianLoopbackLatencyMs } from '../musicians/musiciansSlice';
 import { selectRoom } from '../room/roomSlice';
 
 interface LoopbackLatencyResult {
@@ -147,10 +148,69 @@ async function detectLoopbackLatency(
   // Start playing and recording at the same time
   pulsesSource.start();
   const recordedData = await startRecordingData(audioRecorderNode);
+  audioContext.close();
 
   return calculateLoopbackLatency(recordedData);
 }
 
+interface DataResponse {
+  canChangeStream: boolean;
+  someData: boolean;
+  fetchData: () => Uint8Array;
+}
+
+export function useSimpleStreamFetcher(
+  stream: MediaStream | null
+): DataResponse {
+  const [analyzer, setAnalyzer] = useState<AnalyserNode | null>(null);
+  const [dataArray, setDataArray] = useState<Uint8Array>(new Uint8Array());
+  const [canChangeStream, setCanChangeStream] = useState<boolean>(true);
+
+  useEffect(
+    () => {
+      if (!stream) setAnalyzer(null);
+      else {
+        const audioContext = new window.AudioContext({
+          sampleRate: 48000,
+        });
+        const analyzer = audioContext.createAnalyser();
+        const mediaSource = audioContext.createMediaStreamSource(stream);
+
+        mediaSource.connect(analyzer);
+
+        // Has to be a power of 2. At the default sample rate of 48000, this
+        // size should be enough to let us fetch all samples assuming we are
+        // fetching every 1/60th of a second (48000 / 60 = 800 samples).
+        analyzer.fftSize = 1024;
+
+        setAnalyzer(analyzer);
+        setDataArray(new Uint8Array(analyzer.fftSize));
+
+        return () => {
+          setCanChangeStream(false);
+          audioContext.close().then(() => {
+            setCanChangeStream(true);
+          });
+        };
+      }
+    },
+    [stream]
+  );
+
+  const fetchData = useCallback(
+    () => {
+      if (analyzer) analyzer.getByteTimeDomainData(dataArray);
+      return dataArray;
+    },
+    [analyzer, dataArray]
+  );
+
+  return {
+    canChangeStream,
+    someData: !!analyzer,
+    fetchData,
+  };
+}
 export default function() {
   const recordingState = useSelector(selectRecordingState);
   const defaultSelectedDevice = useSelector(selectInputDevice);
@@ -168,9 +228,7 @@ export default function() {
 
   // Audio data
   const stream = useStream(selectedDevice ? selectedDevice.deviceId : null);
-  const { someData, fetchData } = useStreamData(
-    stream
-  );
+  const { someData, fetchData } = useSimpleStreamFetcher(stream);
 
   const [patchMusician] = usePatch('musicians');
 
@@ -201,8 +259,15 @@ export default function() {
     }
   };
   const handleSaveAndClose = () => {
+    if (!musicianId) return;
     dispatch(
       setLoopbackLatencyMs({
+        loopbackLatencyMs: pendingLoopbackLatencyMs || 0,
+      })
+    );
+    dispatch(
+      setMusicianLoopbackLatencyMs({
+        musicianId,
         loopbackLatencyMs: pendingLoopbackLatencyMs || 0,
       })
     );
@@ -251,13 +316,13 @@ export default function() {
             </span>{' '}
             It is important for Cedar to know this latency value so it can
             correct for it before sending audio on to the next musician in the
-            chain. Loopback latency is typically less than 200 ms.
+            chain. Loopback latency is typically less than 300 ms.
           </p>
           <Callout style={{ marginBottom: 10 }}>
             <span style={{ fontWeight: 'bold' }}>NOTE:</span> Loopback latency
-            will vary from system to system, including the PC or Mac used and
-            the headphones and input devices used. So it ideal to calibrate
-            using the same equipment you will use when performing through Cedar.
+            will vary depending on the equipment you use--PC or Mac, headphones,
+            and input devices. So it is ideal to calibrate using the same
+            equipment you will use when performing through Cedar.
           </Callout>
           <H3>Instructions</H3>
           <OL>
@@ -296,7 +361,7 @@ export default function() {
                 selectedDevice={selectedDevice}
               />
             </div>
-            <div style={{ marginBottom: 5 }}>
+            <div style={{ position: 'relative', marginBottom: 5 }}>
               <VolumeBar
                 height={20}
                 width={250}

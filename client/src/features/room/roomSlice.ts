@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../../app/store';
 
@@ -10,11 +11,11 @@ export interface RoomState {
 }
 
 const initialState: RoomState = {
-  id: null, // || 'c08ff8b5-2dc7-45e4-80ae-8a059c862e1a',
-  name: null, // || 'asdfasdf',
-  musicianId: null, // || '3e9b9911-ee61-4328-a03c-fb4a49c8b60f',
+  id: null, // || '06063a24-4d52-48c0-9848-e8bf2f4d8d33',
+  name: null, // || 'asdf',
+  musicianId: null, // || '4582ae5c-7eb9-4f97-b7b8-b378f4c9cd85',
   musicianIdsChain: [],
-  secondsBetweenMusicians: 2,
+  secondsBetweenMusicians: 0.8,
 };
 
 export const roomSlice = createSlice({
@@ -60,8 +61,17 @@ export const {
 // of in the slice file. For example: `useSelector((state: RootState) =>
 // state.room)`
 export const selectRoom = (state: RootState) => state.room;
+export const selectRoomId = (state: RootState) => state.room.id;
+export const selectRoomName = (state: RootState) => state.room.name;
+export const selectMusicianId = (state: RootState) => state.room.musicianId;
 export const selectMusicianIdsChain = (state: RootState) =>
   state.room.musicianIdsChain;
+export const selectPrecedingMusicianIds = (state: RootState) => {
+  const musicianId = state.room.musicianId;
+  if (!musicianId || !_.includes(state.room.musicianIdsChain, musicianId))
+    return [];
+  return _.takeWhile(state.room.musicianIdsChain, id => id !== musicianId);
+};
 export const selectSecondsBetweenMusicians = (state: RootState) =>
   state.room.secondsBetweenMusicians;
 export const selectHostId = (state: RootState) =>

@@ -56,25 +56,73 @@ x (bonus) Visualize the audio received by the client!
   added to the chain
 + Mix multiple input channels into one
 
+Client-side mixing
++ Can only see musicians behind you
++ Tooltip about the fact that this only mixes for you (maybe just call it
+  "Personal Mixer"?)
++ Master output and slider
++ Cut down on needless redux actions (from onUpdate calls?)
++ Support musicians disconnecting
++ Seconds between musicians has a minimum of ~0.4
++ Fix dB-setting/resetting
++ "Alpha" indicator
++ Fix link
++ Update README
+
+Penultimate Patreon push
++ Fix playback buffering issues (not getting zeroed out)
++ Start recording + playback at exactly the same time (probably by adjusting to
+  recordingStartedAt)
++ Start recording based on ws and/or polling. Stopping is still just polling
++ More forgiving input and output "catch up" thresholds
++ Need to use both channels with loopback latency calibration
++ Merge listening channels into one
++ Rename "Listen" to something clearer--"Monitor," "Listen to this," "Hear myself," "Test my sound"?
+
+Final push prior to Patreon
+- Signed distributions
+- Auto-updates https://www.electron.build/auto-update
+- https://cedarapp.org
+
+Fix bugs
+- Set up loopback calibration for non-mic instruments
+- Do testing with audio interface?
+- Possibly move to MediaRecorder
+  (https://developer.mozilla.org/en-US/docs/Web/API/AudioContext/createMediaStreamDestination)
+  and AudioContext.decodeAudioData
+  (https://developer.mozilla.org/en-US/docs/Web/API/BaseAudioContext/decodeAudioData)
+  for encoding/decoding rather than webopus?
+  - I'm concerned that webopus is responsible for out-of-order delivery and
+    possibly other audio glitches...
+- Input selected (and seen in volume bar) may be different than the one sending
+  audio through the chain...? Haven't seen this in a while
+- Dynamically detect audio quantum size...?
+- Sometimes output is crunchy (maybe due to playback catch-up method...)
+- Sometimes output is choppy
+- Sometimes screen turns white
+
 Quality-of-life improvements
+- Allow copy/paste via right-click (custom electron context menu)
+- Fix audio choppyness
+- Fix loopback calibration not working for everyone (maybe fixed)
+- Indication of when WebSocket connection is lost
 - Button to "fix audio problems" (short-term solution to resolving audio
   cutting in and out)
 - Can live-connect/disconnect audio input devices
 - Animated brightness to show audio progression through chain
 - Make name obviously editable
 - Select your instrument (need to find instrument pack)
-- Remove musicians when they leave the room
 - The host is the one who creates the room?
-- Standby scrollable?
+- Button musicians can click that indicate something is wrong
+x Standby scrollable?
 + "Listen to mic" button
 + Rename "Audience" to "Standby"
 + Don't play room audio when on Standby
++ Remove musicians when they leave the room
 
-Client-side mixing
-- Can only see musicians behind you
-- Tooltip about the fact that this only mixes for you (maybe just call it
-  "Personal Mixer"?)
-- Master output and slider
+Saving data
+- Remember name
+- Remember loopback latency by device
 
 Download recordings
 - Mixer role?
@@ -83,10 +131,12 @@ Download recordings
 
 Mixer role
 - Extra slot below the chain
-- Sends their mix directly to the server
+- Sends their mix directly to the server (what happens if nobody takes this
+  role, but we still want to download the mix?)
 - This is what the audience hears
 - Standby musicians don't have to be able to hear if they join late (for now)
 - This is included in the recording download
+- Can edit clients' loopback latency (little gear popover?)
 
 Audience app
 - Unique link for every room--"click to copy audience invitation link"
@@ -109,19 +159,18 @@ Downtimeless updates
 - Accounts with subscriptions?
 
 Other bugs/features before wider release
-- Signed distributions
 - Landing page
 - Sign up/in page
 - Subscription method??
 - Remembering being logged in
 - Display errors (esp. for streaming failures)
+- Calculate seconds between musicians using channels
 - Free trial?
   - Possibly decrease audio quality after 15 minutes, limit to 4 musicians,
     limit to 2-minute recordings (with toast notification), etc.
 - Microphone permission detection broken in Electron
-- Auto-updates https://www.electron.build/auto-update
 - Auth
-- enter and exit room ("active" and "inactive" users... Inactive users in the
++ enter and exit room ("active" and "inactive" users... Inactive users in the
   chain are removed from the chain when recording stops)
 - Use react-beautiful-dnd sensors to make other people's list changes look less
   janky?
@@ -214,6 +263,15 @@ OK, so stuff about audio glitches
   the speaker end of things. We can *maybe* help with this by using a
   SharedArrayBuffer to cut down on message-posting costs. Other than that, I'm
   not sure what's best here.
+= Send sine wave through Cedar, and inspect resultant waveform
+  - I suspect this is due to how we recover from Web Audio API overbuffering
+    (queue size > 1) or somehow skipping frames in output (less likely)
+  - It is in part the above I think. One thing to probably rule out is opus
+    encoding--it does appear that we're encoding/decoding all the data, as
+    evidenced by the fact that tracks stay in-sync long-term (our syncing logic
+    makes sure we're churning through samples 1:1, but if data were lost,
+    tracks would get out of sync)
+  - This issue still occurs, even if I disable our syncing logic
 
 Outgoing worklet:
 - should update the patch endpoint to, if it receives data with the wrong
@@ -272,8 +330,29 @@ x browse list of rooms + number of members
 + looks clean as heck —miranda
 
 10/17/20
-- Replay recording and mix live--could also determine loopback latency from this?
-- Measuring loopback latency takes ~5 minutes per musician
-- Sound quality was actually really good
-- White screen of death occurred occasionally (should be easier to solve after
+x Replay recording and mix live--could also determine loopback latency from this?
+  - Deferred. Loopback latency will be able to be adjusted live by the mixer.
+    Unclear what the value of this would be otherwise.
++ Measuring loopback latency takes ~5 minutes per musician
++ Sound quality was actually really good
++ White screen of death occurred occasionally (should be easier to solve after
   we capture and display errors properly)
+
+11/13/20
++ Need to use both channels with loopback latency calibration
++ Merge listening channels into one
++ Look into pasting
++ Save loopback latency
++ Paul heard bits of guitar during a capella part
++ Check code for clearing room audio ring buffer (clips of Dave on guitar)
++ Synchronize input and output once and for all (slower CPUs maybe have greater loopback latency)
++ Rename "Listen" to something clearer--"Monitor," "Listen to this," "Hear myself," "Test my sound"?
++ Think about monitoring from audio interface--seems to introduce 10 ms of latency for me (probably not the cause of Paul + Jenn's issues)
++ Feature bounty (one big, one small every month)
++ Still want to do Patroen ASAP
++ Separate running open source project from supporting companies (being on-call, custom installation, etc.)
++ Root musician and upcoming Mixer alone can start and stop recordings--all musicians can indicate "something is going wrong," which will cause their nametag to flash red
++ Answer immediate question; then answer philosophical aspect if necessary
++ Mixing channels separately would be toit
++ "Medicine for a weary soul"
++ Calculate seconds between musicians using channels

@@ -1,7 +1,7 @@
 import { ServiceMethods } from '@feathersjs/feathers';
 import { FeathersError } from '@feathersjs/errors';
 import _ from 'lodash';
-import { useCallback, useContext, useState } from 'react';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { FeathersContext } from './FeathersProvider';
@@ -164,7 +164,7 @@ type LazyGetResultTuple<Data> = [
  *
  * @param serviceName  The service name in lowercase (usually corresponds to
  * API URI path), e.g., 'room'
- * @param id  The id for the objedt to get, e.g., 'abc-123'
+ * @param id  The id for the object to get, e.g., 'abc-123'
  */
 export function useLazyGet<T extends keyof ServiceTypes>(
   serviceName: T,
@@ -218,7 +218,7 @@ interface GetOptions<Data> {
  *
  * @param serviceName  The service name in lowercase (usually corresponds to
  * API URI path), e.g., 'room'
- * @param id  The id for the objedt to get, e.g., 'abc-123'
+ * @param id  The id for the object to get, e.g., 'abc-123'
  */
 export function useGet<T extends keyof ServiceTypes>(
   serviceName: T,
@@ -232,14 +232,17 @@ export function useGet<T extends keyof ServiceTypes>(
   const app = useContext(FeathersContext);
   const room = useSelector(selectRoom);
   const [loading, setLoading] = useState<boolean>(false);
+  // Used for when useGet is optimized
+  const loadingRef = useRef<boolean>(false);
   const [error, setError] = useState<FeathersError | null>(null);
   const [data, setData] = useState<any>(null);
 
   useInterval(async () => {
     // Skip if we already have a request out
-    if (loading) return;
+    if (loading || loadingRef.current) return;
 
     if (!optimized) setLoading(true);
+    loadingRef.current = true;
     try {
       const newData = (await app.service(serviceName).get!(id, {
         query: { roomId: room.id },
@@ -250,12 +253,14 @@ export function useGet<T extends keyof ServiceTypes>(
         setError(null);
         setLoading(false);
       }
+      loadingRef.current = false;
       return { data, error: null };
     } catch (error) {
       if (!optimized) {
         setError(error);
         setLoading(false);
       }
+      loadingRef.current = false;
       return { data: null, error };
     }
   }, options.pollingInterval);
@@ -283,7 +288,7 @@ type LazyFindResultTuple<Data> = [
  *
  * @param serviceName  The service name in lowercase (usually corresponds to
  * API URI path), e.g., 'room'
- * @param id  The id for the objedt to get, e.g., 'abc-123'
+ * @param id  The id for the object to get, e.g., 'abc-123'
  */
 export function useLazyFind<T extends keyof ServiceTypes>(
   serviceName: T
@@ -336,31 +341,42 @@ export function useFind<T extends keyof ServiceTypes>(
   options: GetOptions<ExtractData<ServiceTypes[T]>> = {
     pollingInterval: 1000,
     onUpdate: _ => null,
-  }
+  },
+  optimized: boolean = false
 ): GetResult<ExtractData<ServiceTypes[T]>> {
   const app = useContext(FeathersContext);
   const room = useSelector(selectRoom);
   const [loading, setLoading] = useState<boolean>(false);
+  const loadingRef = useRef<boolean>(false);
   const [error, setError] = useState<FeathersError | null>(null);
   const [data, setData] = useState<any>(null);
 
   useInterval(async () => {
     // Skip if we already have a request out
-    if (loading) return;
+    if (loading || loadingRef.current) return;
 
-    setLoading(true);
+    if (!optimized) {
+      setLoading(true);
+    }
+    loadingRef.current = true;
     try {
       const newData = (await app.service(serviceName).find!({
         query: { roomId: room.id },
       })) as ExtractData<ServiceTypes[T]>;
       if (options.onUpdate) options.onUpdate(newData);
-      setData(newData);
-      setError(null);
-      setLoading(false);
+      if (!optimized) {
+        setData(newData);
+        setError(null);
+        setLoading(false);
+      }
+      loadingRef.current = false;
       return { data, error: null };
     } catch (error) {
-      setError(error);
-      setLoading(false);
+      if (!optimized) {
+        setError(error);
+        setLoading(false);
+      }
+      loadingRef.current = false;
       return { data: null, error };
     }
   }, options.pollingInterval);
@@ -368,3 +384,33 @@ export function useFind<T extends keyof ServiceTypes>(
   return { loading, error, data };
 }
 /* ---- END FIND HOOK ---- */
+
+/* ---- BEGIN SUBSCRIBE HOOK ---- */
+type OnUpdate<Data> = (Data) => any;
+
+/**
+ * A hook for subscribing to Cedar services.
+ *
+ * @param serviceName  The service name in lowercase (usually corresponds to
+ * API URI path), e.g., 'room'
+ */
+export function useSubscription<T extends keyof ServiceTypes>(
+  serviceName: T,
+  event: 'created',
+  onUpdate: OnUpdate<ExtractData<ServiceTypes[T]>>
+): void {
+  const app = useContext(FeathersContext);
+
+  useEffect(
+    () => {
+      const service = app.service(serviceName);
+      service.on(event, onUpdate);
+
+      return () => {
+        service.removeListener(event, onUpdate);
+      }
+    },
+    [app, serviceName, event, onUpdate]
+  );
+}
+/* ---- END SUBSCRIBE HOOK ---- */

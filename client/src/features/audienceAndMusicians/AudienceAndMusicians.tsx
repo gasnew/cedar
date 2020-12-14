@@ -6,6 +6,7 @@ import {
   H5,
   Icon,
   NumericInput,
+  Tooltip,
 } from '@blueprintjs/core';
 import { IconNames } from '@blueprintjs/icons';
 import _ from 'lodash';
@@ -22,6 +23,14 @@ import {
   setSecondsBetweenMusicians,
   selectAmHost,
 } from '../room/roomSlice';
+
+const SECONDS_BETWEEN_MUSICIANS_TOOLTIP = (
+  <p style={{ margin: 0, maxWidth: 250 }}>
+    This can be as low as 0.4 seconds, but if anyone in your room is
+    experiencing audio cutting out occasionally, try setting this number higher
+    to allow the data more time to travel over the internet.
+  </p>
+);
 
 function getStyle({ draggableStyle, virtualStyle, isDragging }) {
   // If you don't want any spacing between your items
@@ -220,7 +229,21 @@ export default function() {
             }
             style={{ width: 40 }}
           />
-          <span style={{ marginLeft: 5 }}>seconds between musicians</span>
+          <Tooltip content={SECONDS_BETWEEN_MUSICIANS_TOOLTIP}>
+            <span
+              style={{
+                // We need to do some styling gymnastics to make the underline
+                // work well for a multiline span
+                display: 'block',
+                marginLeft: 5,
+                textDecorationLine: 'underline',
+                textDecorationStyle: 'dotted',
+                cursor: 'help',
+              }}
+            >
+              seconds between musicians
+            </span>
+          </Tooltip>
         </div>
       </div>
       <DragDropContext onDragStart={onDragStart} onDragEnd={onDragEnd}>
@@ -231,6 +254,7 @@ export default function() {
             style={{
               width: 180 - 12,
               backgroundColor: Colors.DARK_GRAY5,
+              marginRight: 8,
             }}
           >
             <H5

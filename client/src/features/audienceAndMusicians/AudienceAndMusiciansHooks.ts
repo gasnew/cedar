@@ -17,15 +17,17 @@ interface IPerson {
   name: string;
 }
 
+export interface AudienceColumn {
+  id: 'audience';
+  items: IPerson[];
+}
+interface MusiciansColumn {
+  id: 'musicians';
+  items: IPerson[];
+}
 interface ListState {
-  audience: {
-    id: 'audience';
-    items: IPerson[];
-  };
-  musicians: {
-    id: 'musicians';
-    items: IPerson[];
-  };
+  audience: AudienceColumn;
+  musicians: MusiciansColumn;
 }
 
 const DEFAULT_LIST_STATE: ListState = {
@@ -86,79 +88,93 @@ export function useLists() {
     musicianId
   );
 
-  useFind('musicians', {
-    pollingInterval: 1000,
-    onUpdate: remoteMusicians => {
-      const remoteMusiciansById = _.keyBy(remoteMusicians, 'id');
-      // NOTE(gnewman): It's possible/likely that we will get an updated ID
-      // chain before the updated musician list. We want to filter out these
-      // cases for this pass, until the inconsistency is resolved.
-      const musicianIdsWeKnowAbout = _.filter(musicianIdsChain, id =>
-        _.has(remoteMusiciansById, id)
-      );
-      const musiciansInOrder = _.map(
-        musicianIdsWeKnowAbout,
-        id => remoteMusiciansById[id]
-      );
-      const alreadyPresentAudienceIds = _.filter(
-        _.map(audienceColumn.items, 'id'),
-        id => _.has(remoteMusiciansById, id)
-      );
-      const audienceInOrder = _.reject(
-        [
-          ..._.map(alreadyPresentAudienceIds, id => remoteMusiciansById[id]),
-          ..._.filter(
-            remoteMusicians,
-            ({ id }) =>
-              !_.includes(musicianIdsWeKnowAbout, id) &&
-              !_.includes(alreadyPresentAudienceIds, id)
-          ),
-        ],
-        ({ id }) => _.some(musiciansInOrder, ['id', id])
-      );
-
-      // NOTE(gnewman): MUTATIONS BEYOND THIS POINT. We use extra logic to make
-      // super sure we're dispatching actions only when truly necessary since
-      // these mutations have proven to be relatively expensive.
-      if (
-        !_.isEqual(audienceColumn.items, audienceInOrder) ||
-        !_.isEqual(musiciansColumn.items, musiciansInOrder)
-      ) {
-        setListsState({
-          audience: {
-            id: 'audience',
-            items: audienceInOrder,
-          },
-          musicians: {
-            id: 'musicians',
-            items: musiciansInOrder,
-          },
-        });
-      }
-      // Only adds new musicians
-      if (
-        _.difference(_.keys(remoteMusiciansById), _.keys(musicians)).length > 0
-      ) {
-        dispatch(addMusicians(remoteMusiciansById));
-      }
-      // Only update names of other musicians (we don't want the server telling
-      // us what our name should be)
-      if (
-        _.some(
-          remoteMusicians,
-          remoteMusician =>
-            (musicians[remoteMusician.id] &&
-              remoteMusician.name !== musicians[remoteMusician.id].name) ||
-            remoteMusician.loopbackLatencyMs !==
-              musicians[remoteMusician.id].loopbackLatencyMs
-        )
-      ) {
-        dispatch(
-          updateMusicians(_.omit(remoteMusiciansById, musicianId || ''))
+  useFind(
+    'musicians',
+    {
+      pollingInterval: 1000,
+      onUpdate: remoteMusicians => {
+        const remoteMusiciansById = _.keyBy(remoteMusicians, 'id');
+        // NOTE(gnewman): It's possible/likely that we will get an updated ID
+        // chain before the updated musician list. We want to filter out these
+        // cases for this pass, until the inconsistency is resolved.
+        const musicianIdsWeKnowAbout = _.filter(musicianIdsChain, id =>
+          _.has(remoteMusiciansById, id)
         );
-      }
+        const musiciansInOrder = _.map(
+          musicianIdsWeKnowAbout,
+          id => remoteMusiciansById[id]
+        );
+        const alreadyPresentAudienceIds = _.filter(
+          _.map(audienceColumn.items, 'id'),
+          id => _.has(remoteMusiciansById, id)
+        );
+        const audienceInOrder = _.reject(
+          [
+            // Already present audience members
+            ..._.map(alreadyPresentAudienceIds, id => remoteMusiciansById[id]),
+            // New remote musicians (neither known audience nor musician)
+            ..._.filter(
+              remoteMusicians,
+              ({ id }) =>
+                !_.includes(musicianIdsWeKnowAbout, id) &&
+                !_.includes(alreadyPresentAudienceIds, id)
+            ),
+          ],
+          ({ id }) =>
+            // Person is a musician
+            _.some(musiciansInOrder, ['id', id]) ||
+            // Person is inactive (note that people are only removed from the
+            // UI if they are both inactive AND not in the chain. Inactive
+            // musicians are removed from the chain when recording stops.)
+            !remoteMusiciansById[id].active
+        );
+
+        // NOTE(gnewman): MUTATIONS BEYOND THIS POINT. We use extra logic to
+        // make super sure we're dispatching actions only when truly necessary
+        // since these mutations have proven to be relatively expensive.
+        if (
+          !_.isEqual(audienceColumn.items, audienceInOrder) ||
+          !_.isEqual(musiciansColumn.items, musiciansInOrder)
+        ) {
+          setListsState({
+            audience: {
+              id: 'audience',
+              items: audienceInOrder,
+            },
+            musicians: {
+              id: 'musicians',
+              items: musiciansInOrder,
+            },
+          });
+        }
+        // Only adds new musicians
+        if (
+          _.difference(_.keys(remoteMusiciansById), _.keys(musicians)).length >
+          0
+        ) {
+          dispatch(addMusicians(remoteMusiciansById));
+        }
+        // Only update names of other musicians (we don't want the server telling
+        // us what our name should be)
+        if (
+          _.some(
+            remoteMusicians,
+            remoteMusician =>
+              (musicians[remoteMusician.id] &&
+                remoteMusician.name !== musicians[remoteMusician.id].name) ||
+              remoteMusician.loopbackLatencyMs !==
+                musicians[remoteMusician.id].loopbackLatencyMs ||
+              remoteMusician.active !== musicians[remoteMusician.id].active
+          )
+        ) {
+          dispatch(
+            updateMusicians(_.omit(remoteMusiciansById, musicianId || ''))
+          );
+        }
+      },
     },
-  });
+    true
+  );
 
   function onDragStart(start) {
     setDragSourceId(start.source.droppableId);

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { v4 as uuidv4 } from 'uuid';
 import { Unprocessable } from '@feathersjs/errors';
-import { Recording, RecordingState } from '../room';
+import { Recording, Recordings, RecordingState } from '../room';
 import commonInterface from './common';
 import { IORedisClient } from './index';
 import musicianInterface from './musicians';
@@ -9,6 +9,7 @@ import roomInterface from './rooms';
 import trackInterface from './tracks';
 
 export interface RecordingInterface {
+  getRecordings: (roomId: string) => Promise<Recordings>;
   getRecording: (roomId: string, recordingId: string) => Promise<Recording>;
   createRecording: (roomId: string) => Promise<Recording>;
   patchRecording: (
@@ -25,6 +26,7 @@ export default function(redisClient: IORedisClient): RecordingInterface {
   const { getRoom } = roomInterface(redisClient);
 
   return {
+    getRecordings: getCollection<Recording>('recordings'),
     getRecording: async (roomId: string, recordingId: string) => {
       if (!(await redisClient.exists(rKey({ roomId }))))
         throw new Unprocessable(`Room ${roomId} does not exist!`);
@@ -83,12 +85,25 @@ export default function(redisClient: IORedisClient): RecordingInterface {
         state: state,
       };
 
-      if (state === 'stopped')
+      // When stopping a recording, do some room-level updates.
+      if (state === 'stopped') {
+        // Remove inactive musicians from the chain
+        const musicians = await getMusicians(roomId);
+        const musicianIdsChain = _.filter(
+          room.musicianIdsChain,
+          id => musicians[id].active
+        );
+
         await redisClient.hset(
           rKey({ roomId }),
           'meta',
-          JSON.stringify({ ...room, recordingId: null })
+          JSON.stringify({
+            ...room,
+            musicianIdsChain,
+            recordingId: null,
+          })
         );
+      }
       await redisClient.hset(
         rKey({ roomId: roomId, collection: 'recordings' }),
         recordingId,

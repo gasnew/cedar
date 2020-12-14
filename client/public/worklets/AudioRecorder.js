@@ -34,16 +34,19 @@ class AudioRecorder extends AudioWorkletProcessor {
 
     // We assume we only have one input connection
     const input = inputs[0];
-    // We only support one channel right now
-    const channel = input[0];
 
     for (let i = 0; i < this.frameSize; i++) {
-      const index = this.recordedSamples
-      this.recordedData[index] = channel[i];
+      const index = this.recordedSamples;
+      this.recordedData[index] = 0;
+      // Add all channels into recordedData
+      for (let j = 0; j < input.length; j++)
+        this.recordedData[index] += input[j][i];
+
       if (index === this.samplesToCapture - 1) {
         this.port.postMessage(this.recordedData);
         this.recording = false;
       }
+
       this.recordedSamples += 1;
     }
 

@@ -21,7 +21,9 @@ export interface RoomMeta {
 // of a given type, indexed by ID
 export interface Musician {
   id: string;
+  roomId: string;
   name: string;
+  active: boolean;
   loopbackLatencyMs: number | null;
 }
 export type Musicians = Collection<Musician>;
