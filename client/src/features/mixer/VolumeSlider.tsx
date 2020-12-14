@@ -1,10 +1,9 @@
 import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
-import { Card, Colors, H4, Slider } from '@blueprintjs/core';
+import { Slider } from '@blueprintjs/core';
 
 import VolumeBar from '../audioInput/VolumeBar';
 import { TrackControls } from './MixerHooks';
-import { Musician } from '../musicians/musiciansSlice';
 
 interface Props {
   controls: TrackControls;

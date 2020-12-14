@@ -15,7 +15,6 @@ import {
   Colors,
   EditableText,
   H4,
-  H5,
   Icon,
   Navbar,
   NavbarDivider,

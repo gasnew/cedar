@@ -66,6 +66,11 @@ export default function(app: Application) {
 
   // Join this user to their room channel.
   app.service('musicians').on('created', (musician: Musician, options: any) => {
+    // No channels => no ws connections => cannot add anyone to this room's
+    // channel
+    if (app.channels.length === 0)
+      return;
+
     const musicianId = musician.id;
     const roomId = options.params.query.roomId;
 

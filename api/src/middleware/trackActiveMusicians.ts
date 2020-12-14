@@ -45,8 +45,12 @@ export default function(app: Application) {
     // We assume that a client is only responsible for one musician at a time.
     // If the client switches rooms, it should mark the previous room's
     // musician as inactive before creating the new one.
-    options.params.connection.musicianId = id;
-    options.params.connection.roomId = options.params.query.roomId;
+    const connection = options.params.connection;
+    if (!connection)
+      return;
+
+    connection.musicianId = id;
+    connection.roomId = options.params.query.roomId;
   });
 
   app.on('disconnect', async (connection: any) => {

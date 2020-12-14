@@ -400,9 +400,6 @@ export function useSubscription<T extends keyof ServiceTypes>(
   onUpdate: OnUpdate<ExtractData<ServiceTypes[T]>>
 ): void {
   const app = useContext(FeathersContext);
-  const room = useSelector(selectRoom);
-
-  // TODO: Figure out how to remove callback
 
   useEffect(
     () => {

@@ -6,7 +6,7 @@ interface MediaBarState {
 }
 
 const initialState: MediaBarState = {
-  loopbackLatencyMs: 42,
+  loopbackLatencyMs: null,
 };
 
 export const mediaBarSlice = createSlice({

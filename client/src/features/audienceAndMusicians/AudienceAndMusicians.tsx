@@ -15,7 +15,7 @@ import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { useDispatch, useSelector } from 'react-redux';
 
 import styles from './AudienceAndMusicians.module.css';
-import { AudienceColumn, useLists } from './AudienceAndMusiciansHooks';
+import { useLists } from './AudienceAndMusiciansHooks';
 import { usePatch } from '../feathers/FeathersHooks';
 import { selectRecordingState } from '../recording/recordingSlice';
 import {

@@ -1,7 +1,6 @@
-import _ from 'lodash';
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Card, H4, Slider, Switch } from '@blueprintjs/core';
+import { Card, H4, Switch } from '@blueprintjs/core';
 
 import AudioInputSelector from './AudioInputSelector';
 import { selectInputDevice, setInputDevice } from './audioSlice';
@@ -18,7 +17,6 @@ export default function() {
   const [listeningToAudioInput, setListeningToAudioInput] = useState(false);
   const {
     canChangeStream,
-    someData,
     fetchData,
     setGainDB,
     setDirectToDestinationGainNodeGain,

@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Base64 } from 'js-base64';
 
@@ -229,7 +229,6 @@ export function useRoomAudio(trackCount: number): DataResponse {
     () => {
       const audioContext = new window.AudioContext({ sampleRate: 48000 });
       const launchAudioNodes = async () => {
-        console.log('Oh my! New audio context!');
         await audioContext.audioWorklet.addModule('RoomAudioPlayer.js');
         const masterGainNode = audioContext.createGain();
         const masterAnalyzer = audioContext.createAnalyser();
@@ -244,8 +243,6 @@ export function useRoomAudio(trackCount: number): DataResponse {
         );
 
         if (trackCount !== 0) {
-          const trackMergerNode = audioContext.createChannelMerger(trackCount);
-
           setTrackControls(
             _.map(_.range(trackCount), index => {
               const trackGainNode = audioContext.createGain();

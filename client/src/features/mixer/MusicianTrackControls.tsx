@@ -1,8 +1,6 @@
-import _ from 'lodash';
-import React, { useState } from 'react';
-import { Card, Colors, H4, Slider } from '@blueprintjs/core';
+import React from 'react';
+import { Card, Colors } from '@blueprintjs/core';
 
-import VolumeBar from '../audioInput/VolumeBar';
 import { TrackControls } from './MixerHooks';
 import { Musician } from '../musicians/musiciansSlice';
 import VolumeSlider from './VolumeSlider';

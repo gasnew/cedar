@@ -4,7 +4,6 @@ import {
   Colors,
   H4,
   H5,
-  Slider,
   Tooltip,
 } from '@blueprintjs/core';
 import _ from 'lodash';
@@ -14,7 +13,6 @@ import { useSelector } from 'react-redux';
 import styles from './Mixer.module.css';
 import MusicianTrackControls from './MusicianTrackControls';
 import './MusicianTrackControls.css';
-import MasterOutput from './MasterOutput';
 import { TrackControls, useRoomAudio } from './MixerHooks';
 import { Musician, selectMusicians } from '../musicians/musiciansSlice';
 import { selectPrecedingMusicianIds } from '../room/roomSlice';
