@@ -85,6 +85,7 @@ Final push prior to Patreon
 - https://cedarapp.org
 
 Fix bugs
+- Somehow, playback buffers don't always get zero'd out (still!)
 - Set up loopback calibration for non-mic instruments
 - Do testing with audio interface?
 - Possibly move to MediaRecorder
@@ -119,6 +120,8 @@ x Standby scrollable?
 + Rename "Audience" to "Standby"
 + Don't play room audio when on Standby
 + Remove musicians when they leave the room
+- Be able to leave the room and join another (need to remember to update
+  channel subscriptions)
 
 Saving data
 - Remember name
