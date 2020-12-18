@@ -43,7 +43,7 @@ import {
 import {
   selectRecordingState,
   startRecording,
-  stopRecording as reduxStopRecording,
+  stopRecording,
 } from '../recording/recordingSlice';
 
 function Help() {
@@ -132,10 +132,12 @@ function RoomNameplate({
     dispatch(startRecording(app, id, recordingId));
     isRecordingRef.current = true;
   };
-  const stopRecording = () => {
-    dispatch(reduxStopRecording());
-    isRecordingRef.current = false;
-  };
+  useEffect(
+    () => {
+      if (recordingState === 'stopped') isRecordingRef.current = false;
+    },
+    [recordingState]
+  );
 
   useSubscription('recordings', 'created', recording => {
     if (recordingState === 'stopped') maybeStartRecording(recording.id);
@@ -156,7 +158,8 @@ function RoomNameplate({
         if (!amHost) {
           if (recordingId && recordingState === 'stopped')
             maybeStartRecording(recordingId);
-          if (!recordingId && recordingState === 'recording') stopRecording();
+          if (!recordingId && recordingState === 'recording')
+            dispatch(stopRecording());
           if (secondsBetweenMusicians !== room.secondsBetweenMusicians)
             dispatch(setSecondsBetweenMusicians({ secondsBetweenMusicians }));
         }

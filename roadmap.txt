@@ -83,6 +83,10 @@ Final push prior to Patreon
 - Signed distributions
 - Auto-updates https://www.electron.build/auto-update
 - https://cedarapp.org
+- auto-restart prod server
++ fix recording state getting broken
+- show version number
+- delete recordings when done
 
 Fix bugs
 - Somehow, playback buffers don't always get zero'd out (still!)
