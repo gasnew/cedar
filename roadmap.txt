@@ -83,12 +83,12 @@ Final push prior to Patreon
 - Signed distributions
 - Auto-updates https://www.electron.build/auto-update
 - https://cedarapp.org
-- auto-restart prod server
++ auto-restart prod server
 + fix recording state getting broken
-- show version number
-- delete recordings when done
++ show version number
 
 Fix bugs
+- delete recordings when done
 - Somehow, playback buffers don't always get zero'd out (still!)
 - Set up loopback calibration for non-mic instruments
 - Do testing with audio interface?
@@ -134,6 +134,8 @@ Saving data
 Download recordings
 - Mixer role?
 - Downloads final mix and individual files as zip
+- Use bull (https://github.com/OptimalBits/bull/) for async jobs?
+  (https://devcenter.heroku.com/articles/node-redis-workers)
 - Can pick where to save files--defaults somewhere
 
 Mixer role

@@ -55,7 +55,7 @@
   },
   "scripts": {
     "start": "nf start -p 3000",
-    "start-react": "BROWSER=none react-scripts start",
+    "start-react": "BROWSER=none REACT_APP_VERSION=$npm_package_version react-scripts start",
     "start-electron": "ELECTRON_START_URL=http://localhost:3000 electron .",
     "build": "react-scripts build",
     "test": "react-scripts test",

@@ -23,7 +23,7 @@ import {
   Popover,
 } from '@blueprintjs/core';
 
-import { useInterval } from '../../app/util';
+import { getEnv, useInterval } from '../../app/util';
 import {
   useGet,
   useLazyGet,
@@ -59,7 +59,12 @@ function Help() {
     >
       <Button icon="help" minimal />
       <div>
-        <H4>Welcome to Cedar!</H4>
+        <div style={{ display: 'flex', flexDirection: 'row' }}>
+          <H4>Welcome to Cedar!</H4>
+          <span style={{ marginLeft: 'auto', fontStyle: 'italic' }}>
+            v{getEnv('VERSION')}
+          </span>
+        </div>
         <Callout
           title="Development status"
           icon="updated"
