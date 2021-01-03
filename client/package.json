@@ -39,7 +39,7 @@
   "build": {
     "appId": "com.gasnew.cedar",
     "productName": "cedar",
-    "copyright": "Copyright © 2020 gasnew",
+    "copyright": "Copyright © 2021 gasnew",
     "mac": {
       "category": "public.app-category.utilities",
       "hardenedRuntime": true,
@@ -67,6 +67,7 @@
     "eject": "react-scripts eject",
     "lint": "eslint ./src/**/*.{ts,tsx}",
     "dist": "yarn build && electron-builder -mw",
+    "release": "build",
     "postinstall": "electron-builder install-app-deps",
     "remove-unused-imports": "tslint --config tslint-remove-unused-imports.json --fix --project ."
   },
