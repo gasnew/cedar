@@ -32,40 +32,11 @@ jobs:
         name: build-files
         path: ./client/build
 
-  release-client-windows:
+  release-client:
 
     needs: test-client
 
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v2
-    - name: Use Node.js 14.x
-      uses: actions/setup-node@v1
-      with:
-        node-version: 14.x
-    - uses: actions/download-artifact@v2
-      with:
-        name: build-files
-        path: ./client/build
-    - run: yarn install
-    - name: Release Cedar for Windows
-      env:
-        APPLEID: ${{ secrets.APPLEID }}
-        APPPLEIDPASS: ${{ secrets.APPPLEIDPASS }}
-        CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
-        CSC_LINK: ${{ secrets.CSC_LINK }}
-        GH_TOKEN: ${{ secrets.GH_TOKEN }}
-      run: docker run --rm \
-        -v "`pwd`:/project" \
-        electronuserland/builder:wine \
-        /bin/bash -c "yarn --link-duplicates --pure-lockfile && yarn release --linux --win"
-
-  release-client-mac:
-
-    needs: test-client
-
-    runs-on: macos-11.0
+    runs-on: macos-latest
 
     steps:
     - uses: actions/checkout@v2
