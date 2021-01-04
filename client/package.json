@@ -66,8 +66,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "lint": "eslint ./src/**/*.{ts,tsx}",
-    "dist": "yarn build && electron-builder -mw",
-    "release": "build",
+    "release": "yarn build && electron-builder",
     "postinstall": "electron-builder install-app-deps",
     "remove-unused-imports": "tslint --config tslint-remove-unused-imports.json --fix --project ."
   },
