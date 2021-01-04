@@ -1,0 +1,88 @@
+name: Cedar client workflow
+
+on: [push]
+
+defaults:
+  run:
+    working-directory: ./client
+
+jobs:
+  test-client:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js 14.x
+      uses: actions/setup-node@v1
+      with:
+        node-version: 14.x
+    # NOTE(gnewman): Puzzlingly, we need to install the api dependencies as
+    # well to get the build step to work. My suspicion is that there is some
+    # gap in the type system that causes TypeScript to treat a type as
+    # "unknown" that shouldn't be/isn't unknown, but I haven't nailed down the
+    # root cause. For now, this gets us by.
+    - run: cd ../api && yarn install
+    - run: yarn install
+    - run: yarn build
+    # TODO(gnewman): Remove --passWithNoTests flag when we add our first test
+    - run: yarn test --passWithNoTests
+    - uses: actions/upload-artifact@v2
+      with:
+        name: build-files
+        path: ./client/build
+
+  release-client-windows:
+
+    needs: test-client
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js 14.x
+      uses: actions/setup-node@v1
+      with:
+        node-version: 14.x
+    - uses: actions/download-artifact@v2
+      with:
+        name: build-files
+        path: ./client/build
+    - run: yarn install
+    - name: Release Cedar for Windows
+      env:
+        APPLEID: ${{ secrets.APPLEID }}
+        APPPLEIDPASS: ${{ secrets.APPPLEIDPASS }}
+        CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+        CSC_LINK: ${{ secrets.CSC_LINK }}
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      run: docker run --rm \
+        -v "`pwd`:/project" \
+        electronuserland/builder:wine \
+        /bin/bash -c "yarn --link-duplicates --pure-lockfile && yarn release --linux --win"
+
+  release-client-mac:
+
+    needs: test-client
+
+    runs-on: macos-11.0
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js 14.x
+      uses: actions/setup-node@v1
+      with:
+        node-version: 14.x
+    - uses: actions/download-artifact@v2
+      with:
+        name: build-files
+        path: ./client/build
+    - run: yarn install
+    - name: Release Cedar for Mac
+      env:
+        APPLEID: ${{ secrets.APPLEID }}
+        APPPLEIDPASS: ${{ secrets.APPPLEIDPASS }}
+        CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+        CSC_LINK: ${{ secrets.CSC_LINK }}
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      run: yarn release --mac
