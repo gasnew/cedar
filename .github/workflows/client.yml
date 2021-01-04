@@ -52,7 +52,7 @@ jobs:
     - name: Release Cedar for Mac
       env:
         APPLEID: ${{ secrets.APPLEID }}
-        APPPLEIDPASS: ${{ secrets.APPPLEIDPASS }}
+        APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
         CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
         CSC_LINK: ${{ secrets.CSC_LINK }}
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
