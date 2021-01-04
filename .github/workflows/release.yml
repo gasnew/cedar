@@ -1,4 +1,4 @@
-name: Tag and release Cedar client
+name: Draft a new Cedar client release
 
 on:
   workflow_dispatch:
@@ -13,7 +13,7 @@ defaults:
     working-directory: ./client
 
 jobs:
-  bump-version:
+  create-bump-version-pr:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -28,5 +28,18 @@ jobs:
       run: yarn version --new-version "${VERSION}"
     - name: Create Pull Request
       uses: peter-evans/create-pull-request@v3
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      with:
+        token: ${{ secrets.GH_TOKEN }}
+        commit-message: Update report
+        committer: GitHub <noreply@github.com>
+        author: ${{ github.actor }} <${{ github.actor }}@users.noreply.github.com>
+        branch: bump-v${{ github.event.inputs.version }}
+        delete-branch: true
+        title: 'Bump client to v${{ github.event.inputs.version }}'
+        body: |
+          This PR was automatically generated from the `create-bump-version-pr` job.
+
+          1. You might want to grab a :coffee: while the jobs for this PR run. It will take **~15 minutes** to run tests and build, sign, and upload the Cedar apps.
+          2. Once the jobs finish, a release draft entitled "${{ github.event.inputs.version }}" should appear [here](https://github.com/gasnew/cedar/releases) with all the assets produced by `electron-builder`.
+          3. If you want to sneak any changes into this release, you can add more commits to this branch then go back to (1).
+          4. Publish the release! :rocket:
