@@ -32,9 +32,11 @@ jobs:
         name: build-files
         path: ./client/build
 
-  build-client-app:
+  draft-client-release-if-version-bumped:
 
     needs: test-client
+
+    if: contains(github.ref, 'bump-v')
 
     runs-on: macos-latest
 
@@ -56,4 +58,4 @@ jobs:
         CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
         CSC_LINK: ${{ secrets.CSC_LINK }}
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
-      run: yarn build-electron-app --mac --win
+      run: yarn build-electron-app --mac --win --publish always
