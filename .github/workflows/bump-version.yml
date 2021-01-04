@@ -17,15 +17,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-      with:
-        fetch-depth: '0'
+    - uses: fregante/setup-git-user@v1
     - name: Bump version
       env:
         BUMP_LEVEL: ${{ github.event.inputs.bumpLevel }}
-      run: yarn version --"${BUMP_LEVEL}" --no-git-tag-version
-    - name: Tag, commit, and push
-      uses: anothrNick/github-tag-action@1.26.0
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-        WITH_V: true
-        DEFAULT_BUMP: ${{ github.event.inputs.bumpLevel }}
+      run: yarn version --"${BUMP_LEVEL}"
+    - name: Push commit
+      run: git push
