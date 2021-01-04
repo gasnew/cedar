@@ -1,7 +1,7 @@
 {
   "name": "cedar",
   "productName": "cedar",
-  "version": "0.4.2",
+  "version": "0.5.0",
   "license": "MIT",
   "author": {
     "name": "Garrett Newman",
@@ -66,7 +66,7 @@
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "lint": "eslint ./src/**/*.{ts,tsx}",
-    "release": "electron-builder",
+    "build-electron-app": "electron-builder",
     "postinstall": "electron-builder install-app-deps",
     "remove-unused-imports": "tslint --config tslint-remove-unused-imports.json --fix --project ."
   },
