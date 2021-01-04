@@ -80,11 +80,16 @@ Penultimate Patreon push
 + Rename "Listen" to something clearer--"Monitor," "Listen to this," "Hear myself," "Test my sound"?
 
 Final push prior to Patreon
-- Signed distributions
++ Signed and notarized distributions
 - Auto-updates https://www.electron.build/auto-update
 - https://cedarapp.org
++ auto-restart prod server
++ fix recording state getting broken
++ show version number
 
 Fix bugs
+- delete recordings when done
+- Somehow, playback buffers don't always get zero'd out (still!)
 - Set up loopback calibration for non-mic instruments
 - Do testing with audio interface?
 - Possibly move to MediaRecorder
@@ -119,6 +124,8 @@ x Standby scrollable?
 + Rename "Audience" to "Standby"
 + Don't play room audio when on Standby
 + Remove musicians when they leave the room
+- Be able to leave the room and join another (need to remember to update
+  channel subscriptions)
 
 Saving data
 - Remember name
@@ -127,6 +134,8 @@ Saving data
 Download recordings
 - Mixer role?
 - Downloads final mix and individual files as zip
+- Use bull (https://github.com/OptimalBits/bull/) for async jobs?
+  (https://devcenter.heroku.com/articles/node-redis-workers)
 - Can pick where to save files--defaults somewhere
 
 Mixer role
@@ -175,6 +184,8 @@ Other bugs/features before wider release
 - Use react-beautiful-dnd sensors to make other people's list changes look less
   janky?
 - Little musical instrument icons?
+- Use an LB with multiple droplets (or use container orchestration) rather than
+  installing everything (including SSL) on a droplet by hand
 
 Wider release milestone!
 

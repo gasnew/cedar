@@ -2,6 +2,7 @@
   "name": "cedar-api",
   "description": "An HTTP/WebSocket REST API for rapidly sending and receiving Cedar audio data",
   "version": "0.0.0",
+  "license": "MIT",
   "homepage": "",
   "repository": "https://github.com/gasnew/cedar/blob/master/api",
   "author": {

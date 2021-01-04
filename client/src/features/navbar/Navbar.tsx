@@ -23,7 +23,7 @@ import {
   Popover,
 } from '@blueprintjs/core';
 
-import { useInterval } from '../../app/util';
+import { getEnv, useInterval } from '../../app/util';
 import {
   useGet,
   useLazyGet,
@@ -43,7 +43,7 @@ import {
 import {
   selectRecordingState,
   startRecording,
-  stopRecording as reduxStopRecording,
+  stopRecording,
 } from '../recording/recordingSlice';
 
 function Help() {
@@ -59,7 +59,12 @@ function Help() {
     >
       <Button icon="help" minimal />
       <div>
-        <H4>Welcome to Cedar!</H4>
+        <div style={{ display: 'flex', flexDirection: 'row' }}>
+          <H4>Welcome to Cedar!</H4>
+          <span style={{ marginLeft: 'auto', fontStyle: 'italic' }}>
+            v{getEnv('VERSION')}
+          </span>
+        </div>
         <Callout
           title="Development status"
           icon="updated"
@@ -132,10 +137,12 @@ function RoomNameplate({
     dispatch(startRecording(app, id, recordingId));
     isRecordingRef.current = true;
   };
-  const stopRecording = () => {
-    dispatch(reduxStopRecording());
-    isRecordingRef.current = false;
-  };
+  useEffect(
+    () => {
+      if (recordingState === 'stopped') isRecordingRef.current = false;
+    },
+    [recordingState]
+  );
 
   useSubscription('recordings', 'created', recording => {
     if (recordingState === 'stopped') maybeStartRecording(recording.id);
@@ -156,7 +163,8 @@ function RoomNameplate({
         if (!amHost) {
           if (recordingId && recordingState === 'stopped')
             maybeStartRecording(recordingId);
-          if (!recordingId && recordingState === 'recording') stopRecording();
+          if (!recordingId && recordingState === 'recording')
+            dispatch(stopRecording());
           if (secondsBetweenMusicians !== room.secondsBetweenMusicians)
             dispatch(setSecondsBetweenMusicians({ secondsBetweenMusicians }));
         }
