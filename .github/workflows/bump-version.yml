@@ -22,8 +22,10 @@ jobs:
     - name: Bump version
       env:
         BUMP_LEVEL: ${{ github.event.inputs.bumpLevel }}
-      run: yarn version --"${BUMP_LEVEL}"
-    - name: Commit and push tag
+      run: yarn version --"${BUMP_LEVEL}" --no-git-tag-version
+    - name: Tag, commit, and push
       uses: anothrNick/github-tag-action@1.26.0
       env:
         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        WITH_V: true
+        DEFAULT_BUMP: ${{ github.event.inputs.bumpLevel }}
