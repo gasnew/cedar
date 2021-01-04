@@ -1,0 +1,25 @@
+name: Bump version
+on:
+  workflow_dispatch:
+    branches: [ master ]
+    inputs:
+      bumpLevel:
+        description: 'Bump level (major, minor, or patch)'
+        required: true
+        default: 'minor'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: '0'
+    - name: Bump version
+      env:
+        BUMP_LEVEL: ${{ github.event.inputs.bumpLevel }}
+      run: yarn version --"${BUMP_LEVEL}"
+    - name: Commit and push tag
+      uses: anothrNick/github-tag-action@1.26.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
