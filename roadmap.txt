@@ -80,7 +80,7 @@ Penultimate Patreon push
 + Rename "Listen" to something clearer--"Monitor," "Listen to this," "Hear myself," "Test my sound"?
 
 Final push prior to Patreon
-- Signed distributions
++ Signed and notarized distributions
 - Auto-updates https://www.electron.build/auto-update
 - https://cedarapp.org
 + auto-restart prod server
@@ -184,6 +184,8 @@ Other bugs/features before wider release
 - Use react-beautiful-dnd sensors to make other people's list changes look less
   janky?
 - Little musical instrument icons?
+- Use an LB with multiple droplets (or use container orchestration) rather than
+  installing everything (including SSL) on a droplet by hand
 
 Wider release milestone!
 

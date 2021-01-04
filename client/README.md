@@ -57,7 +57,7 @@ See the section about
 [deployment](https://facebook.github.io/create-react-app/docs/deployment) for
 more information.
 
-### `yarn release`
+### `yarn build-electron-app`
 
 Builds executables and installers for MacOS and Windows in the `dist` folder
 using [electron-builder](https://www.electron.build/). In the future, I'm

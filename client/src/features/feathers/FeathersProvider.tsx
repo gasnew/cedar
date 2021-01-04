@@ -19,20 +19,7 @@ export function FeathersProvider({ children }: { children: React.ReactNode }) {
   const roomId = useSelector(selectRoomId);
 
   // Set up Socket.io client with the socket
-  const socketIOClient = useMemo(
-    () =>
-      socketIO(getEnv('API_URL'), {
-        query: {
-          booga: 'looga',
-        },
-        transportOptions: {
-          headers: {
-            haha: 'Bearer authorization_token_here',
-          },
-        },
-      }),
-    []
-  );
+  const socketIOClient = useMemo(() => socketIO(getEnv('API_URL')), []);
   const app: FeathersApp<ServiceTypes> = useMemo(
     () => {
       const app = feathers();

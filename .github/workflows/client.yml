@@ -32,7 +32,7 @@ jobs:
         name: build-files
         path: ./client/build
 
-  release-client:
+  build-client-app:
 
     needs: test-client
 
@@ -49,11 +49,11 @@ jobs:
         name: build-files
         path: ./client/build
     - run: yarn install
-    - name: Release Cedar for Mac
+    - name: Build Cedar for Mac and Windows
       env:
         APPLEID: ${{ secrets.APPLEID }}
         APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
         CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
         CSC_LINK: ${{ secrets.CSC_LINK }}
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
-      run: yarn release --mac --win
+      run: yarn build-electron-app --mac --win
