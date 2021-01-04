@@ -8,8 +8,12 @@ on:
         required: true
         default: 'minor'
 
+defaults:
+  run:
+    working-directory: ./client
+
 jobs:
-  build:
+  bump-version:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
