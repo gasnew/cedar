@@ -1,0 +1,30 @@
+name: Tag and release Cedar client
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to tag and release'
+        required: true
+        default: 'v0.0.0'
+
+defaults:
+  run:
+    working-directory: ./client
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js 14.x
+      uses: actions/setup-node@v1
+      with:
+        node-version: 14.x
+    - uses: fregante/setup-git-user@v1
+    - name: Bump version
+      env:
+        VERSION: ${{ github.event.inputs.version }}
+      run: yarn version --new-version "${VERSION}"
+    - name: Create Pull Request
+      uses: peter-evans/create-pull-request@v3
