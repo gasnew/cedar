@@ -1,53 +1,19 @@
 import _ from 'lodash';
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import React, { useEffect, useState } from 'react';
 import {
-  Alignment,
   Button,
   Callout,
   Classes,
   Colors,
   Divider,
-  EditableText,
   H4,
   Icon,
-  Navbar,
-  NavbarDivider,
-  NavbarGroup,
-  NavbarHeading,
   Popover,
   ProgressBar,
-  Spinner,
 } from '@blueprintjs/core';
 
-import { getEnv, useInterval } from '../../app/util';
-import {
-  useGet,
-  useLazyGet,
-  usePatch,
-  useSubscription,
-} from '../feathers/FeathersHooks';
-import { FeathersContext } from '../feathers/FeathersProvider';
-import { selectMusicians, setMusicianName } from '../musicians/musiciansSlice';
+import { getEnv } from '../../app/util';
 import './Navbar.css';
-import {
-  RoomState,
-  selectAmHost,
-  selectRoom,
-  setSecondsBetweenMusicians,
-  updateChain,
-} from '../room/roomSlice';
-import {
-  selectRecordingState,
-  startRecording,
-  stopRecording,
-} from '../recording/recordingSlice';
 
 // ipcRenderer is provided in public/preload.js
 declare global {

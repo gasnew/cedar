@@ -10,7 +10,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import {
   Alignment,
   Button,
-  Callout,
   Classes,
   Colors,
   EditableText,
@@ -23,7 +22,7 @@ import {
   Popover,
 } from '@blueprintjs/core';
 
-import { getEnv, useInterval } from '../../app/util';
+import { useInterval } from '../../app/util';
 import {
   useGet,
   useLazyGet,
