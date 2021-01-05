@@ -140,27 +140,31 @@ export default function Help() {
         preventOverflow: { enabled: true },
       }}
     >
-      <Button minimal style={{ position: 'relative' }}>
+      <Button minimal style={{ position: 'relative', padding: 5 }}>
         <Icon icon="help" />
-        <Icon
-          icon="dot"
-          iconSize={20}
-          style={{
-            color: Colors.DARK_GRAY5,
-            position: 'absolute',
-            bottom: 11,
-            right: 1,
-          }}
-        />
-        <Icon
-          icon="dot"
-          style={{
-            color: Colors.GREEN5,
-            position: 'absolute',
-            bottom: 13,
-            right: 3,
-          }}
-        />
+        {updateState === 'downloaded' && (
+          <>
+            <Icon
+              icon="dot"
+              iconSize={20}
+              style={{
+                color: Colors.DARK_GRAY5,
+                position: 'absolute',
+                bottom: 11,
+                right: 1,
+              }}
+            />
+            <Icon
+              icon="dot"
+              style={{
+                color: Colors.GREEN5,
+                position: 'absolute',
+                bottom: 13,
+                right: 3,
+              }}
+            />
+          </>
+        )}
       </Button>
       <div>
         <div style={{ display: 'flex', flexDirection: 'row' }}>

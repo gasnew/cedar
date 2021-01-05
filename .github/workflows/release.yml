@@ -42,4 +42,4 @@ jobs:
           1. You might want to grab a :coffee: while the jobs for this PR run. It will take **~15 minutes** to run tests and build, sign, and upload the Cedar apps.
           2. Once the jobs finish, a release draft entitled **${{ github.event.inputs.version }}** should appear [here](https://github.com/gasnew/cedar/releases) with all the assets produced by `electron-builder`.
           3. If you want to sneak any changes into this release, you can add more commits to this branch then go back to (1).
-          4. Publish the release! :rocket:
+          4. Merge this PR, and publish the release! :rocket:
