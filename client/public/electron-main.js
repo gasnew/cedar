@@ -8,7 +8,7 @@
 // Modules to control application life and create native browser window
 // @ts-ignore We need to do require-style imports for this file because
 //            ES6-style imports are not supported by electron.
-const { app, BrowserWindow, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const log = require('electron-log');
 const { autoUpdater } = require('electron-updater');
 
@@ -18,6 +18,30 @@ const url = require('url');
 autoUpdater.logger = log;
 autoUpdater.logger.transports.file.level = 'info';
 log.info('App starting...');
+
+function configureAutoUpdater(mainWindow) {
+  function forwardAutoUpdaterEvent(eventName) {
+    autoUpdater.on(eventName, () => {
+      log.info(`Forwarding event ${eventName}`);
+      mainWindow.webContents.send(eventName);
+    });
+  }
+
+  ipcMain.on('check-for-updates', () => {
+    log.info('Render thread told me to check for updates...');
+    autoUpdater.checkForUpdatesAndNotify();
+  });
+  ipcMain.on('quit-and-install', () => {
+    log.info('Render thread told me to quit and install...');
+    autoUpdater.quitAndInstall();
+  });
+
+  forwardAutoUpdaterEvent('checking-for-update');
+  forwardAutoUpdaterEvent('update-not-available');
+  forwardAutoUpdaterEvent('error');
+  forwardAutoUpdaterEvent('download-progress');
+  forwardAutoUpdaterEvent('update-downloaded');
+}
 
 function createWindow() {
   // Create the browser window.
@@ -49,14 +73,16 @@ function createWindow() {
       slashes: true,
     });
   mainWindow.loadURL(startUrl);
+
+  return mainWindow;
 }
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
-  autoUpdater.checkForUpdatesAndNotify();
-  createWindow();
+  const mainWindow = createWindow();
+  configureAutoUpdater(mainWindow);
 
   app.on('activate', function() {
     // On macOS it's common to re-create a window in the app when the

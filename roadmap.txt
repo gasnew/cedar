@@ -81,8 +81,8 @@ Penultimate Patreon push
 
 Final push prior to Patreon
 + Signed and notarized distributions
-- Auto-updates https://www.electron.build/auto-update
-- https://cedarapp.org
++ Auto-updates https://www.electron.build/auto-update
++ http://cedarapp.org
 + auto-restart prod server
 + fix recording state getting broken
 + show version number
