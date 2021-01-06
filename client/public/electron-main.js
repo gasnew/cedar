@@ -21,9 +21,9 @@ log.info('App starting...');
 
 function configureAutoUpdater(mainWindow) {
   function forwardAutoUpdaterEvent(eventName) {
-    autoUpdater.on(eventName, () => {
+    autoUpdater.on(eventName, (...args) => {
       log.info(`Forwarding event ${eventName}`);
-      mainWindow.webContents.send(eventName);
+      mainWindow.webContents.send(eventName, ...args);
     });
   }
 

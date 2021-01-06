@@ -36,7 +36,7 @@ interface EventListener {
   callback: () => void;
 }
 
-function createListeners(setState): EventListener[] {
+function createListeners(setState, setErrorMessage): EventListener[] {
   const listener = (eventName, callback) => ({
     name: eventName,
     callback,
@@ -44,7 +44,10 @@ function createListeners(setState): EventListener[] {
   return [
     listener('checking-for-update', () => setState('checking')),
     listener('update-not-available', () => setState('notAvailable')),
-    listener('error', () => setState('error')),
+    listener('error', (event, error) => {
+      setState('error');
+      setErrorMessage(error);
+    }),
     // NOTE(gnewman): download-progress may not fire when the differential
     // download is small
     // (https://github.com/electron-userland/electron-builder/issues/4919)
@@ -53,8 +56,9 @@ function createListeners(setState): EventListener[] {
   ];
 }
 
-function useUpdateState(): UpdateState {
+function useUpdateState(): [UpdateState, string] {
   const [state, setState] = useState<UpdateState>('notAvailable');
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     if (!ipcRenderer) {
@@ -62,7 +66,7 @@ function useUpdateState(): UpdateState {
       return;
     }
 
-    const listeners = createListeners(setState);
+    const listeners = createListeners(setState, setErrorMessage);
     console.log(listeners);
     _.each(listeners, ({ name, callback }) => ipcRenderer.on(name, callback));
 
@@ -75,10 +79,16 @@ function useUpdateState(): UpdateState {
     };
   }, []);
 
-  return state;
+  return [state, errorMessage];
 }
 
-function UpdateStatus({ state }: { state: UpdateState }) {
+function UpdateStatus({
+  state,
+  errorMessage,
+}: {
+  state: UpdateState;
+  errorMessage: string;
+}) {
   return state === 'checking' ? (
     <Callout icon="automatic-updates" style={{ fontStyle: 'italic' }}>
       Checking for updates...
@@ -119,8 +129,19 @@ function UpdateStatus({ state }: { state: UpdateState }) {
       </Button>
     </Callout>
   ) : state === 'error' ? (
-    <Callout icon="error" intent="danger">
-      An error occurred while downloading the update!
+    <Callout icon="error" intent="danger" style={{ display: 'flex' }}>
+      <span>
+        An error occurred while downloading the update: {errorMessage}
+      </span>
+      <Button
+        minimal
+        fill={false}
+        intent="danger"
+        style={{ marginLeft: 'auto', minHeight: 'initial', whiteSpace: 'nowrap' }}
+        onClick={() => ipcRenderer.send('check-for-updates')}
+      >
+        Try again
+      </Button>
     </Callout>
   ) : (
     <span>Unknown update state...</span>
@@ -128,7 +149,7 @@ function UpdateStatus({ state }: { state: UpdateState }) {
 }
 
 export default function Help() {
-  const updateState = useUpdateState();
+  const [updateState, errorMessage] = useUpdateState();
 
   return (
     <Popover
@@ -211,7 +232,7 @@ export default function Help() {
           lalalalal
         </Callout>
         <Divider />
-        <UpdateStatus state={updateState} />
+        <UpdateStatus state={updateState} errorMessage={errorMessage} />
       </div>
     </Popover>
   );
