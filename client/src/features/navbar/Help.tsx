@@ -26,9 +26,10 @@ const ipcRenderer = window!.ipcRenderer;
 
 type UpdateState =
   | 'checking'
+  | 'available'
+  | 'notAvailable'
   | 'downloading'
   | 'downloaded'
-  | 'notAvailable'
   | 'error';
 
 interface EventListener {
@@ -36,29 +37,36 @@ interface EventListener {
   callback: () => void;
 }
 
-function createListeners(setState, setErrorMessage): EventListener[] {
+function createListeners(
+  setState,
+  setErrorMessage,
+  quitAndInstall
+): EventListener[] {
   const listener = (eventName, callback) => ({
     name: eventName,
     callback,
   });
   return [
     listener('checking-for-update', () => setState('checking')),
+    listener('update-available', () => setState('available')),
     listener('update-not-available', () => setState('notAvailable')),
     listener('error', (event, error) => {
       setState('error');
-      setErrorMessage(error);
+      console.log(error);
+      console.log('' + error);
+      setErrorMessage(_.toString(error));
     }),
     // NOTE(gnewman): download-progress may not fire when the differential
     // download is small
     // (https://github.com/electron-userland/electron-builder/issues/4919)
     listener('download-progress', () => setState('downloading')),
-    listener('update-downloaded', () => setState('downloaded')),
+    listener('update-downloaded', quitAndInstall),
   ];
 }
 
 function useUpdateState(): [UpdateState, string] {
   const [state, setState] = useState<UpdateState>('notAvailable');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState<string>('');
 
   useEffect(() => {
     if (!ipcRenderer) {
@@ -66,11 +74,13 @@ function useUpdateState(): [UpdateState, string] {
       return;
     }
 
-    const listeners = createListeners(setState, setErrorMessage);
+    const listeners = createListeners(setState, setErrorMessage, () =>
+      ipcRenderer.send('quit-and-install')
+    );
     console.log(listeners);
     _.each(listeners, ({ name, callback }) => ipcRenderer.on(name, callback));
 
-    ipcRenderer.send('check-for-updates');
+    //ipcRenderer.send('check-for-updates');
 
     return () => {
       _.each(listeners, ({ name, callback }) =>
@@ -104,16 +114,16 @@ function UpdateStatus({
       </div>
       <span style={{ marginLeft: 4, fontStyle: 'italic' }}>Downloading...</span>
     </Callout>
-  ) : state === 'downloaded' ? (
+  ) : state === 'available' ? (
     <Callout icon="download" intent="success" style={{ display: 'flex' }}>
-      Update downloaded successfully!{' '}
+      New update available!{' '}
       <Button
         intent="success"
         minimal
         style={{ marginLeft: 'auto', minHeight: 'initial' }}
-        onClick={() => ipcRenderer.send('quit-and-install')}
+        onClick={() => ipcRenderer.send('download-update')}
       >
-        Install and quit
+        Download, install, and quit
       </Button>
     </Callout>
   ) : state === 'notAvailable' ? (
@@ -130,14 +140,16 @@ function UpdateStatus({
     </Callout>
   ) : state === 'error' ? (
     <Callout icon="error" intent="danger" style={{ display: 'flex' }}>
-      <span>
-        An error occurred while downloading the update: {errorMessage}
-      </span>
+      <span>An error occurred: {errorMessage}</span>
       <Button
         minimal
         fill={false}
         intent="danger"
-        style={{ marginLeft: 'auto', minHeight: 'initial', whiteSpace: 'nowrap' }}
+        style={{
+          marginLeft: 'auto',
+          minHeight: 'initial',
+          whiteSpace: 'nowrap',
+        }}
         onClick={() => ipcRenderer.send('check-for-updates')}
       >
         Try again
@@ -163,7 +175,7 @@ export default function Help() {
     >
       <Button minimal style={{ position: 'relative', padding: 5 }}>
         <Icon icon="help" />
-        {updateState === 'downloaded' && (
+        {_.includes(['available', 'downloading'], updateState) && (
           <>
             <Icon
               icon="dot"
