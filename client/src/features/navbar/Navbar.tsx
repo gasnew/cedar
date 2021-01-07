@@ -203,7 +203,7 @@ export default function() {
               left: 0,
             }}
           >
-            newerest cedar
+            the cedar
           </span>
           <span
             style={{
