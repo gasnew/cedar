@@ -47,6 +47,7 @@ function createListeners(
     callback,
   });
   return [
+    listener('garrettLog', (event, ...args) => console.log(...args)),
     listener('checking-for-update', () => setState('checking')),
     listener('update-available', () => setState('available')),
     listener('update-not-available', () => setState('notAvailable')),

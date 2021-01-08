@@ -26,6 +26,10 @@ function configureAutoUpdater(windowHolder) {
     autoUpdater.on(eventName, (...args) => {
       log.info(`Forwarding event ${eventName}`);
       windowHolder.current.webContents.send(eventName, ...args);
+      windowHolder.current.webContents.send(
+        'garrettLog',
+        `Forwarding event ${eventName}`
+      );
     });
   }
 
