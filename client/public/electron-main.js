@@ -17,8 +17,8 @@ const url = require('url');
 
 autoUpdater.logger = log;
 autoUpdater.logger.transports.file.level = 'info';
-autoUpdater.autoDownload = false;
-autoUpdater.autoInstallOnAppQuit = false;
+autoUpdater.autoDownload = true;
+autoUpdater.autoInstallOnAppQuit = true;
 log.info('App starting...');
 
 function configureAutoUpdater(windowHolder) {
@@ -62,7 +62,8 @@ function configureAutoUpdater(windowHolder) {
   forwardAutoUpdaterEvent('error');
   forwardAutoUpdaterEvent('download-progress');
   forwardAutoUpdaterEvent('update-downloaded');
-  console.log(autoUpdater);
+
+  return autoUpdater;
 }
 
 function createWindow() {
@@ -108,13 +109,15 @@ app.whenReady().then(() => {
   const windowHolder = { current: null };
 
   windowHolder.current = createWindow();
-  configureAutoUpdater(windowHolder);
+  const autoUpdater = configureAutoUpdater(windowHolder);
+  autoUpdater.checkForUpdates();
 
   app.on('activate', function() {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) {
       windowHolder.current = createWindow();
+      autoUpdater.checkForUpdates();
     }
   });
 });

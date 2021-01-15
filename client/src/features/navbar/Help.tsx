@@ -37,17 +37,12 @@ interface EventListener {
   callback: () => void;
 }
 
-function createListeners(
-  setState,
-  setErrorMessage,
-  quitAndInstall
-): EventListener[] {
+function createListeners(setState, setErrorMessage): EventListener[] {
   const listener = (eventName, callback) => ({
     name: eventName,
     callback,
   });
   return [
-    listener('garrettLog', (event, ...args) => console.log(...args)),
     listener('checking-for-update', () => setState('checking')),
     listener('update-available', () => setState('available')),
     listener('update-not-available', () => setState('notAvailable')),
@@ -61,7 +56,7 @@ function createListeners(
     // download is small
     // (https://github.com/electron-userland/electron-builder/issues/4919)
     listener('download-progress', () => setState('downloading')),
-    listener('update-downloaded', quitAndInstall),
+    listener('update-downloaded', () => setState('downloaded')),
   ];
 }
 
@@ -75,9 +70,7 @@ function useUpdateState(): [UpdateState, string] {
       return;
     }
 
-    const listeners = createListeners(setState, setErrorMessage, () =>
-      ipcRenderer.send('quit-and-install')
-    );
+    const listeners = createListeners(setState, setErrorMessage);
     console.log(listeners);
     _.each(listeners, ({ name, callback }) => ipcRenderer.on(name, callback));
 
@@ -118,14 +111,6 @@ function UpdateStatus({
   ) : state === 'available' ? (
     <Callout icon="download" intent="success" style={{ display: 'flex' }}>
       New update available!{' '}
-      <Button
-        intent="success"
-        minimal
-        style={{ marginLeft: 'auto', minHeight: 'initial' }}
-        onClick={() => ipcRenderer.send('download-update')}
-      >
-        Download, install, and quit
-      </Button>
     </Callout>
   ) : state === 'notAvailable' ? (
     <Callout icon="automatic-updates" style={{ display: 'flex' }}>
@@ -137,6 +122,18 @@ function UpdateStatus({
         onClick={() => ipcRenderer.send('check-for-updates')}
       >
         Check for updates
+      </Button>
+    </Callout>
+  ) : state === 'downloaded' ? (
+    <Callout icon="download" intent="success" style={{ display: 'flex' }}>
+      New update downloaded!{' '}
+      <Button
+        intent="success"
+        minimal
+        style={{ marginLeft: 'auto', minHeight: 'initial' }}
+        onClick={() => ipcRenderer.send('quit-and-install')}
+      >
+        Download, install, and quit
       </Button>
     </Callout>
   ) : state === 'error' ? (
@@ -176,7 +173,10 @@ export default function Help() {
     >
       <Button minimal style={{ position: 'relative', padding: 5 }}>
         <Icon icon="help" />
-        {_.includes(['available', 'downloading'], updateState) && (
+        {_.includes(
+          ['available', 'downloading', 'downloaded'],
+          updateState
+        ) && (
           <>
             <Icon
               icon="dot"
