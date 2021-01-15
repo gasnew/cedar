@@ -50,7 +50,7 @@
       "entitlementsInherit": "build/entitlements.mac.plist"
     },
     "win": {
-      "publisherName": "Developer ID Application: Garrett Newman (Z986S6NQ78)"
+      "publisherName": "Garrett Newman"
     },
     "files": [
       "build/**/*",
