@@ -104,6 +104,7 @@ Fix bugs
 - Dynamically detect audio quantum size...?
 - Sometimes output is crunchy (maybe due to playback catch-up method...)
 - Sometimes output is choppy
+- Output becomes choppy after long recording time?
 - Sometimes screen turns white
 
 Quality-of-life improvements

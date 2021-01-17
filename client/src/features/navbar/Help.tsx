@@ -44,7 +44,11 @@ function createListeners(setState, setErrorMessage): EventListener[] {
   });
   return [
     listener('checking-for-update', () => setState('checking')),
-    listener('update-available', () => setState('available')),
+    // NOTE(gnewman): Since Cedar is currently configured to automatically
+    // download new updates when it finds them, and electron-builder's
+    // `download-progress` event is flaky, let's just set it to the
+    // downloading state immediately so users get immediate feedback.
+    listener('update-available', () => setState('downloading')),
     listener('update-not-available', () => setState('notAvailable')),
     listener('error', (event, error) => {
       setState('error');
@@ -133,7 +137,7 @@ function UpdateStatus({
         style={{ marginLeft: 'auto', minHeight: 'initial' }}
         onClick={() => ipcRenderer.send('quit-and-install')}
       >
-        Download, install, and quit
+        Quit and install
       </Button>
     </Callout>
   ) : state === 'error' ? (
