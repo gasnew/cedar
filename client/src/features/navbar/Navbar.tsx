@@ -10,7 +10,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import {
   Alignment,
   Button,
-  Callout,
   Classes,
   Colors,
   EditableText,
@@ -23,7 +22,7 @@ import {
   Popover,
 } from '@blueprintjs/core';
 
-import { getEnv, useInterval } from '../../app/util';
+import { useInterval } from '../../app/util';
 import {
   useGet,
   useLazyGet,
@@ -32,6 +31,7 @@ import {
 } from '../feathers/FeathersHooks';
 import { FeathersContext } from '../feathers/FeathersProvider';
 import { selectMusicians, setMusicianName } from '../musicians/musiciansSlice';
+import Help from './Help';
 import './Navbar.css';
 import {
   RoomState,
@@ -45,67 +45,6 @@ import {
   startRecording,
   stopRecording,
 } from '../recording/recordingSlice';
-
-function Help() {
-  return (
-    <Popover
-      popoverClassName={Classes.POPOVER_CONTENT_SIZING + ' custom-boi'}
-      modifiers={{
-        arrow: { enabled: true },
-        flip: { enabled: true },
-        keepTogether: { enabled: true },
-        preventOverflow: { enabled: true },
-      }}
-    >
-      <Button icon="help" minimal />
-      <div>
-        <div style={{ display: 'flex', flexDirection: 'row' }}>
-          <H4>Welcome to Cedar!</H4>
-          <span style={{ marginLeft: 'auto', fontStyle: 'italic' }}>
-            v{getEnv('VERSION')}
-          </span>
-        </div>
-        <Callout
-          title="Development status"
-          icon="updated"
-          intent="success"
-          style={{ marginBottom: 10 }}
-        >
-          Cedar is currently in the{' '}
-          <span style={{ fontWeight: 'bold' }}>alpha</span> stage of
-          development, which means it is not yet feature-complete and may
-          contain some bugs. I am working hard to make Cedar the best it can be,
-          but that takes lots of time and lots of testing. Thank you for helping
-          me with this!
-        </Callout>
-        <Callout
-          title="Report a bug"
-          icon="issue"
-          intent="warning"
-          style={{ marginBottom: 10 }}
-        >
-          Bugs happen to the best of us. If you encounter one, I would greatly
-          appreciate it if you would{' '}
-          <a
-            href="https://github.com/gasnew/cedar/issues/new"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            file a bug report
-          </a>. Writing a detailed bug report is one of the best ways you can
-          help contribute to Cedar's development.
-        </Callout>
-        <Callout
-          title="Support this project"
-          icon="bank-account"
-          intent="primary"
-        >
-          lalalalal
-        </Callout>
-      </div>
-    </Popover>
-  );
-}
 
 function RecordingIcon() {
   const [bright, setBright] = useState(true);

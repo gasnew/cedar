@@ -58,4 +58,6 @@ jobs:
         CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
         CSC_LINK: ${{ secrets.CSC_LINK }}
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
+        WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
       run: yarn build-electron-app --mac --win --publish always

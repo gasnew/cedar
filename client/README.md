@@ -25,6 +25,17 @@ Toolkit](https://redux-toolkit.js.org/) template.
     yarn start
     ```
 
+## Release process
+
+Click "Run workflow" for the "Draft a new Cedar client release" action on the
+cedar [Actions
+tab](https://github.com/gasnew/cedar/actions?query=workflow%3A%22Draft+a+new+Cedar+client+release%22).
+Set the version to bump to (we use [semantic versioning](https://semver.org/))
+then click the green "Run workflow" button. This workflow will create a PR from
+a new branch to `master` to update the version. The PR contains instructions to
+finalize the release. Once the release is published, Cedar clients everywhere
+will check GitHub automatically to download and install the update.
+
 ## Available Scripts
 
 In the project directory, you can run:

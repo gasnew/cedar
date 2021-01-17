@@ -26,6 +26,8 @@
     "@types/react": "^16.9.0",
     "@types/react-dom": "^16.9.0",
     "@types/react-redux": "^7.1.9",
+    "electron-log": "^4.3.1",
+    "electron-updater": "^4.3.5",
     "js-base64": "^3.4.4",
     "lodash": "^4.17.19",
     "react": "^16.13.1",
@@ -47,6 +49,9 @@
       "entitlements": "build/entitlements.mac.plist",
       "entitlementsInherit": "build/entitlements.mac.plist"
     },
+    "win": {
+      "publisherName": "Garrett Newman"
+    },
     "files": [
       "build/**/*",
       "node_modules/**/*",
@@ -67,6 +72,7 @@
     "eject": "react-scripts eject",
     "lint": "eslint ./src/**/*.{ts,tsx}",
     "build-electron-app": "electron-builder",
+    "dist-local": "yarn build && electron-builder",
     "postinstall": "electron-builder install-app-deps",
     "remove-unused-imports": "tslint --config tslint-remove-unused-imports.json --fix --project ."
   },
@@ -87,7 +93,7 @@
   },
   "devDependencies": {
     "electron": "10.1.1",
-    "electron-builder": "^22.8.0",
+    "electron-builder": "^22.9.1",
     "electron-notarize": "^1.0.0",
     "foreman": "^3.0.1",
     "tslint": "^6.1.3",

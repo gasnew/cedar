@@ -81,8 +81,8 @@ Penultimate Patreon push
 
 Final push prior to Patreon
 + Signed and notarized distributions
-- Auto-updates https://www.electron.build/auto-update
-- https://cedarapp.org
++ Auto-updates https://www.electron.build/auto-update
++ http://cedarapp.org
 + auto-restart prod server
 + fix recording state getting broken
 + show version number
@@ -104,6 +104,7 @@ Fix bugs
 - Dynamically detect audio quantum size...?
 - Sometimes output is crunchy (maybe due to playback catch-up method...)
 - Sometimes output is choppy
+- Output becomes choppy after long recording time?
 - Sometimes screen turns white
 
 Quality-of-life improvements
