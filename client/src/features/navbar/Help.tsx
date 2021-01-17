@@ -246,7 +246,15 @@ export default function Help() {
           icon="bank-account"
           intent="primary"
         >
-          lalalalal
+          Cedar's development is entirely funded by donations. If you like this
+          project, please consider{' '}
+          <a
+            href="https://www.patreon.com/garrettnewman"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            becoming a backer on Patreon
+          </a>!
         </Callout>
         <Divider />
         <UpdateStatus state={updateState} errorMessage={errorMessage} />
