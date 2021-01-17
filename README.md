@@ -6,6 +6,12 @@ Cedar is Zoom for musicians. Zero latency. No click track. Just play!
 2. **Organize** musicians in the Cedar chain.
 3. **Perform** live together over the internet!
 
+## Supporting Cedar
+
+Cedar's development is entirely funded by donations. If you like this project,
+please consider [becoming a backer on
+Patreon](https://www.patreon.com/garrettnewman)!
+
 ## Current and upcoming features
 
 * :white_check_mark: Perform and/or rehearse live with musicians anywhere you can
