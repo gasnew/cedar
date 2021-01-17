@@ -203,7 +203,7 @@ export default function() {
               left: 0,
             }}
           >
-            the cedar
+            cedar
           </span>
           <span
             style={{

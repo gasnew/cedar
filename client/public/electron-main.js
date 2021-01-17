@@ -26,33 +26,15 @@ function configureAutoUpdater(windowHolder) {
     autoUpdater.on(eventName, (...args) => {
       log.info(`Forwarding event ${eventName}`);
       windowHolder.current.webContents.send(eventName, ...args);
-      windowHolder.current.webContents.send(
-        'garrettLog',
-        `Forwarding event ${eventName}`
-      );
     });
   }
 
   ipcMain.on('check-for-updates', () => {
     log.info('Render thread told me to check for updates...');
-    windowHolder.current.webContents.send(
-      'garrettLog',
-      'Render thread told me to check for updates...'
-    );
     autoUpdater.checkForUpdates();
   });
-  ipcMain.on('download-update', () => {
-    windowHolder.current.webContents.send(
-      'garrettLog',
-      'Render thread told me to download update...'
-    );
-    autoUpdater.downloadUpdate();
-  });
   ipcMain.on('quit-and-install', () => {
-    windowHolder.current.webContents.send(
-      'garrettLog',
-      'Render thread told me to quit and install...'
-    );
+    log.info('Render thread told me to quit and install...');
     autoUpdater.quitAndInstall();
   });
 
