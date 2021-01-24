@@ -87,6 +87,10 @@ Final push prior to Patreon
 + fix recording state getting broken
 + show version number
 
+Admin stuff (no code)
++ Write how-to guide
+- Demo video (~5 minutes, including musical performance)
+
 Fix bugs
 - delete recordings when done
 - Somehow, playback buffers don't always get zero'd out (still!)
@@ -106,8 +110,18 @@ Fix bugs
 - Sometimes output is choppy
 - Output becomes choppy after long recording time?
 - Sometimes screen turns white
+- Think about including the sample index of the root track that all other data
+  packets are relative to instead of adjusting based on time (should prevent
+  stream from degrading over time)
 
 Quality-of-life improvements
+- Musician stream health indicators
+  - Each musician client reports how much buffer room it has
+  - A buffer is healthier the closer that value is to secondsBetweenMusicians
+  - This is in the UI somehow as a generic "bad", "okay", "good" rating or the
+    number itself
+  - This would be extremely useful for debugging and could indicate to a group
+    if they could reduce secondsBetweenMusicians safely
 - Allow copy/paste via right-click (custom electron context menu)
 - Fix audio choppyness
 - Fix loopback calibration not working for everyone (maybe fixed)
@@ -125,6 +139,7 @@ x Standby scrollable?
 + Rename "Audience" to "Standby"
 + Don't play room audio when on Standby
 + Remove musicians when they leave the room
++ Persist redux state on a per-tab basis (nice during development)
 - Be able to leave the room and join another (need to remember to update
   channel subscriptions)
 
