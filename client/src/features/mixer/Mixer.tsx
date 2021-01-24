@@ -1,20 +1,15 @@
-import {
-  Card,
-  Classes,
-  Colors,
-  H4,
-  H5,
-  Tooltip,
-} from '@blueprintjs/core';
+import { Card, Classes, Colors, H4, H5, Tooltip } from '@blueprintjs/core';
 import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 
+import { usePatch } from '../feathers/FeathersHooks';
 import styles from './Mixer.module.css';
 import MusicianTrackControls from './MusicianTrackControls';
 import './MusicianTrackControls.css';
 import { TrackControls, useRoomAudio } from './MixerHooks';
 import { Musician, selectMusicians } from '../musicians/musiciansSlice';
+import { selectMyTrackId } from '../recording/recordingSlice';
 import { selectPrecedingMusicianIds } from '../room/roomSlice';
 import VolumeSlider from './VolumeSlider';
 
@@ -38,9 +33,21 @@ export default function() {
   const precedingMusicianIds = useSelector(selectPrecedingMusicianIds);
   const musicians = useSelector(selectMusicians);
 
+  // Sending buffer health data
+  const myTrackId = useSelector(selectMyTrackId);
+  const [patchTrackBufferHealth] = usePatch('trackBufferHealth', '', {}, true);
+  const sendBufferHealthData = (bufferHealthSeconds: number[]) => {
+    // We should know our track ID before sendBufferHealthData is ever called,
+    // but even if that were not the case, it would not be a big deal to lose
+    // some of this data => let's fail silently.
+    if (!myTrackId) return;
+    patchTrackBufferHealth(myTrackId, { bufferHealthSeconds });
+  };
+
   // Audio data
   const { masterControls, trackControls } = useRoomAudio(
-    precedingMusicianIds.length
+    precedingMusicianIds.length,
+    sendBufferHealthData
   );
 
   useEffect(

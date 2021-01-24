@@ -1,5 +1,48 @@
 // WARNING(gnewman): Be *very* careful editing this file, as it is JS, not TS.
 
+class BufferHealthHandler {
+  constructor(postBufferHealthData) {
+    this.postBufferHealthData = postBufferHealthData;
+    // Let's store health data at 60 Hz and send data out once a second
+    this.bufferHealthSecondsBuffer = new Float32Array(60);
+    this.timeOfLastPost = 0;
+    this.running = false;
+  }
+
+  startPeriodicDataPosts() {
+    this.timeOfLastPost = Date.now();
+    this.running = true;
+  }
+
+  stopPeriodicDataPosts() {
+    this.running = false;
+  }
+
+  update(bufferHealthSeconds) {
+    if (!this.running) return;
+    // This can happen if update is called soon after posting data.
+    if (Date.now() - this.timeOfLastPost < 0) return;
+
+    const bufferIndex = Math.floor(
+      ((Date.now() - this.timeOfLastPost) / 1000) * 60
+    );
+    this.bufferHealthSecondsBuffer[bufferIndex] = bufferHealthSeconds;
+
+    if (bufferIndex >= this.bufferHealthSecondsBuffer.length - 1)
+      this.postData();
+  }
+
+  postData() {
+    this.postBufferHealthData(this.bufferHealthSecondsBuffer);
+    // NOTE(gnewman): We just add 1000 ms here instead of setting
+    // timeOfLastPost to Date.now() because downstream clients expect every 60
+    // samples to correspond to exactly one second. We do not want to
+    // accidentally send more than 60 samples per second and would rather miss
+    // a sample or two instead.
+    this.timeOfLastPost += 1000;
+  }
+}
+
 // TODO: Summarize the API and functionality of this module
 class RoomAudioPlayer extends AudioWorkletProcessor {
   constructor() {
@@ -17,8 +60,11 @@ class RoomAudioPlayer extends AudioWorkletProcessor {
 
     this.prevTimeMs = 0;
     this.timeDeltaMs = 0;
-    this.timeThresholdMs = this.frameSize / sampleRate * 1000;
+    this.timeThresholdMs = (this.frameSize / sampleRate) * 1000;
 
+    this.bufferHealthHandler = new BufferHealthHandler(bufferHealthSeconds =>
+      this.port.postMessage(bufferHealthSeconds)
+    );
     this.port.onmessage = event => {
       if (event.data && event.data.action) {
         if (event.data.action === 'initialize') {
@@ -38,6 +84,8 @@ class RoomAudioPlayer extends AudioWorkletProcessor {
           // node to "catch up" to make up for that elapsed time where it
           // wasn't playing audio data.
           this.prevTimeMs = recordingStartedAt;
+
+          this.bufferHealthHandler.startPeriodicDataPosts();
         } else if (event.data.action === 'buffer') {
           // Append data to buffer, assuming stream data always comes in in the
           // same order (port uses a FIFO queue)
@@ -61,6 +109,8 @@ class RoomAudioPlayer extends AudioWorkletProcessor {
           this.pcmBuffers = [];
           this.bufferWriteIndices = [];
           this.bufferReadIndex = 0;
+
+          this.bufferHealthHandler.stopPeriodicDataPosts();
         }
       }
     };
@@ -78,7 +128,7 @@ class RoomAudioPlayer extends AudioWorkletProcessor {
     this.prevTimeMs = currentTime;
 
     //if (inputs[0][0].length !== 128)
-      //console.log(`YOOOO: ${input[0].length}`);
+    //console.log(`YOOOO: ${input[0].length}`);
     if (outputs[0][0].length !== 128)
       console.log(`FOOOO: ${outputs[0][0].length}`);
 
@@ -112,7 +162,8 @@ class RoomAudioPlayer extends AudioWorkletProcessor {
       while (this.timeDeltaMs > this.timeThresholdMs) {
         // Zero out skipped frame
         for (let frameIndex = 0; frameIndex < this.frameSize; frameIndex++) {
-          const readIndex = (this.bufferReadIndex + frameIndex) % this.bufferLength;
+          const readIndex =
+            (this.bufferReadIndex + frameIndex) % this.bufferLength;
           for (let pcmIndex = 0; pcmIndex < bufferCount; pcmIndex++) {
             this.pcmBuffers[pcmIndex][readIndex] = 0;
           }
@@ -123,6 +174,12 @@ class RoomAudioPlayer extends AudioWorkletProcessor {
         this.timeDeltaMs -= this.timeThresholdMs;
       }
     }
+
+    this.bufferHealthHandler.update(
+      (this.bufferWriteIndices[this.bufferWriteIndices.length - 1] -
+        this.bufferReadIndex) /
+        48000
+    );
 
     return true;
   }

@@ -56,6 +56,11 @@ export interface Track {
   // Read more about Redis streams and entry IDs here:
   // https://redis.io/topics/streams-intro#entry-ids
   cursor: string | null;
+  // bufferHealthSeconds data is stored in a separate Redis stream named
+  // `${roomId}:${trackId}:buffer-health-data`. This is an array of numbers
+  // representing the minimum number of seconds of audio buffer the client has
+  // available for playback at any given point. This stream runs at 60 Hz.
+  bufferHealthSeconds: number[];
 }
 export type Tracks = Collection<Track>;
 

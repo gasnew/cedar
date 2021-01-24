@@ -215,7 +215,10 @@ interface DataResponse {
   trackControls: TrackControls[];
 }
 
-export function useRoomAudio(trackCount: number): DataResponse {
+export function useRoomAudio(
+  trackCount: number,
+  sendBufferHealthData: (bufferHealthSeconds: number[]) => void
+): DataResponse {
   const [masterControls, setMasterControls] = useState<TrackControls | null>(
     null
   );
@@ -280,14 +283,20 @@ export function useRoomAudio(trackCount: number): DataResponse {
         setPostWorkletMessage(() => message =>
           roomAudioNode.port.postMessage(message)
         );
+        // This will be called once a second
+        roomAudioNode.port.onmessage = ({ data }) => sendBufferHealthData(data);
       };
-      launchAudioNodes();
+      const launchAudioNodesPromise = launchAudioNodes();
 
       return () => {
-        audioContext.close();
+        // NOTE(gnewman): We need to wait until updateStream has finished
+        // doing its thing before we can close the context. The promise
+        // resolver will be fired immediately after `then` is called if the
+        // promise is already fulfilled.
+        launchAudioNodesPromise.then(() => {
+          audioContext.close();
+        });
       };
-      // NOTE(gnewman): We do this so we recreate the AudioContext, just like in
-      // AudioStreamHooks
     },
     [trackCount]
   );

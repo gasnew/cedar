@@ -10,6 +10,7 @@ interface RedisKeyParameters {
 interface RedisStreamKeyParameters {
   roomId: string;
   trackId: string;
+  suffix?: string;
 }
 export interface CommonInterface {
   rKey: (params: RedisKeyParameters) => string;
@@ -30,8 +31,9 @@ export function rKey({ roomId, collection }: RedisKeyParameters): string {
 export function rStreamKey({
   roomId,
   trackId,
+  suffix = '',
 }: RedisStreamKeyParameters): string {
-  return `${roomId}:${trackId}`;
+  return `${roomId}:${trackId}:${suffix}`;
 }
 
 export default function(redisClient: IORedisClient): CommonInterface {

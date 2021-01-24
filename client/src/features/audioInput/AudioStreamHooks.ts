@@ -280,12 +280,18 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
           );
         };
 
-        updateStream();
+        const updateStreamPromise = updateStream();
 
         return () => {
           setCanChangeStream(false);
-          audioContext.close().then(() => {
-            setCanChangeStream(true);
+          // NOTE(gnewman): We need to wait until updateStream has finished
+          // doing its thing before we can close the context. The promise
+          // resolver will be fired immediately after `then` is called if the
+          // promise is already fulfilled.
+          updateStreamPromise.then(() => {
+            audioContext.close().then(() => {
+              setCanChangeStream(true);
+            });
           });
         };
       }
