@@ -1,8 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { PersistGate } from 'redux-persist/integration/react';
 import './index.css';
 import App from './App';
-import { store } from './app/store';
+import { store, persistor } from './app/store';
 import { Provider } from 'react-redux';
 import { FeathersProvider } from './features/feathers/FeathersProvider';
 import * as serviceWorker from './serviceWorker';
@@ -15,9 +16,11 @@ import * as serviceWorker from './serviceWorker';
 // https://github.com/palantir/blueprint/issues/3979
 ReactDOM.render(
   <Provider store={store}>
-    <FeathersProvider>
-      <App />
-    </FeathersProvider>
+    <PersistGate loading={null} persistor={persistor}>
+      <FeathersProvider>
+        <App />
+      </FeathersProvider>
+    </PersistGate>
   </Provider>,
   document.getElementById('root')
 );
