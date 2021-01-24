@@ -47,7 +47,10 @@
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
       "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.plist"
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "extendInfo": {
+        "NSMicrophoneUsageDescription": "Cedar requires microphone access to send audio to the other musicians in the room."
+      }
     },
     "win": {
       "publisherName": "Garrett Newman"
