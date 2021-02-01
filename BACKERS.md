@@ -1,7 +1,7 @@
 # Backers
 
 Cedar's development is entirely funded by donations. If you like this project,
-please consider [joining these amazing
-Patreon](https://www.patreon.com/garrettnewman) backers:
+please consider [joining these amazing Patreon
+backers](https://www.patreon.com/garrettnewman):
 
-__No backers quite yet!__
+* Calob Symonds
