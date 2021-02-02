@@ -125,7 +125,7 @@ export const selectRecordingDelaySeconds = (state: RootState) => {
   return index === -1 ? 0 : index * secondsBetweenMusicians;
 };
 
-export const selectCurrentTracks = (state: RootState) => {
+export const selectCurrentTracks = (state: RootState): Track[] => {
   const recording = selectCurrentRecording(state);
   if (!recording) return [];
   return recording.tracks;

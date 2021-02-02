@@ -202,6 +202,7 @@ Other bugs/features before wider release
 - Little musical instrument icons?
 - Use an LB with multiple droplets (or use container orchestration) rather than
   installing everything (including SSL) on a droplet by hand
+- [development] rejoin recording subscription on redux state rehydration
 
 Wider release milestone!
 

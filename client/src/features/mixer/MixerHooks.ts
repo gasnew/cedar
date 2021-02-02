@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { MutableRefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Base64 } from 'js-base64';
 
@@ -215,7 +215,12 @@ interface DataResponse {
   trackControls: TrackControls[];
 }
 
-export function useRoomAudio(trackCount: number): DataResponse {
+export function useRoomAudio(
+  trackCount: number,
+  sendBufferHealthData: MutableRefObject<
+    (bufferHealthSeconds: number[]) => void
+  >
+): DataResponse {
   const [masterControls, setMasterControls] = useState<TrackControls | null>(
     null
   );
@@ -280,16 +285,23 @@ export function useRoomAudio(trackCount: number): DataResponse {
         setPostWorkletMessage(() => message =>
           roomAudioNode.port.postMessage(message)
         );
+        // This will be called once a second
+        roomAudioNode.port.onmessage = ({ data }) =>
+          sendBufferHealthData.current(data);
       };
-      launchAudioNodes();
+      const launchAudioNodesPromise = launchAudioNodes();
 
       return () => {
-        audioContext.close();
+        // NOTE(gnewman): We need to wait until updateStream has finished
+        // doing its thing before we can close the context. The promise
+        // resolver will be fired immediately after `then` is called if the
+        // promise is already fulfilled.
+        launchAudioNodesPromise.then(() => {
+          audioContext.close();
+        });
       };
-      // NOTE(gnewman): We do this so we recreate the AudioContext, just like in
-      // AudioStreamHooks
     },
-    [trackCount]
+    [trackCount, sendBufferHealthData]
   );
 
   return { masterControls, trackControls };

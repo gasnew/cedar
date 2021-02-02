@@ -16,6 +16,9 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import styles from './AudienceAndMusicians.module.css';
 import { useLists } from './AudienceAndMusiciansHooks';
+import BufferHealthDisplay, {
+  useBufferHealthData,
+} from './BufferHealthDisplay';
 import { usePatch } from '../feathers/FeathersHooks';
 import { selectRecordingState } from '../recording/recordingSlice';
 import {
@@ -186,6 +189,10 @@ export default function() {
   const { secondsBetweenMusicians, id: roomId } = useSelector(selectRoom);
   const amHost = useSelector(selectAmHost);
 
+  const bufferHealthDataHandlersByMusicianId = useBufferHealthData(
+    recordingState === 'recording'
+  );
+
   const [patchRoom] = usePatch('rooms');
 
   const musiciansLocked = recordingState !== 'stopped';
@@ -298,38 +305,55 @@ export default function() {
               )}
               Musician chain
             </H5>
-            <div className={styles.listContainer}>
-              <PersonList
-                column={musiciansColumn}
-                isDropDisabled={
-                  (dragSourceId === audienceColumn.id &&
-                    musiciansColumn.items.length === 8) ||
-                  musiciansLocked ||
-                  musicianLoopbackIsUnset
-                }
-                musicianLoopbackIsUnset={musicianLoopbackIsUnset}
-                isDragDisabled={musiciansLocked}
-              />
-              <div className={styles.listHighlightsContainer}>
-                {_.map(_.range(8), index => (
-                  <div
-                    key={index}
-                    className={styles.listHighlight}
-                    style={{
-                      backgroundColor:
-                        index % 2 ? Colors.DARK_GRAY5 : Colors.DARK_GRAY4,
-                    }}
-                  >
-                    <span
-                      className={styles.listHighlightIndex}
+            <div style={{ display: 'flex', flexDirection: 'row' }}>
+              <div className={styles.listContainer}>
+                <PersonList
+                  column={musiciansColumn}
+                  isDropDisabled={
+                    (dragSourceId === audienceColumn.id &&
+                      musiciansColumn.items.length === 8) ||
+                    musiciansLocked ||
+                    musicianLoopbackIsUnset
+                  }
+                  musicianLoopbackIsUnset={musicianLoopbackIsUnset}
+                  isDragDisabled={musiciansLocked}
+                />
+                <div className={styles.listHighlightsContainer}>
+                  {_.map(_.range(8), index => (
+                    <div
+                      key={index}
+                      className={styles.listHighlight}
                       style={{
-                        color: index % 2 ? Colors.GRAY2 : Colors.GRAY1,
+                        backgroundColor:
+                          index % 2 ? Colors.DARK_GRAY5 : Colors.DARK_GRAY4,
                       }}
                     >
-                      {index + 1}
-                    </span>
-                  </div>
-                ))}
+                      <span
+                        className={styles.listHighlightIndex}
+                        style={{
+                          color: index % 2 ? Colors.GRAY2 : Colors.GRAY1,
+                        }}
+                      >
+                        {index + 1}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {_.map(musiciansColumn.items, ({ id: musicianId }) =>
+                  _.flow(
+                    handler =>
+                      handler ? (
+                        <BufferHealthDisplay
+                          key={musicianId}
+                          dataHandler={handler}
+                        />
+                      ) : (
+                        <span key={musicianId}>no data</span>
+                      )
+                  )(bufferHealthDataHandlersByMusicianId[musicianId])
+                )}
               </div>
             </div>
           </Card>
