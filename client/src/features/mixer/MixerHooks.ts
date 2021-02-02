@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { MutableRefObject, useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Base64 } from 'js-base64';
 
@@ -217,7 +217,9 @@ interface DataResponse {
 
 export function useRoomAudio(
   trackCount: number,
-  sendBufferHealthData: (bufferHealthSeconds: number[]) => void
+  sendBufferHealthData: MutableRefObject<
+    (bufferHealthSeconds: number[]) => void
+  >
 ): DataResponse {
   const [masterControls, setMasterControls] = useState<TrackControls | null>(
     null
@@ -284,7 +286,8 @@ export function useRoomAudio(
           roomAudioNode.port.postMessage(message)
         );
         // This will be called once a second
-        roomAudioNode.port.onmessage = ({ data }) => sendBufferHealthData(data);
+        roomAudioNode.port.onmessage = ({ data }) =>
+          sendBufferHealthData.current(data);
       };
       const launchAudioNodesPromise = launchAudioNodes();
 
@@ -298,7 +301,7 @@ export function useRoomAudio(
         });
       };
     },
-    [trackCount]
+    [trackCount, sendBufferHealthData]
   );
 
   return { masterControls, trackControls };

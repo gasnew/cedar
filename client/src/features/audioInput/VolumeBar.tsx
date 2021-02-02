@@ -2,7 +2,7 @@ import _ from 'lodash';
 import React, { useCallback, useEffect, useRef } from 'react';
 import { Colors } from '@blueprintjs/core';
 
-function Canvas({ draw, style }) {
+export function Canvas({ draw, style }) {
   const canvasRef = useRef(null);
   const animationFrameId = useRef<number | null>(null);
 
@@ -27,7 +27,14 @@ function Canvas({ draw, style }) {
     [draw]
   );
 
-  return <canvas height={1} width={1} ref={canvasRef} style={style} />;
+  return (
+    <canvas
+      height={style.height || 1}
+      width={style.width || 1}
+      ref={canvasRef}
+      style={style}
+    />
+  );
 }
 
 interface Props {

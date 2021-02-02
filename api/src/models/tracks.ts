@@ -23,7 +23,7 @@ export interface TrackInterface {
   ) => Promise<Track>;
   appendTrackBufferHealthData: (
     roomId: string,
-    { id, data }: { id: string; data: number[] }
+    { id, bufferHealthSeconds }: { id: string; bufferHealthSeconds: number[] }
   ) => Promise<Track>;
 }
 
@@ -99,7 +99,7 @@ export default function(redisClient: IORedisClient): TrackInterface {
         throw new Unprocessable(`Track "${trackId}" does not exist!`);
       const track = parseOrThrow<Track>(rawTrack);
 
-      const { data, newCursor } = await readFromStream(
+      const { data, newCursor } = await readFromStream<string>(
         rStreamKey({ roomId, trackId }),
         cursor
       );
@@ -186,7 +186,7 @@ export default function(redisClient: IORedisClient): TrackInterface {
         cursor: newCursor,
       };
     },
-    appendTrackBufferHealthData: async (roomId, { id, data }) => {
+    appendTrackBufferHealthData: async (roomId, { id, bufferHealthSeconds }) => {
       if (!(await redisClient.exists(rKey({ roomId }))))
         throw new Unprocessable(`Room ${roomId} does not exist!`);
       const track = parseOrThrow<Track>(
@@ -195,7 +195,7 @@ export default function(redisClient: IORedisClient): TrackInterface {
 
       await writeToStream(
         rStreamKey({ roomId, trackId: id, suffix: 'buffer-health-data' }),
-        data
+        bufferHealthSeconds
       );
       return track;
     },

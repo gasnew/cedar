@@ -13,7 +13,9 @@ type FindQueryParams = QueryParams<{
 }>;
 
 // This is a service just for reading and writing a track's buffer health data.
-function buildTrackBufferHealthData(redisClient: Redis): TrackBufferHealthService {
+function buildTrackBufferHealthData(
+  redisClient: Redis
+): TrackBufferHealthService {
   return {
     find: async (params: FindQueryParams) => {
       const { roomId, cursorsByTrack } = params.query;
@@ -25,10 +27,13 @@ function buildTrackBufferHealthData(redisClient: Redis): TrackBufferHealthServic
     },
     patch: async (
       id: string,
-      { data }: { data: string[] },
+      { bufferHealthSeconds }: { bufferHealthSeconds: number[] },
       { query: { roomId } }: QueryParams<{ roomId: string }>
     ) => {
-      return redisClient.appendTrackBufferHealthData(roomId, { id, data });
+      return redisClient.appendTrackBufferHealthData(roomId, {
+        id,
+        bufferHealthSeconds,
+      });
     },
   };
 }

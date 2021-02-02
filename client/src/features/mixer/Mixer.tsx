@@ -1,6 +1,6 @@
 import { Card, Classes, Colors, H4, H5, Tooltip } from '@blueprintjs/core';
 import _ from 'lodash';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 
 import { usePatch } from '../feathers/FeathersHooks';
@@ -36,13 +36,23 @@ export default function() {
   // Sending buffer health data
   const myTrackId = useSelector(selectMyTrackId);
   const [patchTrackBufferHealth] = usePatch('trackBufferHealth', '', {}, true);
-  const sendBufferHealthData = (bufferHealthSeconds: number[]) => {
-    // We should know our track ID before sendBufferHealthData is ever called,
-    // but even if that were not the case, it would not be a big deal to lose
-    // some of this data => let's fail silently.
-    if (!myTrackId) return;
-    patchTrackBufferHealth(myTrackId, { bufferHealthSeconds });
-  };
+  const sendBufferHealthData = useRef<(bufferHealthSeconds: number[]) => void>(
+    (bufferHealthSeconds: number[]) => null
+  );
+  useEffect(
+    () => {
+      console.log('yo');
+      sendBufferHealthData.current = (bufferHealthSeconds: number[]) => {
+        // We should know our track ID before sendBufferHealthData is ever called,
+        // but even if that were not the case, it would not be a big deal to lose
+        // some of this data => let's fail silently.
+        if (!myTrackId) return;
+        //console.log(bufferHealthSeconds);
+        patchTrackBufferHealth(myTrackId, { bufferHealthSeconds });
+      };
+    },
+    [myTrackId, patchTrackBufferHealth, sendBufferHealthData]
+  );
 
   // Audio data
   const { masterControls, trackControls } = useRoomAudio(
