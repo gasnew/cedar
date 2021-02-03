@@ -14,6 +14,12 @@ import { selectAmInChain } from '../room/roomSlice';
 import { useInterval } from '../../app/util';
 import { Track as ServerTrack } from '../../../../api/src/room';
 
+declare global {
+  interface HTMLAudioElement {
+    setSinkId: (string) => Promise<undefined>;
+  }
+}
+
 function useFetchAudioData(postWorkletMessage: (any) => void) {
   const [fetching, setFetching] = useState<boolean>(false);
   const cursorsByTrack = useRef<{
@@ -215,7 +221,7 @@ interface DataResponse {
   trackControls: TrackControls[];
 }
 
-export function useRoomAudio(trackCount: number): DataResponse {
+export function useRoomAudio(trackCount: number, deviceId: string): DataResponse {
   const [masterControls, setMasterControls] = useState<TrackControls | null>(
     null
   );
@@ -223,11 +229,16 @@ export function useRoomAudio(trackCount: number): DataResponse {
   const [postWorkletMessage, setPostWorkletMessage] = useState<(any) => void>(
     () => _ => null
   );
+  // Only used in race-condition protection
+  const currentAudioContext = useRef<AudioContext | null>(null);
+
   useFetchAudioData(postWorkletMessage);
 
   useEffect(
     () => {
       const audioContext = new window.AudioContext({ sampleRate: 48000 });
+      // Store the current AudioContext for race condition protection
+      currentAudioContext.current = audioContext;
       const launchAudioNodes = async () => {
         await audioContext.audioWorklet.addModule('RoomAudioPlayer.js');
         const masterGainNode = audioContext.createGain();
@@ -242,33 +253,37 @@ export function useRoomAudio(trackCount: number): DataResponse {
           }
         );
 
-        if (trackCount !== 0) {
-          setTrackControls(
-            _.map(_.range(trackCount), index => {
-              const trackGainNode = audioContext.createGain();
-              const trackAnalyzer = audioContext.createAnalyser();
+        const trackControls =
+          trackCount === 0
+            ? []
+            : _.map(_.range(trackCount), index => {
+                const trackGainNode = audioContext.createGain();
+                const trackAnalyzer = audioContext.createAnalyser();
 
-              roomAudioNode.connect(
-                trackGainNode,
-                index,
-                0
-              );
-              trackGainNode.connect(trackAnalyzer);
-              trackGainNode.connect(
-                masterGainNode,
-                0,
-                0
-              );
+                roomAudioNode.connect(
+                  trackGainNode,
+                  index,
+                  0
+                );
+                trackGainNode.connect(trackAnalyzer);
+                trackGainNode.connect(
+                  masterGainNode,
+                  0,
+                  0
+                );
 
-              return createControls(trackGainNode, trackAnalyzer);
-            })
-          );
-        } else {
-          roomAudioNode.connect(masterGainNode);
-          setTrackControls([]);
-        }
+                return createControls(trackGainNode, trackAnalyzer);
+              });
+        if (trackControls.length === 0) roomAudioNode.connect(masterGainNode);
         masterGainNode.connect(masterAnalyzer);
-        masterGainNode.connect(audioContext.destination);
+
+        const audioElement = new Audio();
+        await audioElement.setSinkId(deviceId);
+
+        var outputDeviceNode = audioContext.createMediaStreamDestination();
+        masterGainNode.connect(outputDeviceNode);
+        audioElement.srcObject = outputDeviceNode.stream;
+        await audioElement.play();
 
         // Has to be a power of 2. At the default sample rate of 48000, this
         // size should be enough to let us fetch all samples assuming we are
@@ -276,20 +291,37 @@ export function useRoomAudio(trackCount: number): DataResponse {
         masterAnalyzer.fftSize = 1024;
         masterGainNode.gain.value = 1;
 
+        // NOTE(gnewman): This check protects us from making state changes
+        // using an outdated AudioContext. If the AudioContext of this function
+        // call is not the same as currentAudioContext.current, that means
+        // there is another in-progress call to this function that we should
+        // yield to--i.e., return now before calling "set" commands.
+        if (audioContext !== currentAudioContext.current) {
+          console.log(
+            `launchAudioNodes was called in quick succession. Ignoring setting
+            data for the first call.`
+          );
+          return;
+        }
+        setTrackControls(trackControls);
         setMasterControls(createControls(masterGainNode, masterAnalyzer));
         setPostWorkletMessage(() => message =>
           roomAudioNode.port.postMessage(message)
         );
       };
-      launchAudioNodes();
+      const launchAudioNodesPromise = launchAudioNodes();
 
       return () => {
-        audioContext.close();
+        // NOTE(gnewman): We need to wait until updateStream has finished
+        // doing its thing before we can close the context. The promise
+        // resolver will be fired immediately after `then` is called if the
+        // promise is already fulfilled.
+        launchAudioNodesPromise.then(() => {
+          audioContext.close();
+        });
       };
-      // NOTE(gnewman): We do this so we recreate the AudioContext, just like in
-      // AudioStreamHooks
     },
-    [trackCount]
+    [trackCount, deviceId]
   );
 
   return { masterControls, trackControls };
