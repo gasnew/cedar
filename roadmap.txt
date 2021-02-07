@@ -87,6 +87,10 @@ Final push prior to Patreon
 + fix recording state getting broken
 + show version number
 
+Improve Cedar interoperability experience
++ Allow setting output audio device
++ Disable "Monitor input" while recording
+
 Admin stuff (no code)
 + Write how-to guide
 - Demo video (~5 minutes, including musical performance)
@@ -246,6 +250,22 @@ Cedar audience
 FEATURE PACKAGES THAT NEED TO BE SPECCED OUT
 --------------------------------------------
 Future features
+- Fix HTMLAudioElement latency variability
+  - <rant>To allow users to select the output device they want to use, we
+    instantiate an `HTMLAudioElement`--which allows setting a "sink ID," or the
+    output device--rather than piping to the `AudioContext.destination`. This
+    method adds ~50 ms of latency over `AudioContext.destination`, which is a
+    huge bummer, and the `HTMLAudioElement` seems to vary in latency by +/- 7
+    ms. I'm not happy with the Web Audio API in this instance, as there is no
+    native support for configuring an `AudioContext`'s `destination`'s device.
+    Still, we are pretty much required to be able to set Cedar's output device
+    for the sake of interoperability with things like VB Cable. So... this is a
+    bit of an unfortunate situation, but based on my testing, latency is still
+    predictable enough that Cedar still works well enough... A big shrug from
+    me!</rant>
+  - Can we fix this somehow? I can live with some extra latency that
+    `HTMLAudioElement` brings, but the latency variation is troubling. Maybe we
+    need to fork electron and edit chromium code??
 - Use JWT + Google OAuth for authentication
 - Display errors (esp. for streaming failures)
   - Maybe allow handle in FeathersHooks to make these pop up if I don't handle

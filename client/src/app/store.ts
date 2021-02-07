@@ -1,6 +1,7 @@
 import {
   combineReducers,
   configureStore,
+  getDefaultMiddleware,
   ThunkAction,
   Action,
 } from '@reduxjs/toolkit';
@@ -34,6 +35,12 @@ export const store = configureStore({
       recording: recordingReducer,
     })
   ),
+  middleware: getDefaultMiddleware({
+    // NOTE(gnewman): Sadly, we need to turn off this check because of
+    // redux-persist :P. Generally, though, we only want to put serializable
+    // data into Redux.
+    serializableCheck: false,
+  }),
 });
 export const persistor = persistStore(store);
 

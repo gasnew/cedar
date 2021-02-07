@@ -24,6 +24,7 @@ class AudioRecorder extends AudioWorkletProcessor {
           this.recording = true;
           this.recordedSamples = 0;
           this.samplesToCapture = event.data.samplesToCapture;
+          this.recordingStartedAt = event.data.recordingStartedAt;
         }
       }
     };
@@ -31,6 +32,12 @@ class AudioRecorder extends AudioWorkletProcessor {
 
   process(inputs, outputs, parameters) {
     if (!this.recording) return true;
+    if (this.recordedSamples === 0) {
+      // NOTE(gnewman): Recording may start at a different time than
+      // playback, so let's account for any time that's elapsed since
+      // playback began by padding our recording data.
+      this.recordedSamples = (Date.now() - this.recordingStartedAt) * 48;
+    }
 
     // We assume we only have one input connection
     const input = inputs[0];

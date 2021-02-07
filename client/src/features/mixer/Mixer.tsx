@@ -1,20 +1,16 @@
-import {
-  Card,
-  Classes,
-  Colors,
-  H4,
-  H5,
-  Tooltip,
-} from '@blueprintjs/core';
+import { Card, Classes, Colors, H4, H5, Tooltip } from '@blueprintjs/core';
 import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
+import AudioOutputSelector from './AudioOutputSelector';
+import { selectOutputDevice, setOutputDevice } from '../audioInput/audioSlice';
 import styles from './Mixer.module.css';
 import MusicianTrackControls from './MusicianTrackControls';
 import './MusicianTrackControls.css';
 import { TrackControls, useRoomAudio } from './MixerHooks';
 import { Musician, selectMusicians } from '../musicians/musiciansSlice';
+import { selectRecordingState } from '../recording/recordingSlice';
 import { selectPrecedingMusicianIds } from '../room/roomSlice';
 import VolumeSlider from './VolumeSlider';
 
@@ -31,16 +27,21 @@ interface TrackWithMusician {
 }
 
 export default function() {
+  // Output device state
+  const dispatch = useDispatch();
+  const selectedDevice = useSelector(selectOutputDevice);
+
   const [tracksWithMusicians, setTracksWithMusicians] = useState<
     TrackWithMusician[]
   >([]);
 
   const precedingMusicianIds = useSelector(selectPrecedingMusicianIds);
   const musicians = useSelector(selectMusicians);
+  const recordingState = useSelector(selectRecordingState);
 
   // Audio data
   const { masterControls, trackControls } = useRoomAudio(
-    precedingMusicianIds.length
+    precedingMusicianIds.length, selectedDevice ? selectedDevice.deviceId : 'default'
   );
 
   useEffect(
@@ -118,6 +119,13 @@ export default function() {
         >
           Master output
         </H5>
+        <div style={{ marginBottom: 10 }}>
+          <AudioOutputSelector
+            disabled={recordingState !== 'stopped'}
+            setSelectedDevice={device => dispatch(setOutputDevice(device))}
+            selectedDevice={selectedDevice}
+          />
+        </div>
         <div style={{ marginLeft: 12, marginRight: 4 }}>
           {masterControls && <VolumeSlider controls={masterControls} />}
         </div>
