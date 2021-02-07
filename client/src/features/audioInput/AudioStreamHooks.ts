@@ -286,8 +286,7 @@ export function useStreamData(
           // should yield to--i.e., return now before calling "set" commands.
           if (audioContext !== currentAudioContext.current) {
             console.log(
-              `updateStream was called in quick succession. Ignoring setting
-              data for the first call.`
+              `updateStream was called in quick succession. Ignoring setting data for the first call.`
             );
             return;
           }

@@ -301,8 +301,7 @@ export function useRoomAudio(
         // yield to--i.e., return now before calling "set" commands.
         if (audioContext !== currentAudioContext.current) {
           console.log(
-            `launchAudioNodes was called in quick succession. Ignoring setting
-            data for the first call.`
+            `launchAudioNodes was called in quick succession. Ignoring setting data for the first call.`
           );
           return audioElement;
         }

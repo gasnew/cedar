@@ -53,7 +53,7 @@ export default function() {
       if (interactionDisabled && listeningToAudioInput)
         setListeningToAudioInput(false);
     },
-    [interactionDisabled]
+    [interactionDisabled, listeningToAudioInput]
   );
   useEffect(
     () => {
@@ -61,7 +61,7 @@ export default function() {
         listeningToAudioInput === true ? 1 : 0
       );
     },
-    [listeningToAudioInput]
+    [listeningToAudioInput, setDirectToDestinationGainNodeGain]
   );
 
   return (
