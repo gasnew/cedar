@@ -316,10 +316,9 @@ export default function() {
       } else {
         setPendingLoopbackLatencyMs(null);
         setErrorMessage(
-          `Cedar was unable to determine your system's loopback latency.
-          Please try turning up your system audio, moving your headphones
-          closer to your microphone, and/or selecting a different input
-          device.`
+          `Cedar was unable to determine loopback latency. Try turning up your
+          computer audio and moving your headphones closer to your microphone.
+          Also make sure you have the right input and output devices selected.`
         );
       }
       setRunning(false);
