@@ -87,6 +87,10 @@ Final push prior to Patreon
 + fix recording state getting broken
 + show version number
 
+Improve Cedar interoperability experience
+/ Allow setting output audio device
+- Disable "Monitor input" while recording
+
 Admin stuff (no code)
 + Write how-to guide
 - Demo video (~5 minutes, including musical performance)

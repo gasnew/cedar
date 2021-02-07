@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Button,
@@ -14,11 +14,17 @@ import {
 } from '@blueprintjs/core';
 
 import { useStream } from '../audioInput/AudioStreamHooks';
-import { selectInputDevice, IInputDevice } from '../audioInput/audioSlice';
+import {
+  selectInputDevice,
+  selectOutputDevice,
+  IInputDevice,
+  IOutputDevice,
+} from '../audioInput/audioSlice';
 import AudioInputSelector from '../audioInput/AudioInputSelector';
 import VolumeBar from '../audioInput/VolumeBar';
 import { usePatch } from '../feathers/FeathersHooks';
 import { setLoopbackLatencyMs } from './mediaBarSlice';
+import AudioOutputSelector from '../mixer/AudioOutputSelector';
 import { selectRecordingState } from '../recording/recordingSlice';
 import { setMusicianLoopbackLatencyMs } from '../musicians/musiciansSlice';
 import { selectRoom } from '../room/roomSlice';
@@ -37,7 +43,7 @@ const PULSE_SAMPLES = Math.floor(PULSE_PERIOD_SECONDS * PULSE_COUNT * 48000);
 
 function createPulsesSource(audioContext) {
   // Create an empty three-second stereo buffer at the sample rate of the AudioContext
-  var myArrayBuffer = audioContext.createBuffer(
+  const myArrayBuffer = audioContext.createBuffer(
     2,
     audioContext.sampleRate * PULSE_PERIOD_SECONDS * PULSE_COUNT,
     audioContext.sampleRate
@@ -45,7 +51,7 @@ function createPulsesSource(audioContext) {
 
   for (var channel = 0; channel < myArrayBuffer.numberOfChannels; channel++) {
     // This gives us the actual array that contains the data
-    var nowBuffering = myArrayBuffer.getChannelData(channel);
+    const nowBuffering = myArrayBuffer.getChannelData(channel);
     for (var i = 0; i < myArrayBuffer.length; i++) {
       const periodSamples = PULSE_PERIOD_SECONDS * audioContext.sampleRate;
       if (
@@ -63,14 +69,14 @@ function createPulsesSource(audioContext) {
 
   // Get an AudioBufferSourceNode.
   // This is the AudioNode to use when we want to play an AudioBuffer
-  var source = audioContext.createBufferSource();
+  const source = audioContext.createBufferSource();
 
   // set the buffer in the AudioBufferSourceNode
   source.buffer = myArrayBuffer;
   return source;
 }
 
-function startRecordingData(audioRecorderNode) {
+function startRecordingData(audioRecorderNode, recordingStartedAt) {
   return new Promise<Float32Array>((resolve, reject) => {
     audioRecorderNode.port.onmessage = function(event) {
       resolve(event.data);
@@ -79,6 +85,7 @@ function startRecordingData(audioRecorderNode) {
     audioRecorderNode.port.postMessage({
       action: 'start',
       samplesToCapture: PULSE_SAMPLES,
+      recordingStartedAt,
     });
   });
 }
@@ -125,30 +132,73 @@ function calculateLoopbackLatency(
   };
 }
 
-async function detectLoopbackLatency(
-  stream: MediaStream
-): Promise<LoopbackLatencyResult> {
-  // Pulses source
-  const audioContext = new window.AudioContext({ sampleRate: 48000 });
-  const pulsesSource = createPulsesSource(audioContext);
-  pulsesSource.connect(audioContext.destination);
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
-  // Audio input stream recording
-  const sourceNode = audioContext.createMediaStreamSource(stream);
-  const biquadFilterNode = new BiquadFilterNode(audioContext, {
+async function detectLoopbackLatency(
+  stream: MediaStream,
+  audioElement: HTMLAudioElement
+): Promise<LoopbackLatencyResult> {
+  // CONNECT PULSES SOURCE TO OUTPUT DEVICE
+  const outputAudioContext = new window.AudioContext({ sampleRate: 48000 });
+  const pulsesSource = createPulsesSource(outputAudioContext);
+  const outputDeviceNode = outputAudioContext.createMediaStreamDestination();
+  // NOTE(gnewman): Sometimes routing an AudioContext to a destination, even if
+  // you don't need it, helps the AudioContext time things correctly.
+  const outputGain = outputAudioContext.createGain();
+  outputGain.gain.value = 0;
+  pulsesSource.connect(outputGain);
+  outputGain.connect(outputAudioContext.destination);
+  pulsesSource.connect(outputDeviceNode);
+  audioElement.srcObject = outputDeviceNode.stream;
+
+  // START AUDIO ELEMENT, AND SLEEP
+  await audioElement.play();
+  // NOTE(gnewman): HTMLAudioElement is a little finickey and sometimes takes a
+  // moment to fill up its buffer and start playback sensibly, so we sleep for
+  // a bit to give it time to do its thing. This also mimicks the actual core
+  // Cedar audio loop where audioElement.play() is called when the chain is
+  // arranged (when the AudioContext for your audio sources needs to be
+  // rebuilt), then audio data starts coming in much later when recording
+  // starts.
+  await sleep(500);
+
+  // CONNECT INPUT DEVICE TO AUDIO RECORDER
+  const inputAudioContext = new window.AudioContext({ sampleRate: 48000 });
+  const sourceNode = inputAudioContext.createMediaStreamSource(stream);
+  const biquadFilterNode = new BiquadFilterNode(inputAudioContext, {
     type: 'bandpass',
     Q: 10,
     frequency: PULSE_HZ,
   });
-  await audioContext.audioWorklet.addModule('worklets/AudioRecorder.js');
-  const audioRecorderNode = new AudioWorkletNode(audioContext, 'AudioRecorder');
+  await inputAudioContext.audioWorklet.addModule('worklets/AudioRecorder.js');
+  const audioRecorderNode = new AudioWorkletNode(
+    inputAudioContext,
+    'AudioRecorder'
+  );
   sourceNode.connect(biquadFilterNode);
   biquadFilterNode.connect(audioRecorderNode);
+  // NOTE(gnewman): Sometimes routing an AudioContext to a destination, even if
+  // you don't need it, helps the AudioContext time things correctly.
+  const inputGain = inputAudioContext.createGain();
+  inputGain.gain.value = 0;
+  audioRecorderNode.connect(inputGain);
+  inputGain.connect(inputAudioContext.destination);
 
-  // Start playing and recording at the same time
+  // START RECORDING AND PLAYBACK AT THE SAME TIME
   pulsesSource.start();
-  const recordedData = await startRecordingData(audioRecorderNode);
-  audioContext.close();
+  // We use this timestamp to adjust the recording
+  const recordingStartedAt = Date.now();
+  const recordedData = await startRecordingData(
+    audioRecorderNode,
+    recordingStartedAt
+  );
+
+  // CLEAN UP
+  inputAudioContext.close();
+  outputAudioContext.close();
+  await audioElement.pause();
 
   return calculateLoopbackLatency(recordedData);
 }
@@ -213,13 +263,20 @@ export function useSimpleStreamFetcher(
 }
 export default function() {
   const recordingState = useSelector(selectRecordingState);
-  const defaultSelectedDevice = useSelector(selectInputDevice);
+  const defaultSelectedInputDevice = useSelector(selectInputDevice);
+  const defaultSelectedOutputDevice = useSelector(selectOutputDevice);
   const { musicianId } = useSelector(selectRoom);
 
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedDevice, setSelectedDevice] = useState<IInputDevice | null>(
-    defaultSelectedDevice
-  );
+  const [
+    selectedInputDevice,
+    setSelectedInputDevice,
+  ] = useState<IInputDevice | null>(defaultSelectedInputDevice);
+  const [
+    selectedOutputDevice,
+    setSelectedOutputDevice,
+  ] = useState<IOutputDevice | null>(defaultSelectedOutputDevice);
+  const audioElement = useMemo<HTMLAudioElement>(() => new Audio(), []);
   const [running, setRunning] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [pendingLoopbackLatencyMs, setPendingLoopbackLatencyMs] = useState<
@@ -227,12 +284,22 @@ export default function() {
   >(null);
 
   // Audio data
-  const stream = useStream(selectedDevice ? selectedDevice.deviceId : null);
+  const stream = useStream(
+    selectedInputDevice ? selectedInputDevice.deviceId : null
+  );
   const { someData, fetchData } = useSimpleStreamFetcher(stream);
 
   const [patchMusician] = usePatch('musicians');
 
   const dispatch = useDispatch();
+
+  useEffect(
+    () => {
+      if (selectedOutputDevice)
+        audioElement.setSinkId(selectedOutputDevice.deviceId);
+    },
+    [audioElement, selectedOutputDevice]
+  );
 
   const handleOpen = () => setIsOpen(true);
   const handleClose = () => {
@@ -240,9 +307,9 @@ export default function() {
     setIsOpen(false);
   };
   const handleRunClick = async () => {
-    if (stream) {
+    if (stream && audioElement) {
       setRunning(true);
-      const latencyResult = await detectLoopbackLatency(stream);
+      const latencyResult = await detectLoopbackLatency(stream, audioElement);
       if (latencyResult.success) {
         setPendingLoopbackLatencyMs(latencyResult.latencyMs);
         setErrorMessage(null);
@@ -300,8 +367,10 @@ export default function() {
         title="Calibrate loopback latency!"
         isOpen={isOpen && recordingState === 'stopped'}
         onOpened={() => {
-          if (selectedDevice !== defaultSelectedDevice)
-            setSelectedDevice(defaultSelectedDevice);
+          if (selectedInputDevice !== defaultSelectedInputDevice)
+            setSelectedInputDevice(defaultSelectedInputDevice);
+          if (selectedOutputDevice !== defaultSelectedOutputDevice)
+            setSelectedOutputDevice(defaultSelectedOutputDevice);
         }}
         onClose={handleClose}
         onClosed={handleClosed}
@@ -357,8 +426,8 @@ export default function() {
           >
             <div style={{ marginBottom: 10 }}>
               <AudioInputSelector
-                setSelectedDevice={setSelectedDevice}
-                selectedDevice={selectedDevice}
+                setSelectedDevice={setSelectedInputDevice}
+                selectedDevice={selectedInputDevice}
               />
             </div>
             <div style={{ position: 'relative', marginBottom: 5 }}>
@@ -367,6 +436,12 @@ export default function() {
                 width={250}
                 fetchData={fetchData}
                 disabled={!someData}
+              />
+            </div>
+            <div style={{ marginBottom: 10 }}>
+              <AudioOutputSelector
+                setSelectedDevice={setSelectedOutputDevice}
+                selectedDevice={selectedOutputDevice}
               />
             </div>
             <Button

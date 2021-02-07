@@ -195,6 +195,8 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
   const [setWorkletCallback, setSetWorkletCallback] = useState<
     (WorkletCallback) => void
   >(_ => _ => null);
+  // Only used in race-condition protection
+  const currentAudioContext = useRef<AudioContext | null>(null);
   useChunkPoster(useSelector(selectMyTrackId), setWorkletCallback);
   const recordingState = useSelector(selectRecordingState);
   const currentRecording = useSelector(selectCurrentRecording);
@@ -237,6 +239,8 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
         const audioContext = new window.AudioContext({
           sampleRate: 48000,
         });
+        // Store the current AudioContext for race condition protection
+        currentAudioContext.current = audioContext;
         const updateStream = async () => {
           await audioContext.audioWorklet.addModule('AudioInputBufferer.js');
           const analyzer = audioContext.createAnalyser();
@@ -247,9 +251,6 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
           const audioInputBufferNode = new AudioWorkletNode(
             audioContext,
             'AudioInputBufferer'
-          );
-          setSetWorkletCallback(() => callback =>
-            (audioInputBufferNode.port.onmessage = callback)
           );
 
           mediaSource.connect(inputGainNode);
@@ -271,6 +272,21 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
           inputGainNode.gain.value = 1;
           directToDestinationGainNode.gain.value = 0;
 
+          // NOTE(gnewman): This check protects us from making state changes
+          // using an outdated AudioContext. If the AudioContext of this
+          // function call is not the same as currentAudioContext.current, that
+          // means there is another in-progress call to this function that we
+          // should yield to--i.e., return now before calling "set" commands.
+          if (audioContext !== currentAudioContext.current) {
+            console.log(
+              `updateStream was called in quick succession. Ignoring setting
+              data for the first call.`
+            );
+            return;
+          }
+          setSetWorkletCallback(() => callback =>
+            (audioInputBufferNode.port.onmessage = callback)
+          );
           setAnalyzer(analyzer);
           setGainNode(inputGainNode);
           setDirectToDestinationGainNode(directToDestinationGainNode);
@@ -280,12 +296,18 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
           );
         };
 
-        updateStream();
+        const updateStreamPromise = updateStream();
 
         return () => {
           setCanChangeStream(false);
-          audioContext.close().then(() => {
-            setCanChangeStream(true);
+          // NOTE(gnewman): We need to wait until updateStream has finished
+          // doing its thing before we can close the context. The promise
+          // resolver will be fired immediately after `then` is called if the
+          // promise is already fulfilled.
+          updateStreamPromise.then(() => {
+            audioContext.close().then(() => {
+              setCanChangeStream(true);
+            });
           });
         };
       }

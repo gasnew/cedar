@@ -221,7 +221,10 @@ interface DataResponse {
   trackControls: TrackControls[];
 }
 
-export function useRoomAudio(trackCount: number, deviceId: string): DataResponse {
+export function useRoomAudio(
+  trackCount: number,
+  deviceId: string
+): DataResponse {
   const [masterControls, setMasterControls] = useState<TrackControls | null>(
     null
   );
@@ -280,7 +283,7 @@ export function useRoomAudio(trackCount: number, deviceId: string): DataResponse
         const audioElement = new Audio();
         await audioElement.setSinkId(deviceId);
 
-        var outputDeviceNode = audioContext.createMediaStreamDestination();
+        const outputDeviceNode = audioContext.createMediaStreamDestination();
         masterGainNode.connect(outputDeviceNode);
         audioElement.srcObject = outputDeviceNode.stream;
         await audioElement.play();
@@ -301,23 +304,26 @@ export function useRoomAudio(trackCount: number, deviceId: string): DataResponse
             `launchAudioNodes was called in quick succession. Ignoring setting
             data for the first call.`
           );
-          return;
+          return audioElement;
         }
         setTrackControls(trackControls);
         setMasterControls(createControls(masterGainNode, masterAnalyzer));
         setPostWorkletMessage(() => message =>
           roomAudioNode.port.postMessage(message)
         );
+
+        return audioElement;
       };
       const launchAudioNodesPromise = launchAudioNodes();
 
       return () => {
-        // NOTE(gnewman): We need to wait until updateStream has finished
+        // NOTE(gnewman): We need to wait until launchAudioNodes has finished
         // doing its thing before we can close the context. The promise
         // resolver will be fired immediately after `then` is called if the
         // promise is already fulfilled.
-        launchAudioNodesPromise.then(() => {
+        launchAudioNodesPromise.then(audioElement => {
           audioContext.close();
+          audioElement.pause();
         });
       };
     },
