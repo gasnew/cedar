@@ -88,8 +88,8 @@ Final push prior to Patreon
 + show version number
 
 Improve Cedar interoperability experience
-/ Allow setting output audio device
-- Disable "Monitor input" while recording
++ Allow setting output audio device
++ Disable "Monitor input" while recording
 
 Admin stuff (no code)
 + Write how-to guide

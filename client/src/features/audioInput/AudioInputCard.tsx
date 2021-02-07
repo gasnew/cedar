@@ -43,11 +43,26 @@ export default function() {
   // Redux state
   const recordingState = useSelector(selectRecordingState);
 
-  const selectionDisabled = !canChangeStream || recordingState !== 'stopped';
+  const interactionDisabled = !canChangeStream || recordingState !== 'stopped';
   const handleToggleListening = () => {
-    setDirectToDestinationGainNodeGain(listeningToAudioInput === true ? 0 : 1);
     setListeningToAudioInput(!listeningToAudioInput);
   };
+  useEffect(
+    () => {
+      // Disable monitoring if we are recording
+      if (interactionDisabled && listeningToAudioInput)
+        setListeningToAudioInput(false);
+    },
+    [interactionDisabled]
+  );
+  useEffect(
+    () => {
+      setDirectToDestinationGainNodeGain(
+        listeningToAudioInput === true ? 1 : 0
+      );
+    },
+    [listeningToAudioInput]
+  );
 
   return (
     <Card style={{ flexGrow: 1 }}>
@@ -57,12 +72,13 @@ export default function() {
           style={{ marginLeft: 'auto' }}
           checked={listeningToAudioInput}
           label="Monitor input"
+          disabled={interactionDisabled}
           onChange={handleToggleListening}
         />
       </div>
       <div style={{ marginBottom: 10 }}>
         <AudioInputSelector
-          disabled={selectionDisabled}
+          disabled={interactionDisabled}
           setSelectedDevice={device => dispatch(setInputDevice(device))}
           selectedDevice={selectedInputDevice}
         />
