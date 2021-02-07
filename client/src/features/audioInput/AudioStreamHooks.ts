@@ -180,7 +180,10 @@ interface DataResponse {
   setDirectToDestinationGainNodeGain: (number) => void;
 }
 
-export function useStreamData(stream: MediaStream | null): DataResponse {
+export function useStreamData(
+  stream: MediaStream | null,
+  audioElement: HTMLAudioElement
+): DataResponse {
   const [analyzer, setAnalyzer] = useState<AnalyserNode | null>(null);
   const [gainNode, setGainNode] = useState<GainNode | null>(null);
   const [
@@ -261,9 +264,13 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
           // branch as active. No audio is rendered to the speakers.
           audioInputBufferNode.connect(audioContext.destination);
 
+          // Set up monitoring
           const inputChannelMergerNode = audioContext.createChannelMerger(1);
+          const outputDeviceNode = audioContext.createMediaStreamDestination();
+          audioElement.srcObject = outputDeviceNode.stream;
+          await audioElement.play();
           directToDestinationGainNode.connect(inputChannelMergerNode);
-          inputChannelMergerNode.connect(audioContext.destination);
+          inputChannelMergerNode.connect(outputDeviceNode);
 
           // Has to be a power of 2. At the default sample rate of 48000, this
           // size should be enough to let us fetch all samples assuming we are
@@ -312,7 +319,7 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
         };
       }
     },
-    [stream]
+    [audioElement, stream]
   );
 
   const fetchData = useCallback(
