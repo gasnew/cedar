@@ -41,7 +41,7 @@ export default function(app: Application) {
     return;
   }
 
-  app.service('musicians').on('created', ({ id }: Musician, options: any) => {
+  function registerConnectionWithMusician({ id}: Musician, options: any) {
     // We assume that a client is only responsible for one musician at a time.
     // If the client switches rooms, it should mark the previous room's
     // musician as inactive before creating the new one.
@@ -51,7 +51,12 @@ export default function(app: Application) {
 
     connection.musicianId = id;
     connection.roomId = options.params.query.roomId;
-  });
+  }
+  // NOTE(gnewman): When a client joins a room, they either create or update
+  // (activate) a musician. These functions are idempotent, so it's OK if
+  // they're called extraneously.
+  app.service('musicians').on('created', registerConnectionWithMusician);
+  app.service('musicians').on('patched', registerConnectionWithMusician);
 
   app.on('disconnect', async (connection: any) => {
     const musicianId = connection.musicianId;

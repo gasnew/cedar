@@ -91,6 +91,11 @@ Improve Cedar interoperability experience
 + Allow setting output audio device
 + Disable "Monitor input" while recording
 
+Usability improvements
++ Clients rejoin subscriptions when they reconnect
++ VolumeBar is further optimized
+- Make loopback latency calibration easier
+
 Admin stuff (no code)
 + Write how-to guide
 - Demo video (~5 minutes, including musical performance)
@@ -183,6 +188,11 @@ Set up authentication
 Downtimeless updates
 - Use infrastructure-as-code to provision Cedar server
 - Use load balancer for downtimeless deploys
+- Server track PATCH endpoint is truly idempotent (returns the same response if
+  the same input is received). This will help make us robust to servers that
+  die (i.e., it's OK if we don't get the new cursor immediately when writing
+  audio data)
+- Server can be restarted without disrupting clients
 - Automatically upload Electron app to CMS
 - Landing page?
 - Accounts with subscriptions?
@@ -270,10 +280,6 @@ Future features
 - Display errors (esp. for streaming failures)
   - Maybe allow handle in FeathersHooks to make these pop up if I don't handle
     them in a particular way?
-- Server track PATCH endpoint is truly idempotent (returns the same response if
-  the same input is received). This will help make us robust to servers that
-  die (i.e., it's OK if we don't get the new cursor immediately when writing
-  audio data)
 - Support multiple channels (stereo+)
 - Visualize and allow playback of recordings
 - Download recordings
@@ -403,3 +409,19 @@ x Replay recording and mix live--could also determine loopback latency from this
 + Mixing channels separately would be toit
 + "Medicine for a weary soul"
 + Calculate seconds between musicians using channels
+
+2/14/21
+- White screen of death while multiple users drag musician simultaneously
+  - TypeError: Cannot read property 'name' of undefined
+      at De (main.688c9280.chunk.js:1)
+      at Yo (2.cc641b9c.chunk.js:2)
+      at Pi (2.cc641b9c.chunk.js:2)
+      at ma (2.cc641b9c.chunk.js:2)
+      at sl (2.cc641b9c.chunk.js:2)
+      at al (2.cc641b9c.chunk.js:2)
+      at Ja (2.cc641b9c.chunk.js:2)
+      at 2.cc641b9c.chunk.js:2
+      at t.unstable_runWithPriority (2.cc641b9c.chunk.js:2)
+      at Fc (2.cc641b9c.chunk.js:2)
+- choppy mic? Fixed by increasing seconds between musicians then stopping and
+  starting recording
