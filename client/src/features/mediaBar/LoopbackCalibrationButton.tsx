@@ -12,6 +12,8 @@ import {
   OL,
   Tag,
 } from '@blueprintjs/core';
+import Speaker from 'speaker';
+
 
 import { useStream } from '../audioInput/AudioStreamHooks';
 import {
@@ -29,6 +31,15 @@ import { selectRecordingState } from '../recording/recordingSlice';
 import { setMusicianLoopbackLatencyMs } from '../musicians/musiciansSlice';
 import { selectRoom } from '../room/roomSlice';
 
+// Create the Speaker instance
+//const speaker = new Speaker({
+  //channels: 2,          // 2 channels
+  //bitDepth: 16,         // 16-bit samples
+  //sampleRate: 44100     // 44,100 Hz sample rate
+//});
+
+//// PCM data from stdin gets piped into the speaker
+//process.stdin.pipe(speaker);
 interface LoopbackLatencyResult {
   success: boolean;
   latencyMs: number | null;
@@ -36,7 +47,7 @@ interface LoopbackLatencyResult {
 
 const PULSE_PERIOD_SECONDS = 0.5;
 const PULSE_DUTY_CYCLE = 0.3;
-const PULSE_COUNT = 3;
+const PULSE_COUNT = 20;
 const PULSE_AMPLITUDE = 0.6;
 const PULSE_HZ = 880;
 const PULSE_SAMPLES = Math.floor(PULSE_PERIOD_SECONDS * PULSE_COUNT * 48000);
@@ -112,6 +123,7 @@ function calculateLoopbackLatency(
     }
   }
 
+  console.log(detectedPulseLatencies);
   const meanLatency = _.mean(detectedPulseLatencies);
   if (
     detectedPulseLatencies.length === PULSE_COUNT &&
@@ -152,6 +164,9 @@ async function detectLoopbackLatency(
   outputGain.connect(outputAudioContext.destination);
   pulsesSource.connect(outputDeviceNode);
   audioElement.srcObject = outputDeviceNode.stream;
+  audioElement.addEventListener('ratechange', event => {
+    console.log('The playback rate changed.');
+  });
 
   // START AUDIO ELEMENT, AND SLEEP
   await audioElement.play();
