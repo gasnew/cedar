@@ -11,6 +11,114 @@
 const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const log = require('electron-log');
 const { autoUpdater } = require('electron-updater');
+var fs = require('fs');
+const { Readable } = require('stream');
+
+var portAudio = require('naudiodon');
+
+//console.log(portAudio.getDevices());
+var ao = new portAudio.AudioIO({
+  outOptions: {
+    channelCount: 1,
+    sampleFormat: portAudio.SampleFormat32Bit,
+    sampleRate: 48000,
+    deviceId: -1, // Use -1 or omit the deviceId to select the default device
+    closeOnError: true, // Close the stream if an audio error is detected, if set false then just log the error
+  },
+});
+
+//// Create a stream to pipe into the AudioOutput
+//// Note that this does not strip the WAV header so a click will be heard at the beginning
+var rs = fs.createReadStream('test.wav');
+function idMaker() {
+  let index = 0;
+  return {
+    next: function() {
+      return {
+        value: index++,
+        done: false
+      };
+    },
+    [Symbol.iterator]: function() { return this; }
+  };
+}
+const readable = Readable.from(idMaker());
+////console.log(rs);
+
+//// Start piping data and start streaming
+rs.pipe(ao);
+ao.start();
+rs.on('data', chunk => {
+  //console.log('wr');
+  ao.write(chunk);
+});
+const ids = idMaker();
+console.log(ids);
+const myIterable = {};
+myIterable[Symbol.iterator] = function* () {
+    yield 1;
+    yield 2;
+    yield 3;
+};
+console.log(myIterable);
+//for (const bob of ids) console.log(bob);
+
+// create a sine wave lookup table
+//var sampleRate = 44100;
+//var tableSize = 200;
+//var buffer = Buffer.allocUnsafe(tableSize * 4);
+//for (var i = 0; i < tableSize * 4; i++) {
+//buffer[i] = (Math.sin((i / tableSize) * 3.1415 * 2.0) * 127);
+//}
+
+//var ao = new portAudio.AudioIO({
+//outOptions: {
+//channelCount: 1,
+//sampleFormat: portAudio.SampleFormat8Bit,
+//sampleRate: sampleRate,
+//deviceId: -1
+//}
+//});
+
+//const a = ['close', 'drain', 'error', 'finish', 'pipe', 'unpipe']
+//for (let i = 0; i < a.length; i++){
+//console.log(a[i]);
+//ao.on(a[i], console.log);
+//}
+//function tenSecondsIsh(writer, data, callback) {
+//this.i = 552;
+//const write = () => {
+//console.log('wr');
+//var ok = true;
+//do {
+//this.i -= 1;
+//if (this.i === 0) {
+//// last time!
+//writer.end(data, callback);
+//} else {
+//// see if we should continue, or wait
+//// don't pass the callback, because we're not done yet.
+//console.log('write')
+//ok = writer.write(data);
+//console.log('Writing data', ok);
+//}
+//} while (this.i > 0 && ok);
+//if (this.i > 0) {
+//// had to stop early!
+//// write some more once it drains
+//console.log("So draining.");
+//writer.once('drain', write);
+//}
+//}
+//write();
+//return this;
+//}
+//tenSecondsIsh.prototype.quit = function() { this.i = 1; }
+
+//let tsi = new tenSecondsIsh(ao, buffer, () => console.log.bind(null, "Done!"));
+//process.once('SIGINT', () => tsi.quit());
+
+//ao.start();
 
 const path = require('path');
 const url = require('url');
@@ -53,6 +161,7 @@ function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 1000,
     height: 800,
+    show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       worldSafeExecuteJavaScript: true,
@@ -80,6 +189,7 @@ function createWindow() {
       slashes: true,
     });
   mainWindow.loadURL(startUrl);
+  mainWindow.showInactive();
 
   return mainWindow;
 }

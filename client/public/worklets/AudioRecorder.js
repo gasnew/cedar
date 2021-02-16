@@ -11,7 +11,7 @@ class AudioRecorder extends AudioWorkletProcessor {
     this.frameSize = 128;
 
     const sampleRate = 48000;
-    const maxSamplesToCapture = sampleRate * 5;
+    const maxSamplesToCapture = sampleRate * 20;
     this.recordedData = new Float32Array(maxSamplesToCapture);
     this.recording = false;
     this.recordedSamples = 0;

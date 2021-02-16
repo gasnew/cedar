@@ -425,3 +425,9 @@ x Replay recording and mix live--could also determine loopback latency from this
       at Fc (2.cc641b9c.chunk.js:2)
 - choppy mic? Fixed by increasing seconds between musicians then stopping and
   starting recording
+
+
+
+- pitch change with CPU stress: https://bugs.chromium.org/p/chromium/issues/detail?id=766198
+- issue for accessing different output devices: https://github.com/WebAudio/web-audio-api-v2/issues/10
+- confirmation we can't rely on HTMLAudioElement: https://lists.w3.org/Archives/Public/public-audio/2020OctDec/0026.html
