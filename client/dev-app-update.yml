@@ -1,0 +1,4 @@
+owner: gasnew
+repo: cedar
+provider: github
+updaterCacheDirName: cedar-updater
