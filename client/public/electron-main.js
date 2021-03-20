@@ -14,10 +14,9 @@ const { autoUpdater } = require('electron-updater');
 var fs = require('fs');
 const { Readable, finished: streamFinished } = require('stream');
 const util = require('util');
-const { once } = require('events');
 const isDev = require('electron-is-dev');
 
-const AudioDestination = require('./AudioDestination.js');
+const configureAudioDestination = require('./configureAudioDestination.js');
 
 var portAudio = require('naudiodon');
 
@@ -103,6 +102,7 @@ app.whenReady().then(() => {
   // even after hiding and showing again on MacOS
   const windowHolder = { current: null };
 
+  configureAudioDestination();
   windowHolder.current = createWindow();
   const autoUpdater = configureAutoUpdater(windowHolder);
   if (!isDev) autoUpdater.checkForUpdates();

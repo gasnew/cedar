@@ -95,6 +95,7 @@ Usability improvements
 + Clients rejoin subscriptions when they reconnect
 + VolumeBar is further optimized
 - Make loopback latency calibration easier
+- Updates still work
 
 Admin stuff (no code)
 + Write how-to guide

@@ -1,3 +1,8 @@
+const { contextBridge } = require('electron');
 const { ipcRenderer } = require('electron');
 
-window.ipcRenderer = ipcRenderer;
+contextBridge.exposeInMainWorld('ipcRenderer', {
+  on: ipcRenderer.on,
+  send: ipcRenderer.send,
+  removeListener: ipcRenderer.removeListener,
+});
