@@ -15,15 +15,11 @@ class RoomAudioPlayer extends AudioWorkletProcessor {
     this.bufferWriteIndices = [];
     this.bufferReadIndex = 0;
 
-    this.prevTimeMs = 0;
-    this.timeDeltaMs = 0;
-    this.timeThresholdMs = this.frameSize / sampleRate * 1000;
-
     this.port.onmessage = event => {
       if (event.data && event.data.action) {
         if (event.data.action === 'initialize') {
           // Initialize buffers and write indices, and set delay
-          const { delaySeconds, recordingStartedAt, trackCount } = event.data;
+          const { delaySeconds, trackCount } = event.data;
           this.pcmBuffers = new Array(trackCount);
           this.bufferWriteIndices = new Array(trackCount);
           for (let i = 0; i < this.pcmBuffers.length; i++) {
@@ -32,12 +28,6 @@ class RoomAudioPlayer extends AudioWorkletProcessor {
           }
           this.delaySamples = Math.floor(sampleRate * delaySeconds);
           this.bufferReadIndex = this.bufferLength - this.delaySamples;
-          this.timeDeltaMs = 0;
-          // NOTE(gnewman): Some time (10s to 100s of ms) will have passed
-          // since the recording's startedAt time was set. We will need this
-          // node to "catch up" to make up for that elapsed time where it
-          // wasn't playing audio data.
-          this.prevTimeMs = recordingStartedAt;
         } else if (event.data.action === 'buffer') {
           // Append data to buffer, assuming stream data always comes in in the
           // same order (port uses a FIFO queue)
@@ -72,16 +62,6 @@ class RoomAudioPlayer extends AudioWorkletProcessor {
       return true;
     }
 
-    const currentTime = Date.now();
-    //                (elapsed time ms)               - (ideal elapsed time ms)
-    this.timeDeltaMs += currentTime - this.prevTimeMs - 128 / 48;
-    this.prevTimeMs = currentTime;
-
-    //if (inputs[0][0].length !== 128)
-      //console.log(`YOOOO: ${input[0].length}`);
-    if (outputs[0][0].length !== 128)
-      console.log(`FOOOO: ${outputs[0][0].length}`);
-
     const bufferCount = this.pcmBuffers.length;
     for (let frameIndex = 0; frameIndex < this.frameSize; frameIndex++) {
       const readIndex = (this.bufferReadIndex + frameIndex) % this.bufferLength;
@@ -96,33 +76,6 @@ class RoomAudioPlayer extends AudioWorkletProcessor {
     }
     this.bufferReadIndex =
       (this.bufferReadIndex + this.frameSize) % this.bufferLength;
-
-    // If we are behind on playback because we somehow missed rendering an
-    // audio quantum, skip ahead a few frames. This does not happen as
-    // frequently as when the OS skips audio input quanta, but it can still
-    // happen. Skipping one frame lets us keep what plays out of our speakers
-    // up-to-date with real-time. This is crucial so that our outgoing audio
-    // data (to the next musician) is synced with what this musician hears in
-    // the speakers.
-    // TODO (gnewman):
-    // - Consider a smaller or larger threshold? We have a couple of frames of
-    //   leeway given how Web Audio API queues up render requests
-    // - Use a fancy algorithm to time-compress without losing data
-    if (this.timeDeltaMs > this.timeThresholdMs * 3) {
-      while (this.timeDeltaMs > this.timeThresholdMs) {
-        // Zero out skipped frame
-        for (let frameIndex = 0; frameIndex < this.frameSize; frameIndex++) {
-          const readIndex = (this.bufferReadIndex + frameIndex) % this.bufferLength;
-          for (let pcmIndex = 0; pcmIndex < bufferCount; pcmIndex++) {
-            this.pcmBuffers[pcmIndex][readIndex] = 0;
-          }
-        }
-        this.bufferReadIndex =
-          (this.bufferReadIndex + this.frameSize) % this.bufferLength;
-
-        this.timeDeltaMs -= this.timeThresholdMs;
-      }
-    }
 
     return true;
   }

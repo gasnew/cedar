@@ -144,7 +144,7 @@ export const selectPrecedingTracks = (state: RootState): Track[] => {
   if (_.some(precedingTracks, track => track === undefined)) return [];
   // Uncomment this to allow listening to your own audio. TODO: Make this
   // conditional on an env variable for easy configuration
-  //return currentTracks;
+  return currentTracks;
   return precedingTracks as Track[];
 };
 
