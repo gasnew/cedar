@@ -71,6 +71,7 @@ function useFetchAudioData(
           audioDestinationControls.startAudioDestinationNode({
             recordingStartedAt: currentRecording.startedAt,
           }),
+        // TODO remove this once recordingStartedAt is legit
         2000
       );
 
