@@ -94,6 +94,7 @@ Improve Cedar interoperability experience
 Usability improvements
 + Clients rejoin subscriptions when they reconnect
 + VolumeBar is further optimized
+/ Use custom backend for playing audio
 - Make loopback latency calibration easier
 - Updates still work
 

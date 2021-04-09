@@ -1,4 +1,4 @@
-var fs = require('fs');
+const fs = require('fs');
 
 const { ipcMain } = require('electron');
 const log = require('electron-log');
@@ -17,7 +17,7 @@ const {
   // NOTE(gnewman): Due to callback hell, we actually do want one top-level
   // variable here so we can manage it like we would any external resource
   // handler
-  var destinationStream = null;
+  let destinationStream = null;
 
   async function createDestinationStream() {
     console.log('await done');
@@ -62,9 +62,9 @@ const {
   createSourceStream,
   getSourceStream,
 } = (() => {
-  var sourceStream = null;
-  var dataQueue = [];
-  var announceDataHasBeenAdded = null;
+  let sourceStream = null;
+  let dataQueue = [];
+  let announceDataHasBeenAdded = null;
 
   function pushData(data) {
     dataQueue.push(data);
@@ -100,7 +100,6 @@ const {
 
   function createSourceStream() {
     function streamGenerator() {
-      let index = 0;
       return {
         next: async function () {
           const data = await dequeueData();
@@ -133,9 +132,6 @@ const {
   };
 })();
 
-// TODO remove
-var fileReadStream = fs.createReadStream('public/test2.wav');
-
 async function pipeSourceToDestination(sourceStream, destinationStream) {
   function write(data) {
     return new Promise((resolve) => {
@@ -148,27 +144,8 @@ async function pipeSourceToDestination(sourceStream, destinationStream) {
     const time = Date.now();
     const buffer = Buffer.from(chunk.buffer);
     //const buffer2 = new Uint32Array(chunk);
-    var i = 0;
-    console.log(chunk.buffer);
-    for (const value of buffer.values()) {
-      if (i < 10) console.log(value);
-      i++;
-    }
-    //for (const value of buffer2.values()) {
-    //if (i < 10)
-    //console.log(value);
-    //i++
-    //}
-    for (let i = 0; i < 10; i++) {
-      console.log(chunk[i]);
-    }
-    //console.log(chunk[1], chunk[20], chunk[10]);
-    //console.log(buffer.readUInt32BE(1) / (1000000000), buffer.readUInt32BE(20) / (1000000000), buffer.readUInt32BE(10) / (1000000000));
-    //console.log(buffer.readUInt32LE(1) / (1000000000), buffer.readUInt32LE(20) / (1000000000), buffer.readUInt32LE(10) / (1000000000));
-    //console.log(chunk.length, buffer.length);
     // TODO AudioIO: Error [ERR_STREAM_WRITE_AFTER_END]: write after end
     const result = await write(buffer);
-    console.log(`chunk write delta: ${Date.now() - time}`);
     if (result === false) {
       // Handle backpressure
       console.log(
@@ -181,9 +158,35 @@ async function pipeSourceToDestination(sourceStream, destinationStream) {
 }
 
 function configureAudioDestination() {
+  // NOTE(gnewman): The correlation ID lets the backend associate incoming data
+  // with a particular audio destination node. Only one destination node can
+  // write to the backend at a time. When `start-playing` is called,
+  // correlationId is updated to what was provided, the data queue is cleared,
+  // and any incoming data with any other correlationId is ignored.
+  let correlationId = 'none';
+
+  async function stopPlaying() {
+    const destinationStream = getDestinationStream();
+    const sourceStream = getSourceStream();
+    if (!destinationStream || !sourceStream) return;
+
+    clearSourceData();
+    clearDestinationData();
+    // TODO: somehow immediately stop playback?
+    sourceStream.destroy();
+    destinationStream.end();
+    destinationStream.quit();
+    // Wait until done. Throws if there are errors.
+    await finished(destinationStream);
+  }
+
   ipcMain.on(
     'audio-destination/start-playing',
-    async (_, { recordingStartedAt }) => {
+    async (_, { recordingStartedAt, correlationId: newCorrelationId }) => {
+      correlationId = newCorrelationId;
+      console.log(newCorrelationId);
+      await stopPlaying();
+
       console.log('STAHT');
       console.log(recordingStartedAt);
       log.info('AUDIO DESTINATION: Render thread told me to start playing...');
@@ -199,25 +202,25 @@ function configureAudioDestination() {
     }
   );
 
-  ipcMain.on('audio-destination/push-data', (_, data) => {
-    // TODO: what happens if this gets called before `start-playing`?
-    //log.info('AUDIO DESTINATION: Render thread gave me more audio data...');
-    pushData(data);
-  });
+  ipcMain.on(
+    'audio-destination/push-data',
+    (_, { data, correlationId: dataCorrelationId }) => {
+      // TODO: what happens if this gets called before `start-playing`?
+      //log.info('AUDIO DESTINATION: Render thread gave me more audio data...');
+      if (dataCorrelationId !== correlationId) {
+        console.log(
+          `Ignoring data from correlation ID: ${dataCorrelationId}. The current correlationId is ${correlationId}.`
+        );
+        return;
+      }
+      pushData(data);
+    }
+  );
 
   ipcMain.on('audio-destination/stop-playing', async () => {
     log.info('AUDIO DESTINATION: Render thread told me to stop playing...');
 
-    const destinationStream = getDestinationStream();
-    const sourceStream = getSourceStream();
-    clearSourceData();
-    clearDestinationData();
-    // TODO: somehow immediately stop playback?
-    sourceStream.destroy();
-    destinationStream.end();
-    destinationStream.quit();
-    // Wait until done. Throws if there are errors.
-    await finished(destinationStream);
+    stopPlaying();
   });
 }
 

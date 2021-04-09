@@ -6,9 +6,11 @@ class AudioDestinationNode extends AudioWorkletProcessor {
     super();
 
     this.running = false;
-    //this.outputBuffer = new Float32Array(48000 * 1);
+    // TODO: buffer less than this
     this.outputBuffer = new Uint32Array(48000 * 1);
     this.bufferIndex = 0;
+    this.recordingStartedAt = 0;
+    this.adjustedForDeadTime = false;
 
     this.port.onmessage = (event) => {
       if (event.data && event.data.action) {
@@ -17,6 +19,8 @@ class AudioDestinationNode extends AudioWorkletProcessor {
           // this moment and starting collecting data
           this.running = true;
           this.bufferIndex = 0;
+          this.recordingStartedAt = event.data.recordingStartedAt;
+          this.adjustedForDeadTime = false;
         } else if (event.data.action === 'stop') {
           this.running = false;
         }
@@ -26,27 +30,39 @@ class AudioDestinationNode extends AudioWorkletProcessor {
 
   process(inputs, outputs, parameters) {
     if (!this.running) return true;
+    if (!this.adjustedForDeadTime) {
+      // NOTE(gnewman): We need to pad our output just after starting this node
+      // to account for the audio samples we should have seen but didn't in the
+      // time in took recording to start.
+      const samplesToAdd = 48 * (Date.now() - this.recordingStartedAt);
+      console.log(`Adding ${samplesToAdd} samples of dead space`);
+      for (let i = 0; i < samplesToAdd; i++) this.pushSample(0);
+      this.adjustedForDeadTime = true;
+    }
 
     for (let i = 0; i < 128; i++) {
       const value = inputs[0][0][i];
-      //this.outputBuffer[this.bufferIndex + i] = ;
-
-      //const clamp = (value) => Math.max(0, Math.min(0xffffffff, value));
-      //this.outputBuffer[this.bufferIndex + i] = clamp((value + 1) * 0x80000000);
-      const clamp = (value) => Math.max(-0x7FFFFFFF, Math.min(0x7FFFFFFF, value))
+      const clamp = (v) => Math.max(-0x7fffffff, Math.min(0x7fffffff, v));
       if (value < 0) {
-          this.outputBuffer[this.bufferIndex + i] = clamp(0x80000000 * value);
+        this.pushSample(clamp(0x80000000 * value));
       } else {
-          this.outputBuffer[this.bufferIndex + i] = clamp(0x7FFFFFFF * value);
+        this.pushSample(clamp(0x7fffffff * value));
       }
-    }
-    this.bufferIndex += 128;
-    if (this.bufferIndex === this.outputBuffer.length) {
-      this.port.postMessage(this.outputBuffer);
-      this.bufferIndex = 0;
     }
 
     return true;
+  }
+
+  pushSample(sample) {
+    this.outputBuffer[this.bufferIndex] = sample;
+
+    if (this.bufferIndex === this.outputBuffer.length) {
+      this.port.postMessage(this.outputBuffer);
+      this.bufferIndex = 0;
+      console.log('post data!');
+    }
+
+    this.bufferIndex += 1;
   }
 }
 
