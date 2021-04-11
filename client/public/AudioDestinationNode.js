@@ -6,8 +6,7 @@ class AudioDestinationNode extends AudioWorkletProcessor {
     super();
 
     this.running = false;
-    // TODO: buffer less than this
-    this.outputBuffer = new Uint32Array(48000 * 1);
+    this.outputBuffer = new Uint32Array(48000 / 50);
     this.bufferIndex = 0;
     this.recordingStartedAt = 0;
     this.adjustedForDeadTime = false;
@@ -33,8 +32,10 @@ class AudioDestinationNode extends AudioWorkletProcessor {
     if (!this.adjustedForDeadTime) {
       // NOTE(gnewman): We need to pad our output just after starting this node
       // to account for the audio samples we should have seen but didn't in the
-      // time in took recording to start.
-      const samplesToAdd = 48 * (Date.now() - this.recordingStartedAt);
+      // time in took recording to start. We also add a few blank samples to
+      // act as a buffer between the frontend (this node) and the
+      // PortAudio-based audio backend.
+      const samplesToAdd = 48 * (Date.now() - this.recordingStartedAt) + 4800;
       console.log(`Adding ${samplesToAdd} samples of dead space`);
       for (let i = 0; i < samplesToAdd; i++) this.pushSample(0);
       this.adjustedForDeadTime = true;
@@ -55,14 +56,12 @@ class AudioDestinationNode extends AudioWorkletProcessor {
 
   pushSample(sample) {
     this.outputBuffer[this.bufferIndex] = sample;
+    this.bufferIndex += 1;
 
     if (this.bufferIndex === this.outputBuffer.length) {
       this.port.postMessage(this.outputBuffer);
       this.bufferIndex = 0;
-      console.log('post data!');
     }
-
-    this.bufferIndex += 1;
   }
 }
 
