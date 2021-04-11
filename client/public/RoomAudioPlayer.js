@@ -15,7 +15,7 @@ class RoomAudioPlayer extends AudioWorkletProcessor {
     this.bufferWriteIndices = [];
     this.bufferReadIndex = 0;
 
-    this.port.onmessage = event => {
+    this.port.onmessage = (event) => {
       if (event.data && event.data.action) {
         if (event.data.action === 'initialize') {
           // Initialize buffers and write indices, and set delay

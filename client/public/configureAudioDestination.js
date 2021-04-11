@@ -71,25 +71,34 @@ const {
 
     // Announce we've pushed data in case we were waiting on it
     if (announceDataHasBeenAdded) {
-      log.info('ANNOUNCEMENT: Audio data has arrived!');
       announceDataHasBeenAdded();
       announceDataHasBeenAdded = null;
     }
   }
 
-  async function dequeueData() {
-    console.log('dequeue!');
-    if (dataQueue.length === 0) {
-      console.log('wait...');
-      await new Promise((resolve) => {
-        announceDataHasBeenAdded = resolve;
-      });
-      console.log('done waiting!');
-    }
-    if (dataQueue.length === 0)
-      console.error('Data was somehow not added to the queue! Oh no!');
+  async function dequeueData(correlationId) {
+    let data = null;
 
-    return dataQueue.shift();
+    while (!data) {
+      if (dataQueue.length === 0) {
+        await new Promise((resolve) => {
+          announceDataHasBeenAdded = resolve;
+        });
+      }
+      if (dataQueue.length === 0) {
+        console.error('Data was somehow not added to the queue! Oh no!');
+        return new Uint32Array(0);
+      }
+
+      const retrievedData = dataQueue.shift();
+      if (retrievedData.correlationId !== correlationId) {
+        console.log(
+          `Ignoring data from correlation ID: ${retrievedData.correlationId}. The current correlationId is ${correlationId}.`
+        );
+      } else data = retrievedData.data;
+    }
+
+    return data;
   }
 
   function clearSourceData() {
@@ -98,12 +107,12 @@ const {
     announceDataHasBeenAdded = null;
   }
 
-  function createSourceStream() {
+  function createSourceStream(correlationId) {
     function streamGenerator() {
       return {
         next: async function () {
-          const data = await dequeueData();
-          console.log('get data');
+          const booga = Math.random();
+          const data = await dequeueData(correlationId);
           return {
             value: data,
             done: false,
@@ -172,12 +181,14 @@ function configureAudioDestination() {
 
     clearSourceData();
     clearDestinationData();
-    // TODO: somehow immediately stop playback?
+    // TODO: somehow immediately stop playback? destinationStream.abort?
     sourceStream.destroy();
-    destinationStream.end();
-    destinationStream.quit();
+    //destinationStream.end();
+    destinationStream.abort();
+    //destinationStream.quit(() => destinationStream.abort());
     // Wait until done. Throws if there are errors.
-    await finished(destinationStream);
+    //await finished(destinationStream);
+    console.log('finished');
   }
 
   ipcMain.on(
@@ -190,32 +201,20 @@ function configureAudioDestination() {
       console.log('STAHT');
       console.log(recordingStartedAt);
       log.info('AUDIO DESTINATION: Render thread told me to start playing...');
-      const sourceStream = createSourceStream();
+      const sourceStream = createSourceStream(correlationId);
       const destinationStream = await createDestinationStream();
       console.log('destination!!!!');
       sourceStream.once('readable', async () => {
-        log.info('starting streaming');
-        // TODO: pass in started at time
-        destinationStream.start();
+        console.log('starting streaming');
+        destinationStream.start(recordingStartedAt);
         pipeSourceToDestination(sourceStream, destinationStream);
       });
     }
   );
 
-  ipcMain.on(
-    'audio-destination/push-data',
-    (_, { data, correlationId: dataCorrelationId }) => {
-      // TODO: what happens if this gets called before `start-playing`?
-      //log.info('AUDIO DESTINATION: Render thread gave me more audio data...');
-      if (dataCorrelationId !== correlationId) {
-        console.log(
-          `Ignoring data from correlation ID: ${dataCorrelationId}. The current correlationId is ${correlationId}.`
-        );
-        return;
-      }
-      pushData(data);
-    }
-  );
+  ipcMain.on('audio-destination/push-data', (_, dataWithCorrelationId) => {
+    pushData(dataWithCorrelationId);
+  });
 
   ipcMain.on('audio-destination/stop-playing', async () => {
     log.info('AUDIO DESTINATION: Render thread told me to stop playing...');

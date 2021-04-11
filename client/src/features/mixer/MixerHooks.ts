@@ -65,15 +65,9 @@ function useFetchAudioData(
         delaySeconds: delaySeconds + 1,
         trackCount: precedingTracks.length,
       });
-      console.log('enqueue starting audio destination');
-      setTimeout(
-        () =>
-          audioDestinationControls.startAudioDestinationNode({
-            recordingStartedAt: currentRecording.startedAt,
-          }),
-        // TODO remove this once recordingStartedAt is legit
-        2000
-      );
+      audioDestinationControls.startAudioDestinationNode({
+        recordingStartedAt: currentRecording.startedAt,
+      });
 
       requestOut.current = false;
       setFetching(true);
