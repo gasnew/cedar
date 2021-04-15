@@ -150,9 +150,7 @@ async function pipeSourceToDestination(sourceStream, destinationStream) {
 
   // https://2ality.com/2019/11/nodejs-streams-async-iteration.html#reading-from-readable-streams-via-for-await-of
   for await (const chunk of sourceStream) {
-    const time = Date.now();
     const buffer = Buffer.from(chunk.buffer);
-    //const buffer2 = new Uint32Array(chunk);
     // TODO AudioIO: Error [ERR_STREAM_WRITE_AFTER_END]: write after end
     const result = await write(buffer);
     if (result === false) {
@@ -206,8 +204,8 @@ function configureAudioDestination() {
       console.log('destination!!!!');
       sourceStream.once('readable', async () => {
         console.log('starting streaming');
-        destinationStream.start(recordingStartedAt);
         pipeSourceToDestination(sourceStream, destinationStream);
+        destinationStream.start(recordingStartedAt);
       });
     }
   );

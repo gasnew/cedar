@@ -62,8 +62,9 @@ function useFetchAudioData(
       postWorkletMessage({
         action: 'initialize',
         // more positive -> delay mic more
-        delaySeconds: delaySeconds + 1,
+        delaySeconds: delaySeconds,
         trackCount: precedingTracks.length,
+        recordingStartedAt: currentRecording.startedAt,
       });
       audioDestinationControls.startAudioDestinationNode({
         recordingStartedAt: currentRecording.startedAt,
@@ -289,7 +290,6 @@ export function useRoomAudio(
       } = await createAudioDestinationNode(audioContext);
 
       masterGainNode.connect(audioDestinationNode);
-      //masterGainNode.connect(audioContext.destination);
 
       // Has to be a power of 2. At the default sample rate of 48000, this
       // size should be enough to let us fetch all samples assuming we are

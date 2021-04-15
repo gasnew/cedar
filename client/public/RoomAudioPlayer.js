@@ -19,7 +19,7 @@ class RoomAudioPlayer extends AudioWorkletProcessor {
       if (event.data && event.data.action) {
         if (event.data.action === 'initialize') {
           // Initialize buffers and write indices, and set delay
-          const { delaySeconds, trackCount } = event.data;
+          const { delaySeconds, trackCount, recordingStartedAt } = event.data;
           this.pcmBuffers = new Array(trackCount);
           this.bufferWriteIndices = new Array(trackCount);
           for (let i = 0; i < this.pcmBuffers.length; i++) {
@@ -27,7 +27,14 @@ class RoomAudioPlayer extends AudioWorkletProcessor {
             this.bufferWriteIndices[i] = 0;
           }
           this.delaySamples = Math.floor(sampleRate * delaySeconds);
-          this.bufferReadIndex = this.bufferLength - this.delaySamples;
+          const samplesSinceRecordingStarted =
+            (Date.now() - recordingStartedAt) * 48;
+          console.log(samplesSinceRecordingStarted);
+          this.bufferReadIndex =
+            (this.bufferLength -
+              this.delaySamples +
+              samplesSinceRecordingStarted) %
+            this.bufferLength;
         } else if (event.data.action === 'buffer') {
           // Append data to buffer, assuming stream data always comes in in the
           // same order (port uses a FIFO queue)

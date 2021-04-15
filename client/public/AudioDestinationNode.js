@@ -36,7 +36,8 @@ class AudioDestinationNode extends AudioWorkletProcessor {
       // act as a buffer between the frontend (this node) and the
       // PortAudio-based audio backend.
       const samplesToAdd = 48 * (Date.now() - this.recordingStartedAt) + 4800;
-      console.log(`Adding ${samplesToAdd} samples of dead space`);
+      //const samplesToAdd = 4800;
+      console.log(`Adding ${(samplesToAdd - 4800) / 48} ms of dead space`);
       for (let i = 0; i < samplesToAdd; i++) this.pushSample(0);
       this.adjustedForDeadTime = true;
     }
