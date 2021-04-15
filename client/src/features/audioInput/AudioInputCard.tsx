@@ -19,14 +19,14 @@ export default function() {
 
   // Audio output (for monitoring only)
   const selectedOutputDevice = useSelector(selectOutputDevice);
-  const audioElement = useMemo<HTMLAudioElement>(() => new Audio(), []);
-  useEffect(
-    () => {
-      if (selectedOutputDevice)
-        audioElement.setSinkId(selectedOutputDevice.deviceId);
-    },
-    [audioElement, selectedOutputDevice]
-  );
+  //const audioElement = useMemo<HTMLAudioElement>(() => new Audio(), []);
+  //useEffect(
+    //() => {
+      //if (selectedOutputDevice)
+        //audioElement.setSinkId(selectedOutputDevice.deviceId);
+    //},
+    //[audioElement, selectedOutputDevice]
+  //);
 
   // Audio data
   const [listeningToAudioInput, setListeningToAudioInput] = useState(false);
@@ -34,10 +34,9 @@ export default function() {
     canChangeStream,
     fetchData,
     setGainDB,
-    setDirectToDestinationGainNodeGain,
+    setMonitoringInput,
   } = useStreamData(
     useStream(selectedInputDevice ? selectedInputDevice.deviceId : null),
-    audioElement
   );
 
   // Redux state
@@ -57,11 +56,9 @@ export default function() {
   );
   useEffect(
     () => {
-      setDirectToDestinationGainNodeGain(
-        listeningToAudioInput === true ? 1 : 0
-      );
+      setMonitoringInput(listeningToAudioInput);
     },
-    [listeningToAudioInput, setDirectToDestinationGainNodeGain]
+    [listeningToAudioInput, setMonitoringInput]
   );
 
   return (

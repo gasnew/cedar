@@ -37,6 +37,7 @@ class AudioRecorder extends AudioWorkletProcessor {
       // playback, so let's account for any time that's elapsed since
       // playback began by padding our recording data.
       this.recordedSamples = (Date.now() - this.recordingStartedAt) * 48;
+      console.log(`Ignoring ${this.recordedSamples / 48} ms`);
     }
 
     // We assume we only have one input connection
