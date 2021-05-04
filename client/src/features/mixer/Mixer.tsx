@@ -41,7 +41,7 @@ export default function() {
 
   // Audio data
   const { masterControls, trackControls } = useRoomAudio(
-    precedingMusicianIds.length, selectedDevice ? selectedDevice.deviceId : 'default'
+    precedingMusicianIds.length, selectedDevice ? selectedDevice.id : 'default'
   );
 
   useEffect(

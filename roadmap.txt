@@ -95,6 +95,8 @@ Usability improvements
 + Clients rejoin subscriptions when they reconnect
 + VolumeBar is further optimized
 / Use custom backend for playing audio
+  - Change playback speed instead of jumping
+  - Let output devices be configurable again
 - Make loopback latency calibration easier
 - Updates still work
 

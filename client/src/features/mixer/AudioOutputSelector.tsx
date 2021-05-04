@@ -7,15 +7,17 @@ import { ItemRenderer, Select } from '@blueprintjs/select';
 
 import { IOutputDevice } from '../audioInput/audioSlice';
 
+const ipcRenderer = window!.ipcRenderer;
+
 const outputDeviceRenderer: ItemRenderer<IOutputDevice> = (
   outputDevice,
   { handleClick, modifiers, query }
 ) => (
   <MenuItem
-    key={outputDevice.deviceId}
+    key={outputDevice.id}
     active={modifiers.active}
     onClick={handleClick}
-    text={outputDevice.label}
+    text={outputDevice.name}
   />
 );
 
@@ -26,24 +28,8 @@ function useOutputDevices(): IOutputDevice[] {
   const [outputDevices, setOutputDevices] = useState<IOutputDevice[]>([]);
 
   useEffect(() => {
-    navigator.mediaDevices.enumerateDevices().then(devices => {
-      setOutputDevices(
-        _.map(
-          _.filter(
-            devices,
-            device =>
-              device.kind === 'audiooutput' &&
-              !!device.deviceId &&
-              device.deviceId !== 'default'
-          ),
-          ({ deviceId, groupId, kind, label }) => ({
-            deviceId,
-            groupId,
-            kind,
-            label,
-          })
-        )
-      );
+    ipcRenderer.invoke('audio-destination/get-devices').then((devices) => {
+      setOutputDevices(devices);
     });
   }, []);
 
@@ -56,7 +42,7 @@ interface Props {
   setSelectedDevice: (IOutputDevice) => void;
 }
 
-export default function({
+export default function ({
   disabled = false,
   selectedDevice,
   setSelectedDevice,
@@ -64,16 +50,11 @@ export default function({
   // Device selection
   const outputDevices = useOutputDevices();
 
-  useEffect(
-    () => {
-      if (!selectedDevice && outputDevices.length > 0)
-        setSelectedDevice(
-          _.find(outputDevices, ({ kind }) => kind === 'default') ||
-            outputDevices[0]
-        );
-    },
-    [setSelectedDevice, selectedDevice, outputDevices]
-  );
+  useEffect(() => {
+    if (!selectedDevice && outputDevices.length > 0)
+      setSelectedDevice(outputDevices[0]);
+  }, [setSelectedDevice, selectedDevice, outputDevices]);
+  console.log(selectedDevice);
 
   return (
     <OutputDeviceSelect
@@ -89,7 +70,7 @@ export default function({
     >
       <Button icon="headset" rightIcon="caret-down" disabled={disabled}>
         {selectedDevice ? (
-          selectedDevice.label
+          selectedDevice.name
         ) : (
           <i>please select an output device</i>
         )}

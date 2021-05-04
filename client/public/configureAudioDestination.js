@@ -219,6 +219,12 @@ function configureAudioDestination() {
 
     stopPlaying();
   });
+
+  ipcMain.handle('audio-destination/get-devices', async (event) => {
+    return portAudio
+      .getDevices()
+      .filter((device) => device.maxOutputChannels > 0);
+  });
 }
 
 module.exports = configureAudioDestination;
