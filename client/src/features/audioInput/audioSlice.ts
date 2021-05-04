@@ -7,10 +7,8 @@ export interface IInputDevice {
   label: string;
 }
 export interface IOutputDevice {
-  deviceId: string;
-  groupId: string;
-  kind: string;
-  label: string;
+  id: string;
+  name: string;
 }
 
 interface AudioState {
