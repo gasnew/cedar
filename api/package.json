@@ -52,7 +52,7 @@
     "feathers-hooks-common": "^5.0.3",
     "helmet": "^3.21.2",
     "ioredis": "^4.17.3",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.21",
     "serve-favicon": "^2.5.0",
     "uuid": "^8.0.0",
     "winston": "^3.0.0"
