@@ -94,10 +94,8 @@ Improve Cedar interoperability experience
 Usability improvements
 + Clients rejoin subscriptions when they reconnect
 + VolumeBar is further optimized
-/ Use custom backend for playing audio
-  - Change playback speed instead of jumping
-  - Let output devices be configurable again
-- Make loopback latency calibration easier
++ Use custom backend for playing audio
+  + Let output devices be configurable again
 - Updates still work
 
 Admin stuff (no code)
@@ -135,6 +133,7 @@ Quality-of-life improvements
     number itself
   - This would be extremely useful for debugging and could indicate to a group
     if they could reduce secondsBetweenMusicians safely
+- Change playback speed instead of jumping when playback falls behind
 - Allow copy/paste via right-click (custom electron context menu)
 - Fix audio choppyness
 - Fix loopback calibration not working for everyone (maybe fixed)

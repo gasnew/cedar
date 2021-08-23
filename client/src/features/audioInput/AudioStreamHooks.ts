@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Base64 } from 'js-base64';
 
+import { IOutputDevice } from '../audioInput/audioSlice';
 import { usePatch } from '../feathers/FeathersHooks';
 import { selectLoopbackLatencyMs } from '../mediaBar/mediaBarSlice';
 import createAudioDestinationNode from '../mixer/createAudioDestinationNode';
@@ -178,7 +179,10 @@ interface DataResponse {
   setMonitoringInput: (boolean) => void;
 }
 
-export function useStreamData(stream: MediaStream | null): DataResponse {
+export function useStreamData(
+  stream: MediaStream | null,
+  outputDevice: IOutputDevice | null
+): DataResponse {
   const [analyzer, setAnalyzer] = useState<AnalyserNode | null>(null);
   const [gainNode, setGainNode] = useState<GainNode | null>(null);
   const [setMonitoringInput, setSetMonitoringInput] = useState<
@@ -282,20 +286,23 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
           );
           return;
         }
-        setSetWorkletCallback(() => (callback) =>
-          (audioInputBufferNode.port.onmessage = callback)
+        setSetWorkletCallback(
+          () => (callback) => (audioInputBufferNode.port.onmessage = callback)
         );
         setAnalyzer(analyzer);
         setGainNode(inputGainNode);
         setSetMonitoringInput(() => (monitoring) => {
           directToDestinationGainNode.gain.value = monitoring ? 1 : 0;
-          if (monitoring)
-            startAudioDestinationNode({ recordingStartedAt: Date.now() });
+          if (monitoring && outputDevice)
+            startAudioDestinationNode({
+              recordingStartedAt: Date.now(),
+              deviceId: outputDevice.id,
+            });
           else stopAudioDestinationNode();
         });
         setDataArray(new Uint8Array(analyzer.fftSize));
-        setPostWorkletMessage(() => (message) =>
-          audioInputBufferNode.port.postMessage(message)
+        setPostWorkletMessage(
+          () => (message) => audioInputBufferNode.port.postMessage(message)
         );
       };
 
@@ -314,7 +321,7 @@ export function useStreamData(stream: MediaStream | null): DataResponse {
         });
       };
     }
-  }, [stream]);
+  }, [stream, outputDevice]);
 
   const fetchData = useCallback(() => {
     if (analyzer) analyzer.getByteTimeDomainData(dataArray);

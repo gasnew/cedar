@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 const ipcRenderer = window!.ipcRenderer;
 
 function makeStartAudioDestinationNode(audioDestinationNode) {
-  return ({ recordingStartedAt }) => {
+  return ({ recordingStartedAt, deviceId }) => {
     // NOTE(gnewman): The correlation ID lets the backend associate incoming data
     // with our particular destination node. Only one destination node can write
     // to the backend at a time.
@@ -11,6 +11,7 @@ function makeStartAudioDestinationNode(audioDestinationNode) {
     ipcRenderer.send('audio-destination/start-playing', {
       recordingStartedAt,
       correlationId,
+      deviceId,
     });
     audioDestinationNode.port.onmessage = ({ data }) => {
       ipcRenderer.send('audio-destination/push-data', {
