@@ -103,7 +103,6 @@
     "electron": "10.1.1",
     "electron-builder": "^22.9.1",
     "electron-notarize": "^1.0.0",
-    "eslint": "^7.32.0",
     "foreman": "^3.0.1",
     "prettier": "2.3.2",
     "tslint": "^6.1.3",
