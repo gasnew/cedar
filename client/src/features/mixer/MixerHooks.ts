@@ -22,13 +22,14 @@ declare global {
 }
 
 interface AudioDestinationControls {
-  startAudioDestinationNode: ({ recordingStartedAt }) => void;
+  startAudioDestinationNode: ({ recordingStartedAt, deviceId }) => void;
   stopAudioDestinationNode: () => void;
 }
 
 function useFetchAudioData(
   postWorkletMessage: (any) => void,
-  audioDestinationControls: AudioDestinationControls
+  audioDestinationControls: AudioDestinationControls,
+  deviceId: string,
 ) {
   const [fetching, setFetching] = useState<boolean>(false);
   const cursorsByTrack = useRef<{
@@ -68,6 +69,7 @@ function useFetchAudioData(
       });
       audioDestinationControls.startAudioDestinationNode({
         recordingStartedAt: currentRecording.startedAt,
+        deviceId,
       });
 
       requestOut.current = false;
@@ -96,6 +98,7 @@ function useFetchAudioData(
     currentRecording,
     precedingTracks,
     fetching,
+    deviceId,
   ]);
 
   // Wire the opusWorker to the audioWorklet
@@ -248,7 +251,7 @@ export function useRoomAudio(
   // Only used in race-condition protection
   const currentAudioContext = useRef<AudioContext | null>(null);
 
-  useFetchAudioData(postWorkletMessage, audioDestinationControls);
+  useFetchAudioData(postWorkletMessage, audioDestinationControls, deviceId);
 
   useEffect(() => {
     const audioContext = new window.AudioContext({ sampleRate: 48000 });

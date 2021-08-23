@@ -1,6 +1,5 @@
 // NOTE(gnewman): This file repeats a lot of code from AudioInputSelector.tsx.
 
-import _ from 'lodash';
 import React, { useEffect, useState } from 'react';
 import { Button, MenuItem } from '@blueprintjs/core';
 import { ItemRenderer, Select } from '@blueprintjs/select';
@@ -54,7 +53,6 @@ export default function ({
     if (!selectedDevice && outputDevices.length > 0)
       setSelectedDevice(outputDevices[0]);
   }, [setSelectedDevice, selectedDevice, outputDevices]);
-  console.log(selectedDevice);
 
   return (
     <OutputDeviceSelect

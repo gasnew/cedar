@@ -29,7 +29,6 @@ class RoomAudioPlayer extends AudioWorkletProcessor {
           this.delaySamples = Math.floor(sampleRate * delaySeconds);
           const samplesSinceRecordingStarted =
             (Date.now() - recordingStartedAt) * 48;
-          console.log(samplesSinceRecordingStarted);
           this.bufferReadIndex =
             (this.bufferLength -
               this.delaySamples +

@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Button,
@@ -12,7 +12,6 @@ import {
   OL,
   Tag,
 } from '@blueprintjs/core';
-import Speaker from 'speaker';
 
 import { useStream } from '../audioInput/AudioStreamHooks';
 import {
@@ -41,7 +40,8 @@ const PULSE_DUTY_CYCLE = 0.3;
 const PULSE_COUNT = 3;
 const PULSE_AMPLITUDE = 0.6;
 const PULSE_HZ = 880;
-const PULSE_SAMPLES = 48000 + Math.floor(PULSE_PERIOD_SECONDS * PULSE_COUNT * 48000);
+const PULSE_SAMPLES =
+  48000 + Math.floor(PULSE_PERIOD_SECONDS * PULSE_COUNT * 48000);
 
 function createPulsesSource(audioContext) {
   // Create an empty three-second stereo buffer at the sample rate of the AudioContext
@@ -140,7 +140,8 @@ function sleep(ms) {
 }
 
 async function detectLoopbackLatency(
-  stream: MediaStream
+  stream: MediaStream,
+  selectedOutputDevice: IOutputDevice
 ): Promise<LoopbackLatencyResult> {
   // CONNECT PULSES SOURCE TO OUTPUT DEVICE
   const outputAudioContext = new window.AudioContext({ sampleRate: 48000 });
@@ -184,7 +185,10 @@ async function detectLoopbackLatency(
   // START RECORDING AND PLAYBACK AT THE SAME TIME
   // We use this timestamp to adjust the recording
   const recordingStartedAt = Date.now();
-  startAudioDestinationNode({ recordingStartedAt });
+  startAudioDestinationNode({
+    recordingStartedAt,
+    deviceId: selectedOutputDevice.id,
+  });
   await sleep(1000);
   pulsesSource.start();
   const recordedData = await startRecordingData(
@@ -259,14 +263,10 @@ export default function () {
   const { musicianId } = useSelector(selectRoom);
 
   const [isOpen, setIsOpen] = useState(false);
-  const [
-    selectedInputDevice,
-    setSelectedInputDevice,
-  ] = useState<IInputDevice | null>(defaultSelectedInputDevice);
-  const [
-    selectedOutputDevice,
-    setSelectedOutputDevice,
-  ] = useState<IOutputDevice | null>(defaultSelectedOutputDevice);
+  const [selectedInputDevice, setSelectedInputDevice] =
+    useState<IInputDevice | null>(defaultSelectedInputDevice);
+  const [selectedOutputDevice, setSelectedOutputDevice] =
+    useState<IOutputDevice | null>(defaultSelectedOutputDevice);
   const [running, setRunning] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [pendingLoopbackLatencyMs, setPendingLoopbackLatencyMs] = useState<
@@ -294,9 +294,12 @@ export default function () {
     setIsOpen(false);
   };
   const handleRunClick = async () => {
-    if (stream) {
+    if (stream && selectedOutputDevice) {
       setRunning(true);
-      const latencyResult = await detectLoopbackLatency(stream);
+      const latencyResult = await detectLoopbackLatency(
+        stream,
+        selectedOutputDevice
+      );
       if (latencyResult.success) {
         setPendingLoopbackLatencyMs(latencyResult.latencyMs);
         setErrorMessage(null);

@@ -28,16 +28,15 @@ class AudioDestinationNode extends AudioWorkletProcessor {
   }
 
   process(inputs, outputs, parameters) {
-    if (!this.running) return true;
+    if (!this.running || !inputs[0][0]) return true;
     if (!this.adjustedForDeadTime) {
       // NOTE(gnewman): We need to pad our output just after starting this node
       // to account for the audio samples we should have seen but didn't in the
       // time in took recording to start. We also add a few blank samples to
       // act as a buffer between the frontend (this node) and the
       // PortAudio-based audio backend.
-      const samplesToAdd = 48 * (Date.now() - this.recordingStartedAt) + 4800 * 3;
-      //const samplesToAdd = 4800;
-      console.log(`Adding ${(samplesToAdd - 4800 * 3) / 48} ms of dead space`);
+      const samplesToAdd =
+        48 * (Date.now() - this.recordingStartedAt) + 4800 * 1;
       for (let i = 0; i < samplesToAdd; i++) this.pushSample(0);
       this.adjustedForDeadTime = true;
     }

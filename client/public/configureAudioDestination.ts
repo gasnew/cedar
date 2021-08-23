@@ -13,19 +13,20 @@ const { createDestinationStream, getDestinationStream } = (() => {
   // handler
   var destinationStream = null;
 
-  async function createDestinationStream() {
+  async function createDestinationStream(deviceId: string) {
     if (destinationStream) {
       destinationStream.end();
       // Wait until done. Throws if there are errors.
       await finished(destinationStream);
     }
 
+    console.log(deviceId);
     destinationStream = new portAudio.AudioIO({
       outOptions: {
         channelCount: 1,
         sampleFormat: portAudio.SampleFormat32Bit,
         sampleRate: 48000,
-        deviceId: -1, // Use -1 or omit the deviceId to select the default device
+        deviceId, // Use -1 or omit the deviceId to select the default device
         closeOnError: true, // Close the stream if an audio error is detected, if set false then just log the error
       },
     });
@@ -121,10 +122,10 @@ async function pipeSourceToDestination(sourceStream, destinationStream) {
 function configureAudioDestination() {
   ipcMain.on(
     'audio-destination/start-playing',
-    async ({ recordingStartedAt }) => {
+    async ({ recordingStartedAt, deviceId }) => {
       log.info('AUDIO DESTINATION: Render thread told me to start playing...');
       const sourceStream = createSourceStream();
-      const destinationStream = await createDestinationStream();
+      const destinationStream = await createDestinationStream(deviceId);
       sourceStream.once('readable', async () => {
         log.info('starting streaming');
         // TODO: pass in started at time

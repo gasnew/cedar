@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Card, H4, Switch } from '@blueprintjs/core';
 
@@ -37,6 +37,7 @@ export default function() {
     setMonitoringInput,
   } = useStreamData(
     useStream(selectedInputDevice ? selectedInputDevice.deviceId : null),
+    selectedOutputDevice
   );
 
   // Redux state
