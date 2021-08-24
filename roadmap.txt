@@ -99,15 +99,15 @@ Usability improvements
 - Updates still work
 + Recordings are deleted after they are stopped
 + Devices can be swapped in and out without restarting Cedar
-- Prod build works
-- Docs all updated
++ Prod build works
++ Docs all updated
 
 Admin stuff (no code)
 + Write how-to guide
 - Demo video (~5 minutes, including musical performance)
 
 Fix bugs
-- delete recordings when done
+- Fix macos CI build (naudiodon dylib issue)
 - Somehow, playback buffers don't always get zero'd out (still!)
 - Set up loopback calibration for non-mic instruments
 - Do testing with audio interface?

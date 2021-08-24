@@ -109,8 +109,8 @@ time to work on the project.
 ## More information
 
 See the [Cedar
-spec](https://docs.google.com/document/d/142uUTIO0dA_CqsRBE1XJqn3dE_TfxmZoGxRWfiqPm_Y/edit)
-for some ideation about the project from early on.
+guide](https://docs.google.com/document/d/1PVJNlb559fR8R25e_IGvXknX7L8K01HqyJM_XQ0atr8/edit?usp=sharing)
+for information on how to use Cedar.
 
 Cedar is composed of two main modules: an API server
 ([Feathers](http://feathersjs.com) with a [Redis](https://redis.io/) backend)
