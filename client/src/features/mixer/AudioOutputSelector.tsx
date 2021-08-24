@@ -1,6 +1,6 @@
 // NOTE(gnewman): This file repeats a lot of code from AudioInputSelector.tsx.
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Button, MenuItem } from '@blueprintjs/core';
 import { ItemRenderer, Select } from '@blueprintjs/select';
 
@@ -23,14 +23,18 @@ const outputDeviceRenderer: ItemRenderer<IOutputDevice> = (
 const OutputDeviceSelect = Select.ofType<IOutputDevice>();
 
 function useOutputDevices(): IOutputDevice[] {
-  // TODO(gnewman): Handle devices being plugged in and unplugged
   const [outputDevices, setOutputDevices] = useState<IOutputDevice[]>([]);
 
-  useEffect(() => {
+  const fetchOutputDevices = useMemo(() => () => {
     ipcRenderer.invoke('audio-destination/get-devices').then((devices) => {
       setOutputDevices(devices);
     });
   }, []);
+
+  useEffect(fetchOutputDevices, [fetchOutputDevices]);
+  useEffect(() => {
+    navigator.mediaDevices.ondevicechange = fetchOutputDevices;
+  }, [fetchOutputDevices]);
 
   return outputDevices;
 }

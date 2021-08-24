@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Button, MenuItem } from '@blueprintjs/core';
 import { ItemRenderer, Select } from '@blueprintjs/select';
 
@@ -28,26 +28,26 @@ function useInputDevices(): [() => void, InputDeviceData] {
   const [inputDevices, setInputDevices] = useState<IInputDevice[]>([]);
   const [hasPermission, setHasPermission] = useState<boolean>(false);
 
-  const requestPermission = () =>
-    navigator.mediaDevices
-      .getUserMedia({ audio: true })
-      .then(() => setHasPermission(true))
-      .catch(error => {
-        console.error(`Input device permission denied: ${error}`);
-        setHasPermission(false);
-      });
-
-  useEffect(() => {
-    requestPermission();
-  }, []);
-  useEffect(
-    () => {
-      navigator.mediaDevices.enumerateDevices().then(devices => {
+  const requestPermission = useMemo(
+    () => () => {
+      navigator.mediaDevices
+        .getUserMedia({ audio: true })
+        .then(() => setHasPermission(true))
+        .catch((error) => {
+          console.error(`Input device permission denied: ${error}`);
+          setHasPermission(false);
+        });
+    },
+    []
+  );
+  const fetchInputDevices = useMemo(
+    () => () => {
+      navigator.mediaDevices.enumerateDevices().then((devices) => {
         setInputDevices(
           _.map(
             _.filter(
               devices,
-              device =>
+              (device) =>
                 device.kind === 'audioinput' &&
                 !!device.deviceId &&
                 device.deviceId !== 'default'
@@ -61,8 +61,14 @@ function useInputDevices(): [() => void, InputDeviceData] {
         );
       });
     },
-    [hasPermission]
+    []
   );
+
+  useEffect(requestPermission, []);
+  useEffect(fetchInputDevices, [hasPermission, fetchInputDevices]);
+  useEffect(() => {
+    navigator.mediaDevices.ondevicechange = fetchInputDevices;
+  }, [fetchInputDevices]);
 
   return [requestPermission, { hasPermission, inputDevices }];
 }
@@ -73,16 +79,14 @@ interface Props {
   setSelectedDevice: (IInputDevice) => void;
 }
 
-export default function({
+export default function ({
   disabled = false,
   selectedDevice,
   setSelectedDevice,
 }: Props) {
   // Device selection
-  const [
-    requestPermission,
-    { hasPermission, inputDevices },
-  ] = useInputDevices();
+  const [requestPermission, { hasPermission, inputDevices }] =
+    useInputDevices();
 
   useEffect(() => {
     if (!hasPermission && selectedDevice) setSelectedDevice(null);
