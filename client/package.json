@@ -67,7 +67,6 @@
     "directories": {
       "buildResources": "assets"
     },
-    "afterSign": "scripts/notarize.js",
     "extends": null
   },
   "scripts": {
