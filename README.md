@@ -94,6 +94,18 @@ musician, in turn, hears a mix of all previous musicians and adds their own
 audio to the music chain. The result of this arrangement is that latency
 becomes a non-issue, and musicians can perform together in real time.
 
+## Philosophy of development
+
+Cedar is completely free and open source--you can use my app and my code in
+pretty much any way you want. I made it this way by design because I want Cedar
+to be available to anyone with a computer and an internet connection. This is
+why I have a [Patreon](https://www.patreon.com/garrettnewman). It allows me to
+realize my vision for the project without putting the app behind a paywall or
+subscription or flooding it with ads. In other words, musicians are enabled to
+work with Cedar creatively, and I am incentivized to create a valuable product.
+Your money helps me pay the costs of running the Cedar service and buys me more
+time to work on the project.
+
 ## More information
 
 See the [Cedar

@@ -49,7 +49,7 @@ jobs:
     - run: cd ../api && yarn install
     - run: yarn install
     - run: yarn build
-    - name: Build Cedar for Mac and Windows
+    - name: Build Cedar for Mac
       env:
         APPLEID: ${{ secrets.APPLEID }}
         APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
