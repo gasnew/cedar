@@ -19,8 +19,10 @@ export interface RecordingInterface {
   ) => Promise<Recording>;
 }
 
-export default function(redisClient: IORedisClient): RecordingInterface {
-  const { getCollection, parseOrThrow, rKey } = commonInterface(redisClient);
+export default function (redisClient: IORedisClient): RecordingInterface {
+  const { getCollection, parseOrThrow, rKey, rStreamKey } = commonInterface(
+    redisClient
+  );
   const { getMusicians } = musicianInterface(redisClient);
   const { createTrack } = trackInterface(redisClient);
   const { getRoom } = roomInterface(redisClient);
@@ -54,7 +56,7 @@ export default function(redisClient: IORedisClient): RecordingInterface {
       );
       const musicians = await getMusicians(roomId);
       const tracks = await Promise.all(
-        _.map(musicians, musician => createTrack(roomId, musician.id))
+        _.map(musicians, (musician) => createTrack(roomId, musician.id))
       );
       const newRecording: Recording = {
         id: recordingId,
@@ -91,7 +93,7 @@ export default function(redisClient: IORedisClient): RecordingInterface {
         const musicians = await getMusicians(roomId);
         const musicianIdsChain = _.filter(
           room.musicianIdsChain,
-          id => musicians[id].active
+          (id) => musicians[id].active
         );
 
         await redisClient.hset(
@@ -102,6 +104,18 @@ export default function(redisClient: IORedisClient): RecordingInterface {
             musicianIdsChain,
             recordingId: null,
           })
+        );
+
+        // Delete track data.
+        // NOTE(gnewman): From testing, fetching and writing data to a deleted
+        // stream are basically no-ops, so it's fine if R/W occurs after we've
+        // deleted the streams.
+        // TODO(gnewman): Once we have a worker for extracting track data into
+        // long-term storage, move stream deletion to that worker.
+        await Promise.all(
+          _.map(recording.trackIds, async (trackId) =>
+            redisClient.del(rStreamKey({ roomId, trackId }))
+          )
         );
       }
       await redisClient.hset(
