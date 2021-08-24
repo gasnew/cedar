@@ -46,11 +46,8 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: 14.x
-    - uses: actions/download-artifact@v2
-      with:
-        name: build-files
-        path: ./client/build
     - run: yarn install
+    - run: yarn build
     - name: Build Cedar for Mac and Windows
       env:
         APPLEID: ${{ secrets.APPLEID }}
@@ -74,11 +71,8 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: 14.x
-    - uses: actions/download-artifact@v2
-      with:
-        name: build-files
-        path: ./client/build
     - run: yarn install
+    - run: yarn build
     - name: Build Cedar for Windows
       env:
         CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
