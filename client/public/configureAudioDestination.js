@@ -20,15 +20,12 @@ const {
   let destinationStream = null;
 
   async function createDestinationStream(deviceId) {
-    console.log('await done');
     if (destinationStream) {
       destinationStream.end();
       // Wait until done. Throws if there are errors.
       await finished(destinationStream);
     }
 
-    console.log('next!');
-    console.log(deviceId);
     destinationStream = new portAudio.AudioIO({
       outOptions: {
         channelCount: 1,
@@ -125,7 +122,6 @@ const {
       };
     }
     sourceStream = Readable.from(streamGenerator());
-    console.log('created stream!');
     return sourceStream;
   }
 
@@ -180,31 +176,20 @@ function configureAudioDestination() {
 
     clearSourceData();
     clearDestinationData();
-    // TODO: somehow immediately stop playback? destinationStream.abort?
     sourceStream.destroy();
-    //destinationStream.end();
     destinationStream.abort();
-    //destinationStream.quit(() => destinationStream.abort());
-    // Wait until done. Throws if there are errors.
-    //await finished(destinationStream);
-    console.log('finished');
   }
 
   ipcMain.on(
     'audio-destination/start-playing',
     async (_, { recordingStartedAt, correlationId: newCorrelationId, deviceId }) => {
       correlationId = newCorrelationId;
-      console.log(newCorrelationId);
       await stopPlaying();
 
-      console.log('STAHT');
-      console.log(recordingStartedAt);
       log.info('AUDIO DESTINATION: Render thread told me to start playing...');
       const sourceStream = createSourceStream(correlationId);
       const destinationStream = await createDestinationStream(deviceId);
-      console.log('destination!!!!');
       sourceStream.once('readable', async () => {
-        console.log('starting streaming');
         pipeSourceToDestination(sourceStream, destinationStream);
         destinationStream.start(recordingStartedAt);
       });

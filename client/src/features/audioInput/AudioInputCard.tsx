@@ -19,14 +19,6 @@ export default function() {
 
   // Audio output (for monitoring only)
   const selectedOutputDevice = useSelector(selectOutputDevice);
-  //const audioElement = useMemo<HTMLAudioElement>(() => new Audio(), []);
-  //useEffect(
-    //() => {
-      //if (selectedOutputDevice)
-        //audioElement.setSinkId(selectedOutputDevice.deviceId);
-    //},
-    //[audioElement, selectedOutputDevice]
-  //);
 
   // Audio data
   const [listeningToAudioInput, setListeningToAudioInput] = useState(false);

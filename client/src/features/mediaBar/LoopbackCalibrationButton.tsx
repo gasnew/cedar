@@ -113,7 +113,6 @@ function calculateLoopbackLatency(
     }
   }
 
-  console.log(detectedPulseLatencies);
   const meanLatency = _.mean(detectedPulseLatencies);
   if (
     detectedPulseLatencies.length === PULSE_COUNT &&
@@ -122,7 +121,6 @@ function calculateLoopbackLatency(
       (latency) => Math.abs(latency - meanLatency) < 0.003
     )
   ) {
-    console.log(Math.round(meanLatency * 1000));
     return {
       success: true,
       latencyMs: Math.round(meanLatency * 1000),
@@ -282,11 +280,6 @@ export default function () {
   const [patchMusician] = usePatch('musicians');
 
   const dispatch = useDispatch();
-
-  //useEffect(() => {
-  //if (selectedOutputDevice)
-  //audioElement.setSinkId(selectedOutputDevice.deviceId);
-  //}, [audioElement, selectedOutputDevice]);
 
   const handleOpen = () => setIsOpen(true);
   const handleClose = () => {

@@ -214,7 +214,7 @@ export default function() {
               left: 25,
             }}
           >
-            alphad
+            alpha
           </span>
         </NavbarHeading>
         <NavbarDivider />
