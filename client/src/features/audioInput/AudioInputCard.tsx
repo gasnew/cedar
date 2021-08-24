@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Card, H4, Switch } from '@blueprintjs/core';
 
@@ -19,14 +19,6 @@ export default function() {
 
   // Audio output (for monitoring only)
   const selectedOutputDevice = useSelector(selectOutputDevice);
-  const audioElement = useMemo<HTMLAudioElement>(() => new Audio(), []);
-  useEffect(
-    () => {
-      if (selectedOutputDevice)
-        audioElement.setSinkId(selectedOutputDevice.deviceId);
-    },
-    [audioElement, selectedOutputDevice]
-  );
 
   // Audio data
   const [listeningToAudioInput, setListeningToAudioInput] = useState(false);
@@ -34,10 +26,10 @@ export default function() {
     canChangeStream,
     fetchData,
     setGainDB,
-    setDirectToDestinationGainNodeGain,
+    setMonitoringInput,
   } = useStreamData(
     useStream(selectedInputDevice ? selectedInputDevice.deviceId : null),
-    audioElement
+    selectedOutputDevice
   );
 
   // Redux state
@@ -57,11 +49,9 @@ export default function() {
   );
   useEffect(
     () => {
-      setDirectToDestinationGainNodeGain(
-        listeningToAudioInput === true ? 1 : 0
-      );
+      setMonitoringInput(listeningToAudioInput);
     },
-    [listeningToAudioInput, setDirectToDestinationGainNodeGain]
+    [listeningToAudioInput, setMonitoringInput]
   );
 
   return (

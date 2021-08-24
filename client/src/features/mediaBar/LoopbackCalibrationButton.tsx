@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   Button,
@@ -25,6 +25,7 @@ import VolumeBar from '../audioInput/VolumeBar';
 import { usePatch } from '../feathers/FeathersHooks';
 import { setLoopbackLatencyMs } from './mediaBarSlice';
 import AudioOutputSelector from '../mixer/AudioOutputSelector';
+import createAudioDestinationNode from '../mixer/createAudioDestinationNode';
 import { selectRecordingState } from '../recording/recordingSlice';
 import { setMusicianLoopbackLatencyMs } from '../musicians/musiciansSlice';
 import { selectRoom } from '../room/roomSlice';
@@ -39,7 +40,8 @@ const PULSE_DUTY_CYCLE = 0.3;
 const PULSE_COUNT = 3;
 const PULSE_AMPLITUDE = 0.6;
 const PULSE_HZ = 880;
-const PULSE_SAMPLES = Math.floor(PULSE_PERIOD_SECONDS * PULSE_COUNT * 48000);
+const PULSE_SAMPLES =
+  48000 + Math.floor(PULSE_PERIOD_SECONDS * PULSE_COUNT * 48000);
 
 function createPulsesSource(audioContext) {
   // Create an empty three-second stereo buffer at the sample rate of the AudioContext
@@ -55,8 +57,7 @@ function createPulsesSource(audioContext) {
     for (var i = 0; i < myArrayBuffer.length; i++) {
       const periodSamples = PULSE_PERIOD_SECONDS * audioContext.sampleRate;
       if (
-        i %
-        periodSamples <
+        i % periodSamples <
         audioContext.sampleRate * PULSE_PERIOD_SECONDS * PULSE_DUTY_CYCLE
       ) {
         const elapsedSeconds = i / audioContext.sampleRate;
@@ -78,7 +79,7 @@ function createPulsesSource(audioContext) {
 
 function startRecordingData(audioRecorderNode, recordingStartedAt) {
   return new Promise<Float32Array>((resolve, reject) => {
-    audioRecorderNode.port.onmessage = function(event) {
+    audioRecorderNode.port.onmessage = function (event) {
       resolve(event.data);
     };
 
@@ -103,7 +104,7 @@ function calculateLoopbackLatency(
     const abs1 = absBuffer[index - 1];
     const abs2 = absBuffer[index];
 
-    const bigJump = value => value > mean + (max - mean) * 0.8;
+    const bigJump = (value) => value > mean + (max - mean) * 0.8;
     if (bigJump(abs2) && !bigJump(abs1)) {
       detectedPulseLatencies.push(
         (index % Math.floor(PULSE_PERIOD_SECONDS * 48000)) / 48000
@@ -117,7 +118,7 @@ function calculateLoopbackLatency(
     detectedPulseLatencies.length === PULSE_COUNT &&
     _.every(
       detectedPulseLatencies,
-      latency => Math.abs(latency - meanLatency) < 0.003
+      (latency) => Math.abs(latency - meanLatency) < 0.003
     )
   ) {
     return {
@@ -133,36 +134,29 @@ function calculateLoopbackLatency(
 }
 
 function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function detectLoopbackLatency(
   stream: MediaStream,
-  audioElement: HTMLAudioElement
+  selectedOutputDevice: IOutputDevice
 ): Promise<LoopbackLatencyResult> {
   // CONNECT PULSES SOURCE TO OUTPUT DEVICE
   const outputAudioContext = new window.AudioContext({ sampleRate: 48000 });
   const pulsesSource = createPulsesSource(outputAudioContext);
-  const outputDeviceNode = outputAudioContext.createMediaStreamDestination();
   // NOTE(gnewman): Sometimes routing an AudioContext to a destination, even if
   // you don't need it, helps the AudioContext time things correctly.
   const outputGain = outputAudioContext.createGain();
   outputGain.gain.value = 0;
   pulsesSource.connect(outputGain);
   outputGain.connect(outputAudioContext.destination);
-  pulsesSource.connect(outputDeviceNode);
-  audioElement.srcObject = outputDeviceNode.stream;
 
-  // START AUDIO ELEMENT, AND SLEEP
-  await audioElement.play();
-  // NOTE(gnewman): HTMLAudioElement is a little finickey and sometimes takes a
-  // moment to fill up its buffer and start playback sensibly, so we sleep for
-  // a bit to give it time to do its thing. This also mimicks the actual core
-  // Cedar audio loop where audioElement.play() is called when the chain is
-  // arranged (when the AudioContext for your audio sources needs to be
-  // rebuilt), then audio data starts coming in much later when recording
-  // starts.
-  await sleep(500);
+  const {
+    audioDestinationNode,
+    startAudioDestinationNode,
+    stopAudioDestinationNode,
+  } = await createAudioDestinationNode(outputAudioContext);
+  pulsesSource.connect(audioDestinationNode);
 
   // CONNECT INPUT DEVICE TO AUDIO RECORDER
   const inputAudioContext = new window.AudioContext({ sampleRate: 48000 });
@@ -187,9 +181,14 @@ async function detectLoopbackLatency(
   inputGain.connect(inputAudioContext.destination);
 
   // START RECORDING AND PLAYBACK AT THE SAME TIME
-  pulsesSource.start();
   // We use this timestamp to adjust the recording
   const recordingStartedAt = Date.now();
+  startAudioDestinationNode({
+    recordingStartedAt,
+    deviceId: selectedOutputDevice.id,
+  });
+  await sleep(1000);
+  pulsesSource.start();
   const recordedData = await startRecordingData(
     audioRecorderNode,
     recordingStartedAt
@@ -198,7 +197,7 @@ async function detectLoopbackLatency(
   // CLEAN UP
   inputAudioContext.close();
   outputAudioContext.close();
-  await audioElement.pause();
+  stopAudioDestinationNode();
 
   return calculateLoopbackLatency(recordedData);
 }
@@ -216,44 +215,38 @@ export function useSimpleStreamFetcher(
   const [dataArray, setDataArray] = useState<Uint8Array>(new Uint8Array());
   const [canChangeStream, setCanChangeStream] = useState<boolean>(true);
 
-  useEffect(
-    () => {
-      if (!stream) setAnalyzer(null);
-      else {
-        const audioContext = new window.AudioContext({
-          sampleRate: 48000,
+  useEffect(() => {
+    if (!stream) setAnalyzer(null);
+    else {
+      const audioContext = new window.AudioContext({
+        sampleRate: 48000,
+      });
+      const analyzer = audioContext.createAnalyser();
+      const mediaSource = audioContext.createMediaStreamSource(stream);
+
+      mediaSource.connect(analyzer);
+
+      // Has to be a power of 2. At the default sample rate of 48000, this
+      // size should be enough to let us fetch all samples assuming we are
+      // fetching every 1/60th of a second (48000 / 60 = 800 samples).
+      analyzer.fftSize = 1024;
+
+      setAnalyzer(analyzer);
+      setDataArray(new Uint8Array(analyzer.fftSize));
+
+      return () => {
+        setCanChangeStream(false);
+        audioContext.close().then(() => {
+          setCanChangeStream(true);
         });
-        const analyzer = audioContext.createAnalyser();
-        const mediaSource = audioContext.createMediaStreamSource(stream);
+      };
+    }
+  }, [stream]);
 
-        mediaSource.connect(analyzer);
-
-        // Has to be a power of 2. At the default sample rate of 48000, this
-        // size should be enough to let us fetch all samples assuming we are
-        // fetching every 1/60th of a second (48000 / 60 = 800 samples).
-        analyzer.fftSize = 1024;
-
-        setAnalyzer(analyzer);
-        setDataArray(new Uint8Array(analyzer.fftSize));
-
-        return () => {
-          setCanChangeStream(false);
-          audioContext.close().then(() => {
-            setCanChangeStream(true);
-          });
-        };
-      }
-    },
-    [stream]
-  );
-
-  const fetchData = useCallback(
-    () => {
-      if (analyzer) analyzer.getByteTimeDomainData(dataArray);
-      return dataArray;
-    },
-    [analyzer, dataArray]
-  );
+  const fetchData = useCallback(() => {
+    if (analyzer) analyzer.getByteTimeDomainData(dataArray);
+    return dataArray;
+  }, [analyzer, dataArray]);
 
   return {
     canChangeStream,
@@ -261,22 +254,17 @@ export function useSimpleStreamFetcher(
     fetchData,
   };
 }
-export default function() {
+export default function () {
   const recordingState = useSelector(selectRecordingState);
   const defaultSelectedInputDevice = useSelector(selectInputDevice);
   const defaultSelectedOutputDevice = useSelector(selectOutputDevice);
   const { musicianId } = useSelector(selectRoom);
 
   const [isOpen, setIsOpen] = useState(false);
-  const [
-    selectedInputDevice,
-    setSelectedInputDevice,
-  ] = useState<IInputDevice | null>(defaultSelectedInputDevice);
-  const [
-    selectedOutputDevice,
-    setSelectedOutputDevice,
-  ] = useState<IOutputDevice | null>(defaultSelectedOutputDevice);
-  const audioElement = useMemo<HTMLAudioElement>(() => new Audio(), []);
+  const [selectedInputDevice, setSelectedInputDevice] =
+    useState<IInputDevice | null>(defaultSelectedInputDevice);
+  const [selectedOutputDevice, setSelectedOutputDevice] =
+    useState<IOutputDevice | null>(defaultSelectedOutputDevice);
   const [running, setRunning] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [pendingLoopbackLatencyMs, setPendingLoopbackLatencyMs] = useState<
@@ -293,23 +281,18 @@ export default function() {
 
   const dispatch = useDispatch();
 
-  useEffect(
-    () => {
-      if (selectedOutputDevice)
-        audioElement.setSinkId(selectedOutputDevice.deviceId);
-    },
-    [audioElement, selectedOutputDevice]
-  );
-
   const handleOpen = () => setIsOpen(true);
   const handleClose = () => {
     if (running) return;
     setIsOpen(false);
   };
   const handleRunClick = async () => {
-    if (stream && audioElement) {
+    if (stream && selectedOutputDevice) {
       setRunning(true);
-      const latencyResult = await detectLoopbackLatency(stream, audioElement);
+      const latencyResult = await detectLoopbackLatency(
+        stream,
+        selectedOutputDevice
+      );
       if (latencyResult.success) {
         setPendingLoopbackLatencyMs(latencyResult.latencyMs);
         setErrorMessage(null);

@@ -27,17 +27,15 @@ jobs:
     - run: yarn build
     # TODO(gnewman): Remove --passWithNoTests flag when we add our first test
     - run: yarn test --passWithNoTests
-    - uses: actions/upload-artifact@v2
-      with:
-        name: build-files
-        path: ./client/build
 
-  draft-client-release-if-version-bumped:
+  draft-mac-client-release-if-version-bumped:
 
     needs: test-client
 
     if: contains(github.ref, 'bump-v')
 
+    # TODO(gnewman): Troubleshoot naudiodon dynamic library loading issue when
+    # running on macos-latest.
     runs-on: macos-latest
 
     steps:
@@ -46,18 +44,40 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: 14.x
-    - uses: actions/download-artifact@v2
-      with:
-        name: build-files
-        path: ./client/build
+    - run: cd ../api && yarn install
     - run: yarn install
-    - name: Build Cedar for Mac and Windows
+    - run: yarn build
+    - name: Build Cedar for Mac
       env:
         APPLEID: ${{ secrets.APPLEID }}
         APPLEIDPASS: ${{ secrets.APPLEIDPASS }}
         CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
         CSC_LINK: ${{ secrets.CSC_LINK }}
         GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      run: yarn build-electron-app --mac --publish always
+
+  draft-windows-client-release-if-version-bumped:
+
+    needs: test-client
+
+    if: contains(github.ref, 'bump-v')
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js 14.x
+      uses: actions/setup-node@v1
+      with:
+        node-version: 14.x
+    - run: cd ../api && yarn install
+    - run: yarn install
+    - run: yarn build-windows
+    - name: Build Cedar for Windows
+      env:
+        CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+        CSC_LINK: ${{ secrets.CSC_LINK }}
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
         WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
         WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
-      run: yarn build-electron-app --mac --win --publish always
+      run: yarn build-electron-app --win --publish always

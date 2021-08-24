@@ -75,7 +75,6 @@ function useUpdateState(): [UpdateState, string] {
     }
 
     const listeners = createListeners(setState, setErrorMessage);
-    console.log(listeners);
     _.each(listeners, ({ name, callback }) => ipcRenderer.on(name, callback));
 
     //ipcRenderer.send('check-for-updates');

@@ -94,11 +94,23 @@ musician, in turn, hears a mix of all previous musicians and adds their own
 audio to the music chain. The result of this arrangement is that latency
 becomes a non-issue, and musicians can perform together in real time.
 
+## Philosophy of development
+
+Cedar is completely free and open source--you can use my app and my code in
+pretty much any way you want. I made it this way by design because I want Cedar
+to be available to anyone with a computer and an internet connection. This is
+why I have a [Patreon](https://www.patreon.com/garrettnewman). It allows me to
+realize my vision for the project without putting the app behind a paywall or
+subscription or flooding it with ads. In other words, musicians are enabled to
+work with Cedar creatively, and I am incentivized to create a valuable product.
+Your money helps me pay the costs of running the Cedar service and buys me more
+time to work on the project.
+
 ## More information
 
 See the [Cedar
-spec](https://docs.google.com/document/d/142uUTIO0dA_CqsRBE1XJqn3dE_TfxmZoGxRWfiqPm_Y/edit)
-for some ideation about the project from early on.
+guide](https://docs.google.com/document/d/1PVJNlb559fR8R25e_IGvXknX7L8K01HqyJM_XQ0atr8/edit?usp=sharing)
+for information on how to use Cedar.
 
 Cedar is composed of two main modules: an API server
 ([Feathers](http://feathersjs.com) with a [Redis](https://redis.io/) backend)

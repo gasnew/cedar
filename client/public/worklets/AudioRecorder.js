@@ -11,7 +11,7 @@ class AudioRecorder extends AudioWorkletProcessor {
     this.frameSize = 128;
 
     const sampleRate = 48000;
-    const maxSamplesToCapture = sampleRate * 5;
+    const maxSamplesToCapture = sampleRate * 20;
     this.recordedData = new Float32Array(maxSamplesToCapture);
     this.recording = false;
     this.recordedSamples = 0;
@@ -37,6 +37,7 @@ class AudioRecorder extends AudioWorkletProcessor {
       // playback, so let's account for any time that's elapsed since
       // playback began by padding our recording data.
       this.recordedSamples = (Date.now() - this.recordingStartedAt) * 48;
+      console.log(`Ignoring ${this.recordedSamples / 48} ms`);
     }
 
     // We assume we only have one input connection

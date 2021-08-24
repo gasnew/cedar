@@ -65,9 +65,9 @@ export default function(app: Application) {
   // });
 
   // Join this user to their room channel.
-  app.service('musicians').on('created', (musician: Musician, options: any) => {
+  function ensureUserIsInRoomChannel(musician: Musician, options: any) {
     // No channels => no ws connections => cannot add anyone to this room's
-    // channel
+    // channel (shouldn't happen except for terminal-based API calls)
     if (app.channels.length === 0)
       return;
 
@@ -83,7 +83,12 @@ export default function(app: Application) {
     connections.forEach(connection =>
       app.channel(roomChannelName(roomId)).join(connection)
     );
-  });
+  }
+  // NOTE(gnewman): When a client joins a room, they either create or update
+  // (activate) a musician. These functions are idempotent, so it's OK if
+  // they're called extraneously.
+  app.service('musicians').on('created', ensureUserIsInRoomChannel);
+  app.service('musicians').on('patched', ensureUserIsInRoomChannel);
 
   // TODO(gnewman): Remove a musician's connection from a room channel if they
   // switch rooms.

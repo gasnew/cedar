@@ -2,8 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Base64 } from 'js-base64';
 
+import { IOutputDevice } from '../audioInput/audioSlice';
 import { usePatch } from '../feathers/FeathersHooks';
 import { selectLoopbackLatencyMs } from '../mediaBar/mediaBarSlice';
+import createAudioDestinationNode from '../mixer/createAudioDestinationNode';
 import {
   selectCurrentRecording,
   selectMyTrackId,
@@ -20,24 +22,21 @@ interface Props {
 export function useStream(deviceId: string | null) {
   const [stream, setStream] = useState<MediaStream | null>(null);
 
-  useEffect(
-    () => {
-      if (!deviceId) setStream(null);
-      else
-        navigator.mediaDevices
-          .getUserMedia({
-            audio: {
-              deviceId: { exact: deviceId },
-              autoGainControl: false,
-              echoCancellation: false,
-              noiseSuppression: false,
-              sampleRate: 48000,
-            },
-          })
-          .then(setStream);
-    },
-    [deviceId]
-  );
+  useEffect(() => {
+    if (!deviceId) setStream(null);
+    else
+      navigator.mediaDevices
+        .getUserMedia({
+          audio: {
+            deviceId: { exact: deviceId },
+            autoGainControl: false,
+            echoCancellation: false,
+            noiseSuppression: false,
+            sampleRate: 48000,
+          },
+        })
+        .then(setStream);
+  }, [deviceId]);
 
   return stream;
 }
@@ -136,7 +135,7 @@ function useChunkPoster(
       // whether we've sent the initial message from our stream or not.
       var instantiatedStream = false;
 
-      setWorkletCallback(event => {
+      setWorkletCallback((event) => {
         if (!instantiatedStream) {
           opusWorker.postMessage({
             op: 'begin',
@@ -177,27 +176,26 @@ interface DataResponse {
   someData: boolean;
   fetchData: () => Uint8Array;
   setGainDB: (number) => void;
-  setDirectToDestinationGainNodeGain: (number) => void;
+  setMonitoringInput: (boolean) => void;
 }
 
 export function useStreamData(
   stream: MediaStream | null,
-  audioElement: HTMLAudioElement
+  outputDevice: IOutputDevice | null
 ): DataResponse {
   const [analyzer, setAnalyzer] = useState<AnalyserNode | null>(null);
   const [gainNode, setGainNode] = useState<GainNode | null>(null);
-  const [
-    directToDestinationGainNode,
-    setDirectToDestinationGainNode,
-  ] = useState<GainNode | null>(null);
+  const [setMonitoringInput, setSetMonitoringInput] = useState<
+    (boolean) => void
+  >(() => (_) => null);
   const [dataArray, setDataArray] = useState<Uint8Array>(new Uint8Array());
   const [postWorkletMessage, setPostWorkletMessage] = useState<(any) => void>(
-    _ => _ => null
+    (_) => (_) => null
   );
   const [canChangeStream, setCanChangeStream] = useState<boolean>(true);
   const [setWorkletCallback, setSetWorkletCallback] = useState<
     (WorkletCallback) => void
-  >(_ => _ => null);
+  >((_) => (_) => null);
   // Only used in race-condition protection
   const currentAudioContext = useRef<AudioContext | null>(null);
   useChunkPoster(useSelector(selectMyTrackId), setWorkletCallback);
@@ -209,131 +207,128 @@ export function useStreamData(
 
   // Hook to start the worklet when recordingState says so. Starting the audio
   // worklet is idempotent, so it's OK if we send the message multiple times
-  useEffect(
-    () => {
-      // Don't send audio to server if not in chain
-      if (!amInChain) return;
+  useEffect(() => {
+    // Don't send audio to server if not in chain
+    if (!amInChain) return;
 
-      if (recordingState === 'recording' && currentRecording) {
-        postWorkletMessage({
-          action: 'start',
-          // more negative -> delay mic more
-          delaySeconds: delaySeconds + (loopbackLatencyMs || 0) / 1000,
-          recordingStartedAt: currentRecording.startedAt,
-        });
-      } else if (recordingState === 'stopped') {
-        postWorkletMessage({ action: 'stop' });
-      }
-    },
-    [
-      amInChain,
-      recordingState,
-      postWorkletMessage,
-      currentRecording,
-      delaySeconds,
-      loopbackLatencyMs,
-    ]
-  );
+    if (recordingState === 'recording' && currentRecording) {
+      postWorkletMessage({
+        action: 'start',
+        // more negative -> delay mic more
+        delaySeconds: delaySeconds + (loopbackLatencyMs || 0) / 1000,
+        recordingStartedAt: currentRecording.startedAt,
+      });
+    } else if (recordingState === 'stopped') {
+      postWorkletMessage({ action: 'stop' });
+    }
+  }, [
+    amInChain,
+    recordingState,
+    postWorkletMessage,
+    currentRecording,
+    delaySeconds,
+    loopbackLatencyMs,
+  ]);
 
-  useEffect(
-    () => {
-      if (!stream) setAnalyzer(null);
-      else {
-        const audioContext = new window.AudioContext({
-          sampleRate: 48000,
-        });
-        // Store the current AudioContext for race condition protection
-        currentAudioContext.current = audioContext;
-        const updateStream = async () => {
-          await audioContext.audioWorklet.addModule('AudioInputBufferer.js');
-          const analyzer = audioContext.createAnalyser();
-          const mediaSource = audioContext.createMediaStreamSource(stream);
+  useEffect(() => {
+    if (!stream) setAnalyzer(null);
+    else {
+      const audioContext = new window.AudioContext({
+        sampleRate: 48000,
+      });
+      // Store the current AudioContext for race condition protection
+      currentAudioContext.current = audioContext;
+      const updateStream = async () => {
+        await audioContext.audioWorklet.addModule('AudioInputBufferer.js');
+        const analyzer = audioContext.createAnalyser();
+        const mediaSource = audioContext.createMediaStreamSource(stream);
 
-          const inputGainNode = audioContext.createGain();
-          const directToDestinationGainNode = audioContext.createGain();
-          const audioInputBufferNode = new AudioWorkletNode(
-            audioContext,
-            'AudioInputBufferer'
+        const inputGainNode = audioContext.createGain();
+        const directToDestinationGainNode = audioContext.createGain();
+        const audioInputBufferNode = new AudioWorkletNode(
+          audioContext,
+          'AudioInputBufferer'
+        );
+
+        mediaSource.connect(inputGainNode);
+        inputGainNode.connect(analyzer);
+        inputGainNode.connect(audioInputBufferNode);
+        inputGainNode.connect(directToDestinationGainNode);
+        // Just piped to destination here so the audio engine treats this
+        // branch as active. No audio is rendered to the speakers.
+        audioInputBufferNode.connect(audioContext.destination);
+
+        // Set up monitoring
+        const inputChannelMergerNode = audioContext.createChannelMerger(1);
+        directToDestinationGainNode.connect(inputChannelMergerNode);
+        const {
+          audioDestinationNode,
+          startAudioDestinationNode,
+          stopAudioDestinationNode,
+        } = await createAudioDestinationNode(audioContext);
+        inputChannelMergerNode.connect(audioDestinationNode);
+
+        // Has to be a power of 2. At the default sample rate of 48000, this
+        // size should be enough to let us fetch all samples assuming we are
+        // fetching every 1/60th of a second (48000 / 60 = 800 samples).
+        analyzer.fftSize = 1024;
+        inputGainNode.gain.value = 1;
+        directToDestinationGainNode.gain.value = 0;
+
+        // NOTE(gnewman): This check protects us from making state changes
+        // using an outdated AudioContext. If the AudioContext of this
+        // function call is not the same as currentAudioContext.current, that
+        // means there is another in-progress call to this function that we
+        // should yield to--i.e., return now before calling "set" commands.
+        if (audioContext !== currentAudioContext.current) {
+          console.log(
+            `updateStream was called in quick succession. Ignoring setting data for the first call.`
           );
-
-          mediaSource.connect(inputGainNode);
-          inputGainNode.connect(analyzer);
-          inputGainNode.connect(audioInputBufferNode);
-          inputGainNode.connect(directToDestinationGainNode);
-          // Just piped to destination here so the audio engine treats this
-          // branch as active. No audio is rendered to the speakers.
-          audioInputBufferNode.connect(audioContext.destination);
-
-          // Set up monitoring
-          const inputChannelMergerNode = audioContext.createChannelMerger(1);
-          const outputDeviceNode = audioContext.createMediaStreamDestination();
-          audioElement.srcObject = outputDeviceNode.stream;
-          await audioElement.play();
-          directToDestinationGainNode.connect(inputChannelMergerNode);
-          inputChannelMergerNode.connect(outputDeviceNode);
-
-          // Has to be a power of 2. At the default sample rate of 48000, this
-          // size should be enough to let us fetch all samples assuming we are
-          // fetching every 1/60th of a second (48000 / 60 = 800 samples).
-          analyzer.fftSize = 1024;
-          inputGainNode.gain.value = 1;
-          directToDestinationGainNode.gain.value = 0;
-
-          // NOTE(gnewman): This check protects us from making state changes
-          // using an outdated AudioContext. If the AudioContext of this
-          // function call is not the same as currentAudioContext.current, that
-          // means there is another in-progress call to this function that we
-          // should yield to--i.e., return now before calling "set" commands.
-          if (audioContext !== currentAudioContext.current) {
-            console.log(
-              `updateStream was called in quick succession. Ignoring setting data for the first call.`
-            );
-            return;
-          }
-          setSetWorkletCallback(() => callback =>
-            (audioInputBufferNode.port.onmessage = callback)
-          );
-          setAnalyzer(analyzer);
-          setGainNode(inputGainNode);
-          setDirectToDestinationGainNode(directToDestinationGainNode);
-          setDataArray(new Uint8Array(analyzer.fftSize));
-          setPostWorkletMessage(() => message =>
-            audioInputBufferNode.port.postMessage(message)
-          );
-        };
-
-        const updateStreamPromise = updateStream();
-
-        return () => {
-          setCanChangeStream(false);
-          // NOTE(gnewman): We need to wait until updateStream has finished
-          // doing its thing before we can close the context. The promise
-          // resolver will be fired immediately after `then` is called if the
-          // promise is already fulfilled.
-          updateStreamPromise.then(() => {
-            audioContext.close().then(() => {
-              setCanChangeStream(true);
+          return;
+        }
+        setSetWorkletCallback(
+          () => (callback) => (audioInputBufferNode.port.onmessage = callback)
+        );
+        setAnalyzer(analyzer);
+        setGainNode(inputGainNode);
+        setSetMonitoringInput(() => (monitoring) => {
+          directToDestinationGainNode.gain.value = monitoring ? 1 : 0;
+          if (monitoring && outputDevice)
+            startAudioDestinationNode({
+              recordingStartedAt: Date.now(),
+              deviceId: outputDevice.id,
             });
-          });
-        };
-      }
-    },
-    [audioElement, stream]
-  );
+          else stopAudioDestinationNode();
+        });
+        setDataArray(new Uint8Array(analyzer.fftSize));
+        setPostWorkletMessage(
+          () => (message) => audioInputBufferNode.port.postMessage(message)
+        );
+      };
 
-  const fetchData = useCallback(
-    () => {
-      if (analyzer) analyzer.getByteTimeDomainData(dataArray);
-      return dataArray;
-    },
-    [analyzer, dataArray]
-  );
-  const setGainDB = gainDB => {
+      const updateStreamPromise = updateStream();
+
+      return () => {
+        setCanChangeStream(false);
+        // NOTE(gnewman): We need to wait until updateStream has finished
+        // doing its thing before we can close the context. The promise
+        // resolver will be fired immediately after `then` is called if the
+        // promise is already fulfilled.
+        updateStreamPromise.then(() => {
+          audioContext.close().then(() => {
+            setCanChangeStream(true);
+          });
+        });
+      };
+    }
+  }, [stream, outputDevice]);
+
+  const fetchData = useCallback(() => {
+    if (analyzer) analyzer.getByteTimeDomainData(dataArray);
+    return dataArray;
+  }, [analyzer, dataArray]);
+  const setGainDB = (gainDB) => {
     if (gainNode) gainNode.gain.value = Math.pow(10, gainDB / 20);
-  };
-  const setDirectToDestinationGainNodeGain = gain => {
-    if (directToDestinationGainNode)
-      directToDestinationGainNode.gain.value = gain;
   };
 
   return {
@@ -341,6 +336,6 @@ export function useStreamData(
     someData: !!analyzer,
     fetchData,
     setGainDB,
-    setDirectToDestinationGainNodeGain,
+    setMonitoringInput,
   };
 }

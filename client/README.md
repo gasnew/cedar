@@ -156,6 +156,30 @@ provides a useful intro to the concepts, and Google has a great overview of Web
 Audio API best practices in [their Audio Worklet Design Pattern
 article](https://developers.google.com/web/updates/2018/06/audio-worklet-design-pattern).
 
+#### Where the Web Audio API comes up short
+
+It turns out that there is no way to configure the output audio device using
+the Web Audio API, but selecting the output device is a crucial Cedar feature
+for interoperability with other programs like VB-Cable. The next best
+alternative is to pipe audio from an `AudioContext` object into an
+`HTMLAudioElement`, but as I discovered, this has its own drawbacks, such as
+the fact that the `HTMLAudioElement` engine pitch-bends the audio in the case
+of a buffer underflow or high CPU load. This is a non-starter for Cedar because
+audio playback latency needs to be constant in order to eliminate latency
+between musicians.
+
+So how do we get to select output devices __and__ have predictable behavior?
+Enter our custom audio backend. This uses [my fork of
+naudiodon](https://github.com/gasnew/naudiodon), which wraps the [PortAudio
+library](http://portaudio.com/), which provides a platform-agnostic audio
+playback API. I built out a custom `AudioDestinationNode` that plugs into an
+`AudioContext` object that sends data from the render thread to the main
+thread, where that data is played back through `naudiodon`. The code for
+ensuring that playback matches elapsed time precisely now lives in the
+`naudiodon` fork, which seems to me to be more well-behaved than
+`AudioContext.destination` anyway, so... a new feature and more stability?
+Sweet!
+
 #### Debugging web audio
 
 Web audio is notoriously difficult to troubleshoot, unfortunately, but there

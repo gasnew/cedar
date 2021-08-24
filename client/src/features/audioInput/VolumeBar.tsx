@@ -54,8 +54,10 @@ export default function({ fetchData, disabled, height, width }: Props) {
 
       // Resize the canvas to the parent container
       const parentRect = ctx.canvas.parentNode.getBoundingClientRect();
-      ctx.canvas.height = height || parentRect.height;
-      ctx.canvas.width = width || parentRect.width;
+      if (ctx.canvas.height !== parentRect.height)
+        ctx.canvas.height = height || parentRect.height;
+      if (ctx.canvas.width !== parentRect.width)
+        ctx.canvas.width = width || parentRect.width;
 
       barWidth.current = newBarWidth;
       dampedBarWidth.current =

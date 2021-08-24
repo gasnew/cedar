@@ -11,6 +11,14 @@
 const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const log = require('electron-log');
 const { autoUpdater } = require('electron-updater');
+var fs = require('fs');
+const { Readable, finished: streamFinished } = require('stream');
+const util = require('util');
+const isDev = require('electron-is-dev');
+
+const configureAudioDestination = require('./configureAudioDestination.js');
+
+var portAudio = require('naudiodon');
 
 const path = require('path');
 const url = require('url');
@@ -53,6 +61,7 @@ function createWindow() {
   const mainWindow = new BrowserWindow({
     width: 1000,
     height: 800,
+    show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       worldSafeExecuteJavaScript: true,
@@ -62,14 +71,14 @@ function createWindow() {
 
   // Open hyperlinks in the browser rather than Electron window
   // (https://github.com/electron/electron/issues/1344).
-  mainWindow.webContents.on('new-window', function(event, url) {
+  mainWindow.webContents.on('new-window', function (event, url) {
     event.preventDefault();
     shell.openExternal(url);
   });
 
   // Open the DevTools (we can's use NODE_ENV because public/ and electron so
   // we check for the absence of an env variable we set in dev mode)
-  if (process.env.ELECTRON_START_URL) mainWindow.webContents.openDevTools();
+  if (isDev) mainWindow.webContents.openDevTools();
 
   // Load from the local React App (dev) or from index.html (prod).
   const startUrl =
@@ -80,6 +89,7 @@ function createWindow() {
       slashes: true,
     });
   mainWindow.loadURL(startUrl);
+  mainWindow.showInactive();
 
   return mainWindow;
 }
@@ -92,22 +102,23 @@ app.whenReady().then(() => {
   // even after hiding and showing again on MacOS
   const windowHolder = { current: null };
 
+  configureAudioDestination();
   windowHolder.current = createWindow();
   const autoUpdater = configureAutoUpdater(windowHolder);
-  autoUpdater.checkForUpdates();
+  if (!isDev) autoUpdater.checkForUpdates();
 
-  app.on('activate', function() {
+  app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) {
       windowHolder.current = createWindow();
-      autoUpdater.checkForUpdates();
+      if (!isDev) autoUpdater.checkForUpdates();
     }
   });
 });
 
 // Quit when all windows are closed.
-app.on('window-all-closed', function() {
+app.on('window-all-closed', function () {
   // On macOS it is common for applications and their menu bar
   // to stay active until the user quits explicitly with Cmd + Q
   if (process.platform !== 'darwin') app.quit();
