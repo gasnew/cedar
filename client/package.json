@@ -74,6 +74,7 @@
     "start-react": "BROWSER=none REACT_APP_VERSION=$npm_package_version react-scripts start",
     "start-electron": "ELECTRON_START_URL=http://localhost:3000 electron .",
     "build": "REACT_APP_VERSION=$npm_package_version react-scripts build",
+    "build-windows": "set REACT_APP_VERSION=%npm_package_version && react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "lint": "eslint ./src/**/*.{ts,tsx}",
