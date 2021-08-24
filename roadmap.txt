@@ -98,6 +98,7 @@ Usability improvements
   + Let output devices be configurable again
 - Updates still work
 + Recordings are deleted after they are stopped
++ Devices can be swapped in and out without restarting Cedar
 - Prod build works
 - Docs all updated
 
