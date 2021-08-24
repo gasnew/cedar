@@ -35,7 +35,7 @@ const {
         sampleFormat: portAudio.SampleFormat32Bit,
         sampleRate: 48000,
         deviceId, // Use -1 or omit the deviceId to select the default device
-        closeOnError: true, // Close the stream if an audio error is detected, if set false then just log the error
+        closeOnError: false, // If true, close the stream if an audio error is detected; if set false then just log the error
       },
     });
     return destinationStream;

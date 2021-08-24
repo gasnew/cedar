@@ -97,6 +97,9 @@ Usability improvements
 + Use custom backend for playing audio
   + Let output devices be configurable again
 - Updates still work
++ Recordings are deleted after they are stopped
+- Prod build works
+- Docs all updated
 
 Admin stuff (no code)
 + Write how-to guide
