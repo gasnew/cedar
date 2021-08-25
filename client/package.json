@@ -58,7 +58,7 @@
       }
     },
     "win": {
-      "icon": "./public/icons/icon.png",
+      "icon": "./public/icons/icon.ico",
       "publisherName": "Garrett Newman"
     },
     "files": [
