@@ -58,9 +58,9 @@ jobs:
 
   draft-windows-client-release-if-version-bumped:
 
-    needs: test-client
+    #needs: test-client
 
-    if: contains(github.ref, 'bump-v')
+    #if: contains(github.ref, 'bump-v')
 
     runs-on: windows-latest
 
@@ -70,9 +70,10 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: 14.x
+    - run: yarn build-windows
+    - run: echo $Env:REACT_APP_VERSION
     - run: cd ../api && yarn install
     - run: yarn install
-    - run: yarn build-windows
     - name: Build Cedar for Windows
       env:
         CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
