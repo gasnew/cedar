@@ -96,11 +96,12 @@ Usability improvements
 + VolumeBar is further optimized
 + Use custom backend for playing audio
   + Let output devices be configurable again
-- Updates still work
 + Recordings are deleted after they are stopped
 + Devices can be swapped in and out without restarting Cedar
 + Prod build works
 + Docs all updated
++ New Cedar logo
+/ Updates still work
 
 Admin stuff (no code)
 + Write how-to guide
