@@ -1,7 +1,7 @@
 {
   "name": "cedar",
   "productName": "cedar",
-  "version": "0.7.2",
+  "version": "0.7.1",
   "license": "MIT",
   "author": {
     "name": "Garrett Newman",
@@ -47,6 +47,7 @@
     "productName": "cedar",
     "copyright": "Copyright © 2021 gasnew",
     "mac": {
+      "icon": "./public/icons/icon.icns",
       "category": "public.app-category.utilities",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,
@@ -57,6 +58,7 @@
       }
     },
     "win": {
+      "icon": "./public/icons/icon.png",
       "publisherName": "Garrett Newman"
     },
     "files": [
@@ -65,7 +67,7 @@
       "public/**/*"
     ],
     "directories": {
-      "buildResources": "assets"
+      "buildResources": "public"
     },
     "afterSign": "scripts/notarize.js",
     "extends": null
