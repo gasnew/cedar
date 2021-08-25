@@ -16,7 +16,7 @@ import { randomBirdName } from '../../app/util';
 import { useCreate, useLazyGet } from '../../features/feathers/FeathersHooks';
 import { setRoom, selectRoom } from '../../features/room/roomSlice';
 
-export default function() {
+export default function () {
   // Redux state
   const dispatch = useDispatch();
   const room = useSelector(selectRoom);
@@ -28,14 +28,10 @@ export default function() {
   const [createFormError, setCreateFormError] = useState('');
 
   // API state
-  const [
-    joinRoomBackend,
-    { error: getApiError, loading: getLoading },
-  ] = useLazyGet('rooms', roomId);
-  const [
-    createRoomBackend,
-    { error: createApiError, loading: createLoading },
-  ] = useCreate('rooms', { name: roomName });
+  const [joinRoomBackend, { error: getApiError, loading: getLoading }] =
+    useLazyGet('rooms', roomId);
+  const [createRoomBackend, { error: createApiError, loading: createLoading }] =
+    useCreate('rooms', { name: roomName });
   const [
     createMusicianBackend,
     { error: musicianApiError, loading: musicianLoading },
@@ -121,6 +117,7 @@ export default function() {
               fill
               intent={intentForError(joinFieldHelperText)}
               onChange={(event: any) => setRoomId(event.target.value)}
+              onKeyPress={(event) => event.key === 'Enter' && joinRoom()}
               placeholder="abc-123-def-456"
             />
             <Button
@@ -145,6 +142,7 @@ export default function() {
             <InputGroup
               fill
               onChange={(event: any) => setRoomName(event.target.value)}
+              onKeyPress={(event) => event.key === 'Enter' && createRoom()}
               value={roomName}
               intent={intentForError(createFieldHelperText)}
               placeholder="Brodyquest Fanclub"
