@@ -12,6 +12,11 @@ Cedar's development is entirely funded by donations. If you like this project,
 please consider [becoming a backer on
 Patreon](https://www.patreon.com/garrettnewman)!
 
+## Try it out
+
+* [Cedar for Mac](https://github.com/gasnew/cedar/releases/download/v0.7.2/cedar-0.7.2.dmg)
+* [Cedar for Windows](https://github.com/gasnew/cedar/releases/download/v0.7.2/cedar-Setup-0.7.2.exe)
+
 ## Current and upcoming features
 
 * :white_check_mark: Perform and/or rehearse live with musicians anywhere you can
