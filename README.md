@@ -1,3 +1,5 @@
+<p align="center"><a href="https://www.patreon.com/garrettnewman" target="_blank" rel="noopener noreferrer"><img width="100" src="https://raw.githubusercontent.com/gasnew/cedar/master/client/public/icons/icon.png" alt="Cedar logo"></a></p>
+
 # Cedar
 
 Cedar is Zoom for musicians. Zero latency. No click track. Just play!
