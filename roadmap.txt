@@ -101,7 +101,7 @@ Usability improvements
 + Prod build works
 + Docs all updated
 + New Cedar logo
-/ Updates still work
++ Updates still work
 
 Admin stuff (no code)
 + Write how-to guide
