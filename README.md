@@ -4,6 +4,8 @@
 
 Cedar is Zoom for musicians. Zero latency. No click track. Just play!
 
+<p align="center"><img width="400" src="https://github.com/user-attachments/assets/b5e0aa6a-db61-4622-b96d-e2b02edefcab" alt="Cedar GIF" /></p>
+
 1. **Create** a Cedar room, and invite your musician friends.
 2. **Organize** musicians in the Cedar chain.
 3. **Perform** live together over the internet!
