@@ -1,4 +1,4 @@
-<p align="center"><a href="https://www.patreon.com/garrettnewman" target="_blank" rel="noopener noreferrer"><img width="100" src="https://raw.githubusercontent.com/gasnew/cedar/master/client/public/icons/icon.png" alt="Cedar logo"></a></p>
+<p align="center"><a href="https://www.github.com/gasnew/cedar" target="_blank" rel="noopener noreferrer"><img width="100" src="https://raw.githubusercontent.com/gasnew/cedar/master/client/public/icons/icon.png" alt="Cedar logo"></a></p>
 
 # Cedar
 
@@ -9,12 +9,6 @@ Cedar is Zoom for musicians. Zero latency. No click track. Just play!
 1. **Create** a Cedar room, and invite your musician friends.
 2. **Organize** musicians in the Cedar chain.
 3. **Perform** live together over the internet!
-
-## Supporting Cedar
-
-Cedar's development is entirely funded by donations. If you like this project,
-please consider [becoming a backer on
-Patreon](https://www.patreon.com/garrettnewman)!
 
 ## Try it out
 
@@ -108,7 +102,7 @@ becomes a non-issue, and musicians can perform together in real time.
 Cedar is completely free and open source--you can use my app and my code in
 pretty much any way you want. I made it this way by design because I want Cedar
 to be available to anyone with a computer and an internet connection. This is
-why I have a [Patreon](https://www.patreon.com/garrettnewman). It allows me to
+why I have a [Patreon](https://www.patreon.com/garrettnewman) (temporarily disabled). It allows me to
 realize my vision for the project without putting the app behind a paywall or
 subscription or flooding it with ads. In other words, musicians are enabled to
 work with Cedar creatively, and I am incentivized to create a valuable product.
